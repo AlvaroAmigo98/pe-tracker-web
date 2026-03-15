@@ -84,7 +84,7 @@ DATABASES = {
         'USER': 'postgres.dvtkpsqcwfekntaslwwn',
         'PASSWORD': os.environ.get('SUPABASE_DB_PASSWORD', 'PEtracker2026'),
         'HOST': 'aws-1-eu-west-2.pooler.supabase.com',
-        'PORT': '5432',
+        'PORT': '6543',
         'OPTIONS': {
             'sslmode': 'require',
         },
