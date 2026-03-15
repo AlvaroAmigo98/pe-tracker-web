@@ -82,7 +82,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',
         'USER': 'postgres.dvtkpsqcwfekntaslwwn',
-        'PASSWORD': os.environ.get('SUPABASE_DB_PASSWORD', ''),
+        'PASSWORD': os.environ.get('SUPABASE_DB_PASSWORD', 'PEtracker2026'),
         'HOST': 'aws-1-eu-west-2.pooler.supabase.com',
         'PORT': '5432',
         'OPTIONS': {
