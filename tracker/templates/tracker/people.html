@@ -1,0 +1,55 @@
+{% extends 'tracker/base.html' %}
+{% block content %}
+<div class="page-title">People</div>
+
+<form method="get" class="filter-bar">
+  <input type="text" name="q" value="{{ search }}" placeholder="Search by name or title…">
+  <select name="company">
+    <option value="">All companies</option>
+    {% for c in companies %}
+    <option value="{{ c.name }}" {% if company_filter == c.name %}selected{% endif %}>{{ c.name }}</option>
+    {% endfor %}
+  </select>
+  <select name="seniority">
+    <option value="">All levels</option>
+    {% for s in seniorities %}
+    <option value="{{ s }}" {% if seniority_filter == s %}selected{% endif %}>{{ s }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit" class="btn">Search</button>
+</form>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">{{ people|length }} people</span>
+  </div>
+  {% if people %}
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Company</th>
+        <th>Title</th>
+        <th>Seniority</th>
+        <th>Location</th>
+        <th>Last seen</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for snap in people %}
+      <tr>
+        <td class="name-cell">{{ snap.person.full_name }}</td>
+        <td>{{ snap.person.company.name }}</td>
+        <td>{{ snap.job_title|default:"—" }}</td>
+        <td>{{ snap.seniority|default:"—" }}</td>
+        <td>{{ snap.location|default:"—" }}</td>
+        <td class="subtle">{{ snap.scraped_at|date:"d M Y" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty">No people found matching your search.</div>
+  {% endif %}
+</div>
+{% endblock %}

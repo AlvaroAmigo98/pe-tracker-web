@@ -1,0 +1,78 @@
+{% extends 'tracker/base.html' %}
+{% block content %}
+<div class="page-title">Dashboard</div>
+
+{% if latest_run %}
+<p class="subtle" style="margin-bottom:18px">Last scrape: {{ latest_run.ran_at|date:"d M Y, H:i" }} — {{ latest_run.total_rows|default:"0" }} employees across {{ latest_run.firms_ok }} firms</p>
+{% endif %}
+
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-num" style="color:#1D9E75">{{ hires|length }}</div>
+    <div class="stat-label">New hires</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num" style="color:#E24B4A">{{ leavers|length }}</div>
+    <div class="stat-label">Leavers</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num" style="color:#BA7517">{{ promotions|length }}</div>
+    <div class="stat-label">Promotions / role changes</div>
+  </div>
+</div>
+
+<form method="get" class="filter-bar">
+  <select name="company" onchange="this.form.submit()">
+    <option value="">All companies</option>
+    {% for c in companies %}
+    <option value="{{ c.name }}" {% if company_filter == c.name %}selected{% endif %}>{{ c.name }}</option>
+    {% endfor %}
+  </select>
+</form>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">Recent changes</span>
+  </div>
+  {% if events %}
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Company</th>
+        <th>Change</th>
+        <th>Detail</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for e in events %}
+      <tr>
+        <td class="name-cell">{{ e.person.full_name }}</td>
+        <td>{{ e.person.company.name }}</td>
+        <td>
+          {% if e.event_type == 'hire' %}<span class="badge badge-hire">Hire</span>
+          {% elif e.event_type == 'leaver' %}<span class="badge badge-leave">Leaver</span>
+          {% elif e.event_type == 'promotion' %}<span class="badge badge-promo">Promotion</span>
+          {% else %}<span class="badge badge-role">Role change</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if e.previous_title and e.new_title %}
+            <span class="subtle">{{ e.previous_title }} → {{ e.new_title }}</span>
+          {% elif e.new_title %}
+            {{ e.new_title }}
+          {% elif e.previous_title %}
+            <span class="subtle">Last role: {{ e.previous_title }}</span>
+          {% endif %}
+        </td>
+        <td class="subtle">{{ e.detected_at|date:"d M Y" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty">No change events yet — they will appear after the second weekly scrape runs.</div>
+  {% endif %}
+</div>
+{% endblock %}
