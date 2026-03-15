@@ -1,0 +1,1 @@
+web: gunicorn petracker.wsgi --log-file -
