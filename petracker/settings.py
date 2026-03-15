@@ -79,21 +79,21 @@ WSGI_APPLICATION = 'petracker.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 
-_db_url = os.environ.get('DATABASE_URL', '')
-if _db_url:
-    DATABASES = {'default': dj_database_url.parse(_db_url, conn_max_age=0)}
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'postgres',
-            'USER': 'postgres.dvtkpsqcwfekntaslwwn',
-            'PASSWORD': os.environ.get('SUPABASE_DB_PASSWORD', ''),
-            'HOST': 'aws-1-eu-west-2.pooler.supabase.com',
-            'PORT': '6543',
-            'OPTIONS': {'sslmode': 'require'},
-        }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres.dvtkpsqcwfekntaslwwn',
+        'PASSWORD': os.environ.get('SUPABASE_DB_PASSWORD', 'PEtracker2026'),
+        'HOST': 'aws-1-eu-west-2.pooler.supabase.com',
+        'PORT': '6543',
+        'OPTIONS': {
+            'sslmode': 'require',
+            'gssencmode': 'disable',
+            'channel_binding': 'disable',
+        },
     }
+}
 
 
 # Password validation
