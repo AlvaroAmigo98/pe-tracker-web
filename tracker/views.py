@@ -7,7 +7,7 @@ SENIORITY_GROUP = {
     "Partner / MD": "Senior",
     "Director":     "Senior",
     "VP":           "Senior",
-    "Principal":    "Senior",
+    "Principal":    "Junior",
     "Associate":    "Junior",
     "Analyst":      "Junior",
     "Other":        "Junior",
@@ -101,6 +101,7 @@ def people(request):
     seniority_filter = request.GET.get('seniority', '')
     group_filter     = request.GET.get('group', '')
     region_filter    = request.GET.get('region', '')
+    function_filter  = request.GET.get('function', '')
 
     companies   = Company.objects.order_by('name')
     seniorities = PersonSnapshot.objects.values_list(
@@ -117,9 +118,9 @@ def people(request):
         pid = snap.person_id
         if pid not in seen:
             seen.add(pid)
-            # Annotate with region and seniority group
-            snap.region           = infer_region(snap.location or '')
-            snap.seniority_group  = infer_seniority_group(snap.seniority or '')
+            snap.region          = infer_region(snap.location or '')
+            snap.seniority_group = infer_seniority_group(snap.seniority or '')
+            snap.function        = infer_function_web(snap.job_title or '')
             people.append(snap)
 
     if search:
@@ -139,6 +140,9 @@ def people(request):
     if region_filter:
         people = [p for p in people if p.region == region_filter]
 
+    if function_filter:
+        people = [p for p in people if p.function == function_filter]
+
     return render(request, 'tracker/people.html', {
         'people':           people,
         'companies':        companies,
@@ -148,4 +152,40 @@ def people(request):
         'seniority_filter': seniority_filter,
         'group_filter':     group_filter,
         'region_filter':    region_filter,
+        'function_filter':  function_filter,
     })
+
+def infer_function_web(title: str) -> str:
+    if not title or title == "N/A":
+        return "Unknown"
+    t = title.lower()
+    if any(x in t for x in [
+        "adviser", "advisor", "board", "chairman", "chairwoman",
+        "co-founder", "founder", "executive in residence",
+        "entrepreneur in residence", "operating partner",
+        "senior partner", "venture partner",
+    ]):
+        return "Advisory"
+    if any(x in t for x in [
+        "finance", "accounting", "tax", "treasury",
+        "human resources", " hr ", "talent", "recruiting",
+        "compliance", "legal", "risk", "audit",
+        "it ", "technology", "marketing", "communications",
+        "events", "office manager", "operations", "admin",
+        "facilities", "procurement", "esg", "sustainability",
+        "investor relations", "capital formation", "fund admin",
+        "fund finance", "fund operations", "portfolio reporting",
+        "valuations", "luxembourg",
+    ]):
+        return "Operations"
+    if any(x in t for x in [
+        "investment", "private equity", "infrastructure",
+        "real estate", "credit", "debt", "equity", "capital",
+        "portfolio", "deal", "transaction", "m&a",
+        "managing director", "director", "partner", "principal",
+        "associate", "analyst", "vice president", "vp",
+        "head of", "co-head",
+    ]):
+        return "Investment"
+    return "Other"
+

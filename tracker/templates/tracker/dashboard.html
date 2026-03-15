@@ -1,73 +1,38 @@
 {% extends 'tracker/base.html' %}
 {% block content %}
+<div class="page-title">Dashboard</div>
 
-<div class="page-header">
-  <div>
-    <div class="page-title">Dashboard</div>
-    {% if latest_run %}
-    <div class="page-meta">Last scrape: {{ latest_run.ran_at|date:"d M Y, H:i" }} — {{ latest_run.total_rows|default:"0" }} employees across {{ latest_run.firms_ok }} firms</div>
-    {% endif %}
-  </div>
-  <a href="?{{ request.GET.urlencode }}&export=csv" class="btn">⬇ Export CSV</a>
-</div>
+{% if latest_run %}
+<p class="subtle" style="margin-bottom:18px">Last scrape: {{ latest_run.ran_at|date:"d M Y, H:i" }} — {{ latest_run.total_rows|default:"0" }} employees across {{ latest_run.firms_ok }} firms</p>
+{% endif %}
 
-<!-- Clickable stat cards -->
 <div class="stats-row">
-  <a href="?event_type=hire" style="text-decoration:none">
-    <div class="stat-card {% if event_type_filter == 'hire' %}active{% endif %}">
-      <div class="stat-num" style="color:#1D9E75">{{ hires|length }}</div>
-      <div class="stat-label">New hires</div>
-    </div>
-  </a>
-  <a href="?event_type=leaver" style="text-decoration:none">
-    <div class="stat-card {% if event_type_filter == 'leaver' %}active{% endif %}">
-      <div class="stat-num" style="color:#E24B4A">{{ leavers|length }}</div>
-      <div class="stat-label">Leavers</div>
-    </div>
-  </a>
-  <a href="?event_type=promotion" style="text-decoration:none">
-    <div class="stat-card {% if event_type_filter == 'promotion' %}active{% endif %}">
-      <div class="stat-num" style="color:#BA7517">{{ promotions|length }}</div>
-      <div class="stat-label">Promotions / role changes</div>
-    </div>
-  </a>
+  <div class="stat-card">
+    <div class="stat-num" style="color:#1D9E75">{{ hires|length }}</div>
+    <div class="stat-label">New hires</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num" style="color:#E24B4A">{{ leavers|length }}</div>
+    <div class="stat-label">Leavers</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num" style="color:#BA7517">{{ promotions|length }}</div>
+    <div class="stat-label">Promotions / role changes</div>
+  </div>
 </div>
 
-<!-- Filters -->
 <form method="get" class="filter-bar">
-  <div class="filter-group">
-    <span class="filter-label">Company</span>
-    <select name="company" onchange="this.form.submit()">
-      <option value="">All companies</option>
-      {% for c in companies %}
-      <option value="{{ c.name }}" {% if company_filter == c.name %}selected{% endif %}>{{ c.name }}</option>
-      {% endfor %}
-    </select>
-  </div>
-  <div class="filter-group">
-    <span class="filter-label">Event type</span>
-    <select name="event_type" onchange="this.form.submit()">
-      <option value="">All events</option>
-      <option value="hire" {% if event_type_filter == 'hire' %}selected{% endif %}>Hires</option>
-      <option value="leaver" {% if event_type_filter == 'leaver' %}selected{% endif %}>Leavers</option>
-      <option value="promotion" {% if event_type_filter == 'promotion' %}selected{% endif %}>Promotions</option>
-      <option value="role_change" {% if event_type_filter == 'role_change' %}selected{% endif %}>Role changes</option>
-    </select>
-  </div>
-  <div class="filter-group">
-    <span class="filter-label">Date from</span>
-    <input type="text" name="date_from" value="{{ date_from }}" placeholder="e.g. 2026-01-01" style="min-width:130px">
-  </div>
-  <button type="submit" class="btn">Filter</button>
-  {% if request.GET %}
-  <a href="{% url 'dashboard' %}" class="btn-ghost">Clear</a>
-  {% endif %}
+  <select name="company" onchange="this.form.submit()">
+    <option value="">All companies</option>
+    {% for c in companies %}
+    <option value="{{ c.name }}" {% if company_filter == c.name %}selected{% endif %}>{{ c.name }}</option>
+    {% endfor %}
+  </select>
 </form>
 
 <div class="card">
   <div class="card-header">
     <span class="card-title">Recent changes</span>
-    <span class="subtle">{{ events|length }} events</span>
   </div>
   {% if events %}
   <table>
@@ -75,9 +40,11 @@
       <tr>
         <th>Name</th>
         <th>Company</th>
+        <th>Function</th>
         <th>Change</th>
         <th>Detail</th>
-        <th>Date ↓</th>
+        <th>Region</th>
+        <th>Date</th>
       </tr>
     </thead>
     <tbody>
@@ -85,6 +52,23 @@
       <tr>
         <td class="name-cell">{{ e.person.full_name }}</td>
         <td>{{ e.person.company.name }}</td>
+        <td>
+          {% with title=e.new_title|default:e.previous_title %}
+            {% if title %}
+              {% with t=title|lower %}
+                {% if "invest" in t or "director" in t or "partner" in t or "principal" in t or "associate" in t or "analyst" in t or "head of" in t or "vp" in t or "vice president" in t %}
+                  <span class="badge badge-promo">Investment</span>
+                {% elif "advis" in t or "board" in t or "chair" in t or "founder" in t or "residence" in t %}
+                  <span class="badge badge-hire">Advisory</span>
+                {% elif "finance" in t or "compliance" in t or "hr" in t or "legal" in t or "operations" in t or "technology" in t or "marketing" in t %}
+                  <span class="badge" style="background:#f1efe8;color:#5f5e5a">Operations</span>
+                {% else %}
+                  <span class="subtle">—</span>
+                {% endif %}
+              {% endwith %}
+            {% endif %}
+          {% endwith %}
+        </td>
         <td>
           {% if e.event_type == 'hire' %}<span class="badge badge-hire">Hire</span>
           {% elif e.event_type == 'leaver' %}<span class="badge badge-leave">Leaver</span>
@@ -95,10 +79,17 @@
         <td>
           {% if e.previous_title and e.new_title %}
             <span class="subtle">{{ e.previous_title }} → {{ e.new_title }}</span>
-          {% elif e.new_title %}{{ e.new_title }}
+          {% elif e.new_title %}
+            {{ e.new_title }}
           {% elif e.previous_title %}
             <span class="subtle">Last role: {{ e.previous_title }}</span>
           {% endif %}
+        </td>
+        <td>
+          {% with loc=e.person %}
+            {% comment %}We'll show region from latest snapshot if available{% endcomment %}
+            <span class="subtle">—</span>
+          {% endwith %}
         </td>
         <td class="subtle">{{ e.detected_at|date:"d M Y" }}</td>
       </tr>
@@ -106,7 +97,7 @@
     </tbody>
   </table>
   {% else %}
-  <div class="empty">No change events found{% if request.GET %} — try clearing filters{% endif %}.</div>
+  <div class="empty">No change events yet — they will appear after the second weekly scrape runs.</div>
   {% endif %}
 </div>
 {% endblock %}

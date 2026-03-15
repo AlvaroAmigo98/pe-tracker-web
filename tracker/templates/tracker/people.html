@@ -21,6 +21,13 @@
     <option value="Senior" {% if group_filter == 'Senior' %}selected{% endif %}>Senior</option>
     <option value="Junior" {% if group_filter == 'Junior' %}selected{% endif %}>Junior</option>
   </select>
+  <select name="function">
+    <option value="">All functions</option>
+    <option value="Investment" {% if function_filter == 'Investment' %}selected{% endif %}>Investment</option>
+    <option value="Advisory" {% if function_filter == 'Advisory' %}selected{% endif %}>Advisory</option>
+    <option value="Operations" {% if function_filter == 'Operations' %}selected{% endif %}>Operations</option>
+    <option value="Other" {% if function_filter == 'Other' %}selected{% endif %}>Other</option>
+  </select>
   <select name="region">
     <option value="">All regions</option>
     <option value="North America" {% if region_filter == 'North America' %}selected{% endif %}>North America</option>
@@ -44,6 +51,7 @@
         <th>Title</th>
         <th>Level</th>
         <th>Group</th>
+        <th>Function</th>
         <th>Region</th>
         <th>Location</th>
         <th>Last seen</th>
@@ -61,6 +69,17 @@
             <span class="badge badge-promo">Senior</span>
           {% else %}
             <span class="badge badge-role">Junior</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if snap.function == 'Investment' %}
+            <span class="badge badge-promo">Investment</span>
+          {% elif snap.function == 'Advisory' %}
+            <span class="badge badge-hire">Advisory</span>
+          {% elif snap.function == 'Operations' %}
+            <span class="badge" style="background:#f1efe8;color:#5f5e5a">Operations</span>
+          {% else %}
+            <span class="subtle">—</span>
           {% endif %}
         </td>
         <td>
