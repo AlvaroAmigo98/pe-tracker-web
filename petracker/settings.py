@@ -87,6 +87,7 @@ DATABASES = {
         'PORT': '6543',
         'OPTIONS': {
             'sslmode': 'require',
+		'options': '-c client_encoding=UTF8',
         },
     }
 }
