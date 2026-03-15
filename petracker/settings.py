@@ -83,16 +83,16 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',
-        'USER': 'postgres.dvtkpsqcwfekntaslwwn',
+        'USER': 'postgres',
         'PASSWORD': os.environ.get('SUPABASE_DB_PASSWORD', 'PEtracker2026'),
-        'HOST': 'aws-1-eu-west-2.pooler.supabase.com',
-        'PORT': '6543',
+        'HOST': 'db.dvtkpsqcwfekntaslwwn.supabase.co',  # ← direct host
+        'PORT': '5432',  # ← back to 5432
         'OPTIONS': {
             'sslmode': 'require',
-            'gssencmode': 'disable',
         },
     }
 }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
