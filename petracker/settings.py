@@ -79,12 +79,21 @@ WSGI_APPLICATION = 'petracker.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 
-DATABASES = {
-    'default': dj_database_url.parse(
-        os.environ.get('DATABASE_URL', ''),
-        conn_max_age=0,
-    )
-}
+_db_url = os.environ.get('DATABASE_URL', '')
+if _db_url:
+    DATABASES = {'default': dj_database_url.parse(_db_url, conn_max_age=0)}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'postgres',
+            'USER': 'postgres.dvtkpsqcwfekntaslwwn',
+            'PASSWORD': os.environ.get('SUPABASE_DB_PASSWORD', ''),
+            'HOST': 'aws-1-eu-west-2.pooler.supabase.com',
+            'PORT': '6543',
+            'OPTIONS': {'sslmode': 'require'},
+        }
+    }
 
 
 # Password validation
