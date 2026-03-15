@@ -122,4 +122,30 @@ def people(request):
             snap.seniority_group  = infer_seniority_group(snap.seniority or '')
             people.append(snap)
 
-    if
+    if search:
+        people = [p for p in people if
+                  search.lower() in p.person.full_name.lower() or
+                  search.lower() in (p.job_title or '').lower()]
+
+    if company_filter:
+        people = [p for p in people if p.person.company.name == company_filter]
+
+    if seniority_filter:
+        people = [p for p in people if p.seniority == seniority_filter]
+
+    if group_filter:
+        people = [p for p in people if p.seniority_group == group_filter]
+
+    if region_filter:
+        people = [p for p in people if p.region == region_filter]
+
+    return render(request, 'tracker/people.html', {
+        'people':           people,
+        'companies':        companies,
+        'seniorities':      seniorities,
+        'search':           search,
+        'company_filter':   company_filter,
+        'seniority_filter': seniority_filter,
+        'group_filter':     group_filter,
+        'region_filter':    region_filter,
+    })
