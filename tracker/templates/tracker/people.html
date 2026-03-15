@@ -10,12 +10,6 @@
     <option value="{{ c.name }}" {% if company_filter == c.name %}selected{% endif %}>{{ c.name }}</option>
     {% endfor %}
   </select>
-  <select name="seniority">
-    <option value="">All levels</option>
-    {% for s in seniorities %}
-    <option value="{{ s }}" {% if seniority_filter == s %}selected{% endif %}>{{ s }}</option>
-    {% endfor %}
-  </select>
   <select name="group">
     <option value="">Senior / Junior</option>
     <option value="Senior" {% if group_filter == 'Senior' %}selected{% endif %}>Senior</option>
@@ -23,19 +17,31 @@
   </select>
   <select name="function">
     <option value="">All functions</option>
-    <option value="Investment" {% if function_filter == 'Investment' %}selected{% endif %}>Investment</option>
+    <option value="Buyout / PE" {% if function_filter == 'Buyout / PE' %}selected{% endif %}>Buyout / PE</option>
+    <option value="Growth Equity" {% if function_filter == 'Growth Equity' %}selected{% endif %}>Growth Equity</option>
+    <option value="Infrastructure" {% if function_filter == 'Infrastructure' %}selected{% endif %}>Infrastructure</option>
+    <option value="Real Estate" {% if function_filter == 'Real Estate' %}selected{% endif %}>Real Estate</option>
+    <option value="Credit / Debt" {% if function_filter == 'Credit / Debt' %}selected{% endif %}>Credit / Debt</option>
+    <option value="Venture Capital" {% if function_filter == 'Venture Capital' %}selected{% endif %}>Venture Capital</option>
+    <option value="Investment (General)" {% if function_filter == 'Investment (General)' %}selected{% endif %}>Investment (General)</option>
     <option value="Advisory" {% if function_filter == 'Advisory' %}selected{% endif %}>Advisory</option>
     <option value="Operations" {% if function_filter == 'Operations' %}selected{% endif %}>Operations</option>
-    <option value="Other" {% if function_filter == 'Other' %}selected{% endif %}>Other</option>
   </select>
   <select name="region">
     <option value="">All regions</option>
-    <option value="North America" {% if region_filter == 'North America' %}selected{% endif %}>North America</option>
     <option value="EMEA" {% if region_filter == 'EMEA' %}selected{% endif %}>EMEA</option>
+    <option value="North America" {% if region_filter == 'North America' %}selected{% endif %}>North America</option>
     <option value="APAC" {% if region_filter == 'APAC' %}selected{% endif %}>APAC</option>
     <option value="Unknown" {% if region_filter == 'Unknown' %}selected{% endif %}>Unknown</option>
   </select>
+  <select name="last_seen">
+    <option value="">Any date</option>
+    <option value="7" {% if last_seen_filter == '7' %}selected{% endif %}>Last 7 days</option>
+    <option value="30" {% if last_seen_filter == '30' %}selected{% endif %}>Last 30 days</option>
+    <option value="90" {% if last_seen_filter == '90' %}selected{% endif %}>Last 90 days</option>
+  </select>
   <button type="submit" class="btn">Search</button>
+  <a href="?{{ request.GET.urlencode }}&export=excel" class="btn" style="background:#0f6e56;text-decoration:none">Export Excel</a>
 </form>
 
 <div class="card">
@@ -72,8 +78,20 @@
           {% endif %}
         </td>
         <td>
-          {% if snap.function == 'Investment' %}
-            <span class="badge badge-promo">Investment</span>
+          {% if snap.function == 'Buyout / PE' %}
+            <span class="badge badge-promo">Buyout / PE</span>
+          {% elif snap.function == 'Growth Equity' %}
+            <span class="badge badge-promo">Growth Equity</span>
+          {% elif snap.function == 'Infrastructure' %}
+            <span class="badge badge-role">Infrastructure</span>
+          {% elif snap.function == 'Real Estate' %}
+            <span class="badge badge-role">Real Estate</span>
+          {% elif snap.function == 'Credit / Debt' %}
+            <span class="badge badge-role">Credit / Debt</span>
+          {% elif snap.function == 'Venture Capital' %}
+            <span class="badge badge-role">Venture Capital</span>
+          {% elif snap.function == 'Investment (General)' %}
+            <span class="badge badge-hire">Investment</span>
           {% elif snap.function == 'Advisory' %}
             <span class="badge badge-hire">Advisory</span>
           {% elif snap.function == 'Operations' %}

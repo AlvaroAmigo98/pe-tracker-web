@@ -21,18 +21,44 @@
   </div>
 </div>
 
-<form method="get" class="filter-bar">
+<form method="get" class="filter-bar" style="margin-bottom:16px">
   <select name="company" onchange="this.form.submit()">
     <option value="">All companies</option>
     {% for c in companies %}
     <option value="{{ c.name }}" {% if company_filter == c.name %}selected{% endif %}>{{ c.name }}</option>
     {% endfor %}
   </select>
+  <select name="group" onchange="this.form.submit()">
+    <option value="">All seniority</option>
+    <option value="Senior" {% if group_filter == 'Senior' %}selected{% endif %}>Senior only</option>
+    <option value="Junior" {% if group_filter == 'Junior' %}selected{% endif %}>Junior only</option>
+  </select>
+  <select name="region" onchange="this.form.submit()">
+    <option value="">All regions</option>
+    <option value="EMEA" {% if region_filter == 'EMEA' %}selected{% endif %}>EMEA</option>
+    <option value="North America" {% if region_filter == 'North America' %}selected{% endif %}>North America</option>
+    <option value="APAC" {% if region_filter == 'APAC' %}selected{% endif %}>APAC</option>
+  </select>
+  <select name="function" onchange="this.form.submit()">
+    <option value="">All functions</option>
+    <option value="Buyout / PE" {% if function_filter == 'Buyout / PE' %}selected{% endif %}>Buyout / PE</option>
+    <option value="Investment (General)" {% if function_filter == 'Investment (General)' %}selected{% endif %}>Investment (General)</option>
+    <option value="Infrastructure" {% if function_filter == 'Infrastructure' %}selected{% endif %}>Infrastructure</option>
+    <option value="Real Estate" {% if function_filter == 'Real Estate' %}selected{% endif %}>Real Estate</option>
+    <option value="Credit / Debt" {% if function_filter == 'Credit / Debt' %}selected{% endif %}>Credit / Debt</option>
+    <option value="Advisory" {% if function_filter == 'Advisory' %}selected{% endif %}>Advisory</option>
+    <option value="Operations" {% if function_filter == 'Operations' %}selected{% endif %}>Operations</option>
+  </select>
+  <a href="?senior_emea=1" class="btn" style="background:#a32d2d;text-decoration:none">Senior EMEA Leavers</a>
+  <a href="?" class="btn" style="background:#555;text-decoration:none">Clear</a>
 </form>
 
 <div class="card">
   <div class="card-header">
-    <span class="card-title">Recent changes</span>
+    <span class="card-title">
+      {% if senior_emea_only %}Senior EMEA Investment Leavers{% else %}Recent changes{% endif %}
+    </span>
+    <span class="subtle">{{ events|length }} events</span>
   </div>
   {% if events %}
   <table>
@@ -53,21 +79,23 @@
         <td class="name-cell">{{ e.person.full_name }}</td>
         <td>{{ e.person.company.name }}</td>
         <td>
-          {% with title=e.new_title|default:e.previous_title %}
-            {% if title %}
-              {% with t=title|lower %}
-                {% if "invest" in t or "director" in t or "partner" in t or "principal" in t or "associate" in t or "analyst" in t or "head of" in t or "vp" in t or "vice president" in t %}
-                  <span class="badge badge-promo">Investment</span>
-                {% elif "advis" in t or "board" in t or "chair" in t or "founder" in t or "residence" in t %}
-                  <span class="badge badge-hire">Advisory</span>
-                {% elif "finance" in t or "compliance" in t or "hr" in t or "legal" in t or "operations" in t or "technology" in t or "marketing" in t %}
-                  <span class="badge" style="background:#f1efe8;color:#5f5e5a">Operations</span>
-                {% else %}
-                  <span class="subtle">—</span>
-                {% endif %}
-              {% endwith %}
-            {% endif %}
-          {% endwith %}
+          {% if e.function == 'Buyout / PE' %}
+            <span class="badge badge-promo">Buyout / PE</span>
+          {% elif e.function == 'Investment (General)' %}
+            <span class="badge badge-hire">Investment</span>
+          {% elif e.function == 'Advisory' %}
+            <span class="badge badge-hire">Advisory</span>
+          {% elif e.function == 'Infrastructure' %}
+            <span class="badge badge-role">Infrastructure</span>
+          {% elif e.function == 'Real Estate' %}
+            <span class="badge badge-role">Real Estate</span>
+          {% elif e.function == 'Credit / Debt' %}
+            <span class="badge badge-role">Credit / Debt</span>
+          {% elif e.function == 'Operations' %}
+            <span class="badge" style="background:#f1efe8;color:#5f5e5a">Operations</span>
+          {% else %}
+            <span class="subtle">—</span>
+          {% endif %}
         </td>
         <td>
           {% if e.event_type == 'hire' %}<span class="badge badge-hire">Hire</span>
@@ -86,10 +114,15 @@
           {% endif %}
         </td>
         <td>
-          {% with loc=e.person %}
-            {% comment %}We'll show region from latest snapshot if available{% endcomment %}
+          {% if e.region == 'EMEA' %}
+            <span class="badge" style="background:#e1f5ee;color:#0f6e56">EMEA</span>
+          {% elif e.region == 'North America' %}
+            <span class="badge" style="background:#e6f1fb;color:#185fa5">N. America</span>
+          {% elif e.region == 'APAC' %}
+            <span class="badge" style="background:#faeeda;color:#854f0b">APAC</span>
+          {% else %}
             <span class="subtle">—</span>
-          {% endwith %}
+          {% endif %}
         </td>
         <td class="subtle">{{ e.detected_at|date:"d M Y" }}</td>
       </tr>
