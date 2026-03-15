@@ -131,3 +131,4 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+CSRF_TRUSTED_ORIGINS = ['https://pe-tracker-web-production.up.railway.app']
