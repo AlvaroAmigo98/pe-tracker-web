@@ -80,17 +80,10 @@ WSGI_APPLICATION = 'petracker.wsgi.application'
 
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': os.environ.get('SUPABASE_DB_PASSWORD', 'PEtracker2026'),
-        'HOST': 'db.dvtkpsqcwfekntaslwwn.supabase.co',  # ← direct host
-        'PORT': '5432',  # ← back to 5432
-        'OPTIONS': {
-            'sslmode': 'require',
-        },
-    }
+    'default': dj_database_url.parse(
+        os.environ.get('DATABASE_URL', ''),
+        conn_max_age=0,
+    )
 }
 
 
