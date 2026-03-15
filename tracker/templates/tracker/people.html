@@ -1,47 +1,106 @@
 {% extends 'tracker/base.html' %}
 {% block content %}
+<style>
+  .filter-wrap { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; align-items:flex-start; }
+  .dropdown { position:relative; display:inline-block; }
+  .dropdown-btn { border:1px solid #ddd; border-radius:7px; padding:7px 12px; font-size:13px; background:white; color:#333; cursor:pointer; display:flex; align-items:center; gap:6px; white-space:nowrap; }
+  .dropdown-btn:hover { border-color:#1a1a2e; }
+  .dropdown-btn .count { background:#1a1a2e; color:white; border-radius:99px; padding:1px 6px; font-size:11px; }
+  .dropdown-panel { display:none; position:absolute; top:calc(100% + 4px); left:0; background:white; border:1px solid #ddd; border-radius:8px; padding:8px 0; min-width:200px; z-index:100; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
+  .dropdown-panel.open { display:block; }
+  .dropdown-panel label { display:flex; align-items:center; gap:8px; padding:6px 14px; font-size:13px; cursor:pointer; color:#333; }
+  .dropdown-panel label:hover { background:#f5f5f5; }
+  .dropdown-panel input[type=checkbox] { width:14px; height:14px; cursor:pointer; }
+  .search-input { border:1px solid #ddd; border-radius:7px; padding:7px 12px; font-size:13px; outline:none; min-width:220px; }
+  .search-input:focus { border-color:#1a1a2e; }
+  .btn { background:#1a1a2e; color:white; border:none; border-radius:7px; padding:7px 16px; font-size:13px; cursor:pointer; text-decoration:none; display:inline-block; }
+  .btn-green { background:#0f6e56; }
+  .btn-clear { background:#888; }
+</style>
+
 <div class="page-title">People</div>
 
-<form method="get" class="filter-bar">
-  <input type="text" name="q" value="{{ search }}" placeholder="Search by name or title…">
-  <select name="company">
-    <option value="">All companies</option>
-    {% for c in companies %}
-    <option value="{{ c.name }}" {% if company_filter == c.name %}selected{% endif %}>{{ c.name }}</option>
-    {% endfor %}
-  </select>
-  <select name="group">
-    <option value="">Senior / Junior</option>
-    <option value="Senior" {% if group_filter == 'Senior' %}selected{% endif %}>Senior</option>
-    <option value="Junior" {% if group_filter == 'Junior' %}selected{% endif %}>Junior</option>
-  </select>
-  <select name="function">
-    <option value="">All functions</option>
-    <option value="Buyout / PE" {% if function_filter == 'Buyout / PE' %}selected{% endif %}>Buyout / PE</option>
-    <option value="Growth Equity" {% if function_filter == 'Growth Equity' %}selected{% endif %}>Growth Equity</option>
-    <option value="Infrastructure" {% if function_filter == 'Infrastructure' %}selected{% endif %}>Infrastructure</option>
-    <option value="Real Estate" {% if function_filter == 'Real Estate' %}selected{% endif %}>Real Estate</option>
-    <option value="Credit / Debt" {% if function_filter == 'Credit / Debt' %}selected{% endif %}>Credit / Debt</option>
-    <option value="Venture Capital" {% if function_filter == 'Venture Capital' %}selected{% endif %}>Venture Capital</option>
-    <option value="Investment (General)" {% if function_filter == 'Investment (General)' %}selected{% endif %}>Investment (General)</option>
-    <option value="Advisory" {% if function_filter == 'Advisory' %}selected{% endif %}>Advisory</option>
-    <option value="Operations" {% if function_filter == 'Operations' %}selected{% endif %}>Operations</option>
-  </select>
-  <select name="region">
-    <option value="">All regions</option>
-    <option value="EMEA" {% if region_filter == 'EMEA' %}selected{% endif %}>EMEA</option>
-    <option value="North America" {% if region_filter == 'North America' %}selected{% endif %}>North America</option>
-    <option value="APAC" {% if region_filter == 'APAC' %}selected{% endif %}>APAC</option>
-    <option value="Unknown" {% if region_filter == 'Unknown' %}selected{% endif %}>Unknown</option>
-  </select>
-  <select name="last_seen">
-    <option value="">Any date</option>
-    <option value="7" {% if last_seen_filter == '7' %}selected{% endif %}>Last 7 days</option>
-    <option value="30" {% if last_seen_filter == '30' %}selected{% endif %}>Last 30 days</option>
-    <option value="90" {% if last_seen_filter == '90' %}selected{% endif %}>Last 90 days</option>
-  </select>
-  <button type="submit" class="btn">Search</button>
-  <a href="?{{ request.GET.urlencode }}&export=excel" class="btn" style="background:#0f6e56;text-decoration:none">Export Excel</a>
+<form method="get" id="filter-form">
+  <div class="filter-wrap">
+    <input type="text" name="q" value="{{ search }}" placeholder="Search by name or title…" class="search-input">
+
+    <!-- Company filter -->
+    <div class="dropdown">
+      <div class="dropdown-btn" onclick="toggleDropdown('company-panel')">
+        Companies {% if company_filter %}<span class="count">{{ company_filter|length }}</span>{% endif %} ▾
+      </div>
+      <div class="dropdown-panel" id="company-panel">
+        {% for c in companies %}
+        <label>
+          <input type="checkbox" name="company" value="{{ c.name }}" {% if c.name in company_filter %}checked{% endif %}
+            onchange="document.getElementById('filter-form').submit()">
+          {{ c.name }}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Seniority group filter -->
+    <div class="dropdown">
+      <div class="dropdown-btn" onclick="toggleDropdown('group-panel')">
+        Level {% if group_filter %}<span class="count">{{ group_filter|length }}</span>{% endif %} ▾
+      </div>
+      <div class="dropdown-panel" id="group-panel">
+        {% for g in 'Senior,Junior'|split:',' %}
+        <label>
+          <input type="checkbox" name="group" value="{{ g }}" {% if g in group_filter %}checked{% endif %}
+            onchange="document.getElementById('filter-form').submit()">
+          {{ g }}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Function filter -->
+    <div class="dropdown">
+      <div class="dropdown-btn" onclick="toggleDropdown('function-panel')">
+        Function {% if function_filter %}<span class="count">{{ function_filter|length }}</span>{% endif %} ▾
+      </div>
+      <div class="dropdown-panel" id="function-panel">
+        {% for f in 'Buyout / PE,Growth Equity,Infrastructure,Real Estate,Credit / Debt,Venture Capital,Investment (General),Advisory,Operations,Other'|split:',' %}
+        <label>
+          <input type="checkbox" name="function" value="{{ f }}" {% if f in function_filter %}checked{% endif %}
+            onchange="document.getElementById('filter-form').submit()">
+          {{ f }}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Region filter -->
+    <div class="dropdown">
+      <div class="dropdown-btn" onclick="toggleDropdown('region-panel')">
+        Region {% if region_filter %}<span class="count">{{ region_filter|length }}</span>{% endif %} ▾
+      </div>
+      <div class="dropdown-panel" id="region-panel">
+        {% for r in 'EMEA,North America,APAC,Unknown'|split:',' %}
+        <label>
+          <input type="checkbox" name="region" value="{{ r }}" {% if r in region_filter %}checked{% endif %}
+            onchange="document.getElementById('filter-form').submit()">
+          {{ r }}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Last seen filter -->
+    <select name="last_seen" onchange="document.getElementById('filter-form').submit()"
+      style="border:1px solid #ddd;border-radius:7px;padding:7px 12px;font-size:13px;background:white;color:#333;outline:none;">
+      <option value="">Any date</option>
+      <option value="7" {% if last_seen_filter == '7' %}selected{% endif %}>Last 7 days</option>
+      <option value="30" {% if last_seen_filter == '30' %}selected{% endif %}>Last 30 days</option>
+      <option value="90" {% if last_seen_filter == '90' %}selected{% endif %}>Last 90 days</option>
+    </select>
+
+    <button type="submit" class="btn">Search</button>
+    <a href="/people/" class="btn btn-clear">Clear</a>
+    <a href="?{{ request.GET.urlencode }}&export=excel" class="btn btn-green">Export Excel</a>
+  </div>
 </form>
 
 <div class="card">
@@ -121,4 +180,18 @@
   <div class="empty">No people found matching your search.</div>
   {% endif %}
 </div>
+
+<script>
+function toggleDropdown(id) {
+  document.querySelectorAll('.dropdown-panel').forEach(p => {
+    if (p.id !== id) p.classList.remove('open');
+  });
+  document.getElementById(id).classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.dropdown')) {
+    document.querySelectorAll('.dropdown-panel').forEach(p => p.classList.remove('open'));
+  }
+});
+</script>
 {% endblock %}

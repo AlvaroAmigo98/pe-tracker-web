@@ -1,5 +1,17 @@
 {% extends 'tracker/base.html' %}
 {% block content %}
+<style>
+  .dropdown { position:relative; display:inline-block; }
+  .dropdown-btn { border:1px solid #ddd; border-radius:7px; padding:7px 12px; font-size:13px; background:white; color:#333; cursor:pointer; display:flex; align-items:center; gap:6px; white-space:nowrap; }
+  .dropdown-btn:hover { border-color:#1a1a2e; }
+  .dropdown-btn .count { background:#1a1a2e; color:white; border-radius:99px; padding:1px 6px; font-size:11px; }
+  .dropdown-panel { display:none; position:absolute; top:calc(100% + 4px); left:0; background:white; border:1px solid #ddd; border-radius:8px; padding:8px 0; min-width:200px; z-index:100; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
+  .dropdown-panel.open { display:block; }
+  .dropdown-panel label { display:flex; align-items:center; gap:8px; padding:6px 14px; font-size:13px; cursor:pointer; color:#333; }
+  .dropdown-panel label:hover { background:#f5f5f5; }
+  .dropdown-panel input[type=checkbox] { width:14px; height:14px; cursor:pointer; }
+</style>
+
 <div class="page-title">Dashboard</div>
 
 {% if latest_run %}
@@ -21,36 +33,80 @@
   </div>
 </div>
 
-<form method="get" class="filter-bar" style="margin-bottom:16px">
-  <select name="company" onchange="this.form.submit()">
-    <option value="">All companies</option>
-    {% for c in companies %}
-    <option value="{{ c.name }}" {% if company_filter == c.name %}selected{% endif %}>{{ c.name }}</option>
-    {% endfor %}
-  </select>
-  <select name="group" onchange="this.form.submit()">
-    <option value="">All seniority</option>
-    <option value="Senior" {% if group_filter == 'Senior' %}selected{% endif %}>Senior only</option>
-    <option value="Junior" {% if group_filter == 'Junior' %}selected{% endif %}>Junior only</option>
-  </select>
-  <select name="region" onchange="this.form.submit()">
-    <option value="">All regions</option>
-    <option value="EMEA" {% if region_filter == 'EMEA' %}selected{% endif %}>EMEA</option>
-    <option value="North America" {% if region_filter == 'North America' %}selected{% endif %}>North America</option>
-    <option value="APAC" {% if region_filter == 'APAC' %}selected{% endif %}>APAC</option>
-  </select>
-  <select name="function" onchange="this.form.submit()">
-    <option value="">All functions</option>
-    <option value="Buyout / PE" {% if function_filter == 'Buyout / PE' %}selected{% endif %}>Buyout / PE</option>
-    <option value="Investment (General)" {% if function_filter == 'Investment (General)' %}selected{% endif %}>Investment (General)</option>
-    <option value="Infrastructure" {% if function_filter == 'Infrastructure' %}selected{% endif %}>Infrastructure</option>
-    <option value="Real Estate" {% if function_filter == 'Real Estate' %}selected{% endif %}>Real Estate</option>
-    <option value="Credit / Debt" {% if function_filter == 'Credit / Debt' %}selected{% endif %}>Credit / Debt</option>
-    <option value="Advisory" {% if function_filter == 'Advisory' %}selected{% endif %}>Advisory</option>
-    <option value="Operations" {% if function_filter == 'Operations' %}selected{% endif %}>Operations</option>
-  </select>
-  <a href="?senior_emea=1" class="btn" style="background:#a32d2d;text-decoration:none">Senior EMEA Leavers</a>
-  <a href="?" class="btn" style="background:#555;text-decoration:none">Clear</a>
+<form method="get" id="dash-form">
+  <div class="filter-bar" style="margin-bottom:16px">
+
+    <!-- Company -->
+    <div class="dropdown">
+      <div class="dropdown-btn" onclick="toggleDropdown('d-company')">
+        Companies {% if company_filter %}<span class="count">{{ company_filter|length }}</span>{% endif %} ▾
+      </div>
+      <div class="dropdown-panel" id="d-company">
+        {% for c in companies %}
+        <label>
+          <input type="checkbox" name="company" value="{{ c.name }}"
+            {% if c.name in company_filter %}checked{% endif %}
+            onchange="document.getElementById('dash-form').submit()">
+          {{ c.name }}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Seniority -->
+    <div class="dropdown">
+      <div class="dropdown-btn" onclick="toggleDropdown('d-group')">
+        Level {% if group_filter %}<span class="count">{{ group_filter|length }}</span>{% endif %} ▾
+      </div>
+      <div class="dropdown-panel" id="d-group">
+        {% for g in 'Senior,Junior'|split:',' %}
+        <label>
+          <input type="checkbox" name="group" value="{{ g }}"
+            {% if g in group_filter %}checked{% endif %}
+            onchange="document.getElementById('dash-form').submit()">
+          {{ g }}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Region -->
+    <div class="dropdown">
+      <div class="dropdown-btn" onclick="toggleDropdown('d-region')">
+        Region {% if region_filter %}<span class="count">{{ region_filter|length }}</span>{% endif %} ▾
+      </div>
+      <div class="dropdown-panel" id="d-region">
+        {% for r in 'EMEA,North America,APAC,Unknown'|split:',' %}
+        <label>
+          <input type="checkbox" name="region" value="{{ r }}"
+            {% if r in region_filter %}checked{% endif %}
+            onchange="document.getElementById('dash-form').submit()">
+          {{ r }}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Function -->
+    <div class="dropdown">
+      <div class="dropdown-btn" onclick="toggleDropdown('d-function')">
+        Function {% if function_filter %}<span class="count">{{ function_filter|length }}</span>{% endif %} ▾
+      </div>
+      <div class="dropdown-panel" id="d-function">
+        {% for f in 'Buyout / PE,Growth Equity,Infrastructure,Real Estate,Credit / Debt,Venture Capital,Investment (General),Advisory,Operations'|split:',' %}
+        <label>
+          <input type="checkbox" name="function" value="{{ f }}"
+            {% if f in function_filter %}checked{% endif %}
+            onchange="document.getElementById('dash-form').submit()">
+          {{ f }}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <a href="?senior_emea=1" class="btn" style="background:#a32d2d;text-decoration:none">⚑ Senior EMEA Leavers</a>
+    <a href="/" class="btn" style="background:#888;text-decoration:none">Clear</a>
+  </div>
 </form>
 
 <div class="card">
@@ -133,4 +189,18 @@
   <div class="empty">No change events yet — they will appear after the second weekly scrape runs.</div>
   {% endif %}
 </div>
+
+<script>
+function toggleDropdown(id) {
+  document.querySelectorAll('.dropdown-panel').forEach(p => {
+    if (p.id !== id) p.classList.remove('open');
+  });
+  document.getElementById(id).classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.dropdown')) {
+    document.querySelectorAll('.dropdown-panel').forEach(p => p.classList.remove('open'));
+  }
+});
+</script>
 {% endblock %}

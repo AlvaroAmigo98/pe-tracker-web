@@ -110,8 +110,7 @@ def infer_function_web(title: str) -> str:
 
     # Real Estate
     if any(x in t for x in [
-        "real estate", "property", "realty", "reit",
-        "real assets",
+        "real estate", "property", "realty", "reit", "real assets",
     ]):
         return "Real Estate"
 
@@ -126,11 +125,10 @@ def infer_function_web(title: str) -> str:
     # Venture Capital
     if any(x in t for x in [
         "venture", " vc ", "early stage", "seed",
-        "series a", "series b",
     ]):
         return "Venture Capital"
 
-    # General investment roles that don't specify a strategy
+    # General investment roles
     if any(x in t for x in [
         "managing director", "director", "partner", "principal",
         "associate", "analyst", "vice president", " vp",
@@ -145,43 +143,40 @@ def infer_function_web(title: str) -> str:
 
 @login_required
 def dashboard(request):
-    latest_run     = ScrapeRun.objects.order_by('-ran_at').first()
-    companies      = Company.objects.order_by('name')
-    company_filter = request.GET.get('company', '')
-    region_filter  = request.GET.get('region', '')
-    group_filter   = request.GET.get('group', '')
-    function_filter = request.GET.get('function', '')
+    latest_run      = ScrapeRun.objects.order_by('-ran_at').first()
+    companies       = Company.objects.order_by('name')
+    company_filter  = request.GET.getlist('company')
+    region_filter   = request.GET.getlist('region')
+    group_filter    = request.GET.getlist('group')
+    function_filter = request.GET.getlist('function')
     senior_emea_only = request.GET.get('senior_emea', '')
 
     events = ChangeEvent.objects.select_related(
         'person', 'person__company'
     ).order_by('-detected_at')
 
-    if company_filter:
-        events = events.filter(person__company__name=company_filter)
-
     events = list(events[:200])
 
-    # Annotate each event with region and function
+    # Annotate each event with region, function, seniority group
     for e in events:
         latest_snap = PersonSnapshot.objects.filter(
             person=e.person
         ).order_by('-scraped_at').first()
-        e.region   = infer_region(latest_snap.location if latest_snap else '')
-        e.function = infer_function_web(
-            e.new_title or e.previous_title or ''
-        )
+        e.region          = infer_region(latest_snap.location if latest_snap else '')
+        e.function        = infer_function_web(e.new_title or e.previous_title or '')
         e.seniority_group = infer_seniority_group(
             latest_snap.seniority if latest_snap else ''
         )
 
     # Apply filters
+    if company_filter:
+        events = [e for e in events if e.person.company.name in company_filter]
     if region_filter:
-        events = [e for e in events if e.region == region_filter]
+        events = [e for e in events if e.region in region_filter]
     if group_filter:
-        events = [e for e in events if e.seniority_group == group_filter]
+        events = [e for e in events if e.seniority_group in group_filter]
     if function_filter:
-        events = [e for e in events if e.function == function_filter]
+        events = [e for e in events if e.function in function_filter]
     if senior_emea_only:
         events = [e for e in events if
                   e.seniority_group == 'Senior' and
@@ -193,28 +188,28 @@ def dashboard(request):
     promotions = [e for e in events if e.event_type in ('promotion', 'role_change')]
 
     return render(request, 'tracker/dashboard.html', {
-        'latest_run':      latest_run,
-        'companies':       companies,
-        'company_filter':  company_filter,
-        'region_filter':   region_filter,
-        'group_filter':    group_filter,
-        'function_filter': function_filter,
+        'latest_run':       latest_run,
+        'companies':        companies,
+        'company_filter':   company_filter,
+        'region_filter':    region_filter,
+        'group_filter':     group_filter,
+        'function_filter':  function_filter,
         'senior_emea_only': senior_emea_only,
-        'events':          events,
-        'hires':           hires,
-        'leavers':         leavers,
-        'promotions':      promotions,
+        'events':           events,
+        'hires':            hires,
+        'leavers':          leavers,
+        'promotions':       promotions,
     })
 
 
 @login_required
 def people(request):
     search           = request.GET.get('q', '')
-    company_filter   = request.GET.get('company', '')
-    seniority_filter = request.GET.get('seniority', '')
-    group_filter     = request.GET.get('group', '')
-    region_filter    = request.GET.get('region', '')
-    function_filter  = request.GET.get('function', '')
+    company_filter   = request.GET.getlist('company')
+    seniority_filter = request.GET.getlist('seniority')
+    group_filter     = request.GET.getlist('group')
+    region_filter    = request.GET.getlist('region')
+    function_filter  = request.GET.getlist('function')
     last_seen_filter = request.GET.get('last_seen', '')
     export           = request.GET.get('export', '')
 
@@ -244,19 +239,19 @@ def people(request):
                   search.lower() in (p.job_title or '').lower()]
 
     if company_filter:
-        people = [p for p in people if p.person.company.name == company_filter]
+        people = [p for p in people if p.person.company.name in company_filter]
 
     if seniority_filter:
-        people = [p for p in people if p.seniority == seniority_filter]
+        people = [p for p in people if p.seniority in seniority_filter]
 
     if group_filter:
-        people = [p for p in people if p.seniority_group == group_filter]
+        people = [p for p in people if p.seniority_group in group_filter]
 
     if region_filter:
-        people = [p for p in people if p.region == region_filter]
+        people = [p for p in people if p.region in region_filter]
 
     if function_filter:
-        people = [p for p in people if p.function == function_filter]
+        people = [p for p in people if p.function in function_filter]
 
     if last_seen_filter:
         cutoff = date.today() - timedelta(days=int(last_seen_filter))
