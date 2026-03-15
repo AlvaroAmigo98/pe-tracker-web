@@ -83,7 +83,7 @@ WSGI_APPLICATION = 'petracker.wsgi.application'
 DATABASES = {
     'default': dj_database_url.parse(
         "postgresql://postgres.dvtkpsqcwfekntaslwwn:{}@aws-1-eu-west-2.pooler.supabase.com:6543/postgres?sslmode=require".format(
-            os.environ.get('SUPABASE_DB_PASSWORD', '')
+            os.environ.get('SUPABASE_DB_PASSWORD', 'PEtracker2026')
         ),
         conn_max_age=600,
         ssl_require=True,
