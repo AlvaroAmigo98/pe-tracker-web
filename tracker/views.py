@@ -2,12 +2,11 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from .models import Company, Person, PersonSnapshot, ChangeEvent, ScrapeRun
+
 import openpyxl
 from openpyxl.styles import Font, PatternFill
+from openpyxl.utils import get_column_letter
 from datetime import date, timedelta
-
-# ADD THESE IMPORTS
-from collections import defaultdict
 
 
 SENIORITY_GROUP = {
@@ -147,26 +146,24 @@ def dashboard(request):
     senior_emea_only = request.GET.get('senior_emea', '')
     export           = request.GET.get('export', '')
 
-    # Load ALL historical events, newest first
     events_qs = ChangeEvent.objects.select_related(
         'person', 'person__company'
     ).order_by('-detected_at', '-id')
 
     events = list(events_qs)
 
-    # Bulk load latest snapshot per person to avoid one query per event
     person_ids = list({e.person_id for e in events})
 
-    latest_snapshots_qs = PersonSnapshot.objects.filter(
-        person_id__in=person_ids
-    ).select_related('person').order_by('person_id', '-scraped_at', '-id')
-
     latest_snapshot_by_person = {}
-    for snap in latest_snapshots_qs:
-        if snap.person_id not in latest_snapshot_by_person:
-            latest_snapshot_by_person[snap.person_id] = snap
+    if person_ids:
+        latest_snapshots_qs = PersonSnapshot.objects.filter(
+            person_id__in=person_ids
+        ).select_related('person').order_by('person_id', '-scraped_at', '-id')
 
-    # Annotate events
+        for snap in latest_snapshots_qs:
+            if snap.person_id not in latest_snapshot_by_person:
+                latest_snapshot_by_person[snap.person_id] = snap
+
     for e in events:
         latest_snap = latest_snapshot_by_person.get(e.person_id)
         e.region = infer_region(latest_snap.location if latest_snap else '')
@@ -175,7 +172,6 @@ def dashboard(request):
             latest_snap.seniority if latest_snap else ''
         )
 
-    # Apply filters AFTER enrichment
     if company_filter:
         events = [e for e in events if e.person.company.name in company_filter]
 
@@ -200,7 +196,6 @@ def dashboard(request):
     leavers = [e for e in events if e.event_type == 'leaver']
     promotions = [e for e in events if e.event_type in ('promotion', 'role_change')]
 
-    # Excel export of CURRENTLY FILTERED dashboard events
     if export == 'excel':
         wb = openpyxl.Workbook()
         ws = wb.active
@@ -229,7 +224,7 @@ def dashboard(request):
             6: 32, 7: 16, 8: 16, 9: 16, 10: 18, 11: 16
         }
         for col_idx, width in widths.items():
-            ws.column_dimensions[openpyxl.utils.get_column_letter(col_idx)].width = width
+            ws.column_dimensions[get_column_letter(col_idx)].width = width
 
         for row_num, e in enumerate(events, start=2):
             ws.cell(row=row_num, column=1, value=e.person.full_name)
@@ -265,4 +260,113 @@ def dashboard(request):
         'hires':            hires,
         'leavers':          leavers,
         'promotions':       promotions,
+    })
+
+
+@login_required
+def people(request):
+    search           = request.GET.get('q', '')
+    company_filter   = request.GET.getlist('company')
+    seniority_filter = request.GET.getlist('seniority')
+    group_filter     = request.GET.getlist('group')
+    region_filter    = request.GET.getlist('region')
+    function_filter  = request.GET.getlist('function')
+    last_seen_filter = request.GET.get('last_seen', '')
+    export           = request.GET.get('export', '')
+
+    companies   = Company.objects.order_by('name')
+    seniorities = PersonSnapshot.objects.values_list(
+        'seniority', flat=True
+    ).distinct().order_by('seniority')
+
+    latest_snapshots = PersonSnapshot.objects.select_related(
+        'person', 'person__company'
+    ).order_by('person__company__name', 'person__full_name', '-scraped_at')
+
+    seen = set()
+    people = []
+    for snap in latest_snapshots:
+        pid = snap.person_id
+        if pid not in seen:
+            seen.add(pid)
+            snap.region = infer_region(snap.location or '')
+            snap.seniority_group = infer_seniority_group(snap.seniority or '')
+            snap.function = infer_function_web(snap.job_title or '')
+            people.append(snap)
+
+    if search:
+        people = [
+            p for p in people if
+            search.lower() in p.person.full_name.lower() or
+            search.lower() in (p.job_title or '').lower()
+        ]
+
+    if company_filter:
+        people = [p for p in people if p.person.company.name in company_filter]
+
+    if seniority_filter:
+        people = [p for p in people if p.seniority in seniority_filter]
+
+    if group_filter:
+        people = [p for p in people if p.seniority_group in group_filter]
+
+    if region_filter:
+        people = [p for p in people if p.region in region_filter]
+
+    if function_filter:
+        people = [p for p in people if p.function in function_filter]
+
+    if last_seen_filter:
+        cutoff = date.today() - timedelta(days=int(last_seen_filter))
+        people = [p for p in people if p.scraped_at >= cutoff]
+
+    if export == 'excel':
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "PE Tracker Export"
+
+        headers = [
+            'Name', 'Company', 'Title', 'Seniority', 'Group',
+            'Function', 'Region', 'Location', 'Last Seen'
+        ]
+        header_fill = PatternFill(start_color="1F3864", end_color="1F3864", fill_type="solid")
+        header_font = Font(bold=True, color="FFFFFF")
+
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col, value=header)
+            cell.fill = header_fill
+            cell.font = header_font
+            ws.column_dimensions[get_column_letter(col)].width = 20
+
+        for row, snap in enumerate(people, 2):
+            ws.cell(row=row, column=1, value=snap.person.full_name)
+            ws.cell(row=row, column=2, value=snap.person.company.name)
+            ws.cell(row=row, column=3, value=snap.job_title or '—')
+            ws.cell(row=row, column=4, value=snap.seniority or '—')
+            ws.cell(row=row, column=5, value=snap.seniority_group)
+            ws.cell(row=row, column=6, value=snap.function)
+            ws.cell(row=row, column=7, value=snap.region)
+            ws.cell(row=row, column=8, value=snap.location or '—')
+            ws.cell(row=row, column=9, value=str(snap.scraped_at))
+
+        ws.freeze_panes = "A2"
+
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename="pe_tracker_export.xlsx"'
+        wb.save(response)
+        return response
+
+    return render(request, 'tracker/people.html', {
+        'people':           people,
+        'companies':        companies,
+        'seniorities':      seniorities,
+        'search':           search,
+        'company_filter':   company_filter,
+        'seniority_filter': seniority_filter,
+        'group_filter':     group_filter,
+        'region_filter':    region_filter,
+        'function_filter':  function_filter,
+        'last_seen_filter': last_seen_filter,
     })
