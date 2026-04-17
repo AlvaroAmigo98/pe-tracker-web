@@ -15,7 +15,9 @@
 <div class="page-title">Dashboard</div>
 
 {% if latest_run %}
-<p class="subtle" style="margin-bottom:18px">Last scrape: {{ latest_run.ran_at|date:"d M Y, H:i" }} — {{ latest_run.total_rows|default:"0" }} employees across {{ latest_run.firms_ok }} firms</p>
+<p class="subtle" style="margin-bottom:18px">
+  Last scrape: {{ latest_run.ran_at|date:"d M Y, H:i" }} — {{ latest_run.total_rows|default:"0" }} employees across {{ latest_run.firms_ok }} firms
+</p>
 {% endif %}
 
 <div class="stats-row">
@@ -36,7 +38,6 @@
 <form method="get" id="dash-form">
   <div class="filter-bar" style="margin-bottom:16px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
 
-    <!-- Company -->
     <div class="dropdown">
       <div class="dropdown-btn" onclick="toggleDropdown('d-company')">
         Companies {% if company_filter %}<span class="count">{{ company_filter|length }}</span>{% endif %} ▾
@@ -53,7 +54,6 @@
       </div>
     </div>
 
-    <!-- Level -->
     <div class="dropdown">
       <div class="dropdown-btn" onclick="toggleDropdown('d-group')">
         Level {% if group_filter %}<span class="count">{{ group_filter|length }}</span>{% endif %} ▾
@@ -64,7 +64,6 @@
       </div>
     </div>
 
-    <!-- Region -->
     <div class="dropdown">
       <div class="dropdown-btn" onclick="toggleDropdown('d-region')">
         Region {% if region_filter %}<span class="count">{{ region_filter|length }}</span>{% endif %} ▾
@@ -77,7 +76,6 @@
       </div>
     </div>
 
-    <!-- Function -->
     <div class="dropdown">
       <div class="dropdown-btn" onclick="toggleDropdown('d-function')">
         Function {% if function_filter %}<span class="count">{{ function_filter|length }}</span>{% endif %} ▾
@@ -96,6 +94,7 @@
     </div>
 
     <a href="?senior_emea=1" class="btn" style="background:#a32d2d;text-decoration:none">⚑ Senior EMEA Leavers</a>
+    <button type="submit" name="export" value="excel" class="btn" style="background:#1d6f42;">Download Excel</button>
     <a href="/" class="btn" style="background:#888;text-decoration:none">Clear</a>
   </div>
 </form>
@@ -103,10 +102,11 @@
 <div class="card">
   <div class="card-header">
     <span class="card-title">
-      {% if senior_emea_only %}Senior EMEA Investment Leavers{% else %}Recent changes{% endif %}
+      {% if senior_emea_only %}Senior EMEA Investment Leavers{% else %}Historical changes{% endif %}
     </span>
     <span class="subtle">{{ events|length }} events</span>
   </div>
+
   {% if events %}
   <table>
     <thead>
