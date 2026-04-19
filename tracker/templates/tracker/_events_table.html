@@ -1,0 +1,47 @@
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Change</th>
+      <th>Detail</th>
+      <th>Function</th>
+      <th>Region</th>
+      <th>Date</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for e in events %}
+    <tr>
+      <td class="name-cell">{{ e.person.full_name }}</td>
+      <td>
+        {% if e.event_type == 'hire' %}<span class="badge badge-hire">Hire</span>
+        {% elif e.event_type == 'leaver' %}<span class="badge badge-leave">Leaver</span>
+        {% elif e.event_type == 'promotion' %}<span class="badge badge-promo">Promotion</span>
+        {% else %}<span class="badge badge-role">Role change</span>{% endif %}
+      </td>
+      <td>
+        {% if e.previous_title and e.new_title %}
+          <span class="subtle">{{ e.previous_title }} → {{ e.new_title }}</span>
+        {% elif e.new_title %}{{ e.new_title }}
+        {% elif e.previous_title %}<span class="subtle">Last role: {{ e.previous_title }}</span>
+        {% endif %}
+      </td>
+      <td>
+        {% if e.function == 'Buyout / PE' %}<span class="badge badge-promo">Buyout / PE</span>
+        {% elif e.function == 'Investment (General)' %}<span class="badge badge-hire">Investment</span>
+        {% elif e.function == 'Advisory' %}<span class="badge badge-hire">Advisory</span>
+        {% elif e.function == 'Infrastructure' %}<span class="badge badge-role">Infrastructure</span>
+        {% elif e.function == 'Operations' %}<span class="badge" style="background:#f1efe8;color:#5f5e5a">Operations</span>
+        {% else %}<span class="subtle">{{ e.function }}</span>{% endif %}
+      </td>
+      <td>
+        {% if e.region == 'EMEA' %}<span class="badge" style="background:#e1f5ee;color:#0f6e56">EMEA</span>
+        {% elif e.region == 'North America' %}<span class="badge" style="background:#e6f1fb;color:#185fa5">N. America</span>
+        {% elif e.region == 'APAC' %}<span class="badge" style="background:#faeeda;color:#854f0b">APAC</span>
+        {% else %}<span class="subtle">—</span>{% endif %}
+      </td>
+      <td class="subtle">{{ e.detected_at|date:"d M Y" }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
