@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.db.models import Count, Max, Q
@@ -173,6 +173,7 @@ def _make_excel_response(filename, headers, rows, col_widths):
 
 @login_required
 def dashboard(request):
+    today            = date.today()
     latest_run       = ScrapeRun.objects.order_by('-ran_at').first()
     companies        = Company.objects.order_by('name')
     company_filter   = request.GET.getlist('company')
@@ -181,10 +182,15 @@ def dashboard(request):
     function_filter  = request.GET.getlist('function')
     senior_emea_only = request.GET.get('senior_emea', '')
     export           = request.GET.get('export', '')
+    days             = request.GET.get('days', '')
 
     events_qs = ChangeEvent.objects.select_related(
         'person', 'person__company'
     ).order_by('-detected_at', '-id')
+
+    if days and days.isdigit():
+        cutoff = today - timedelta(days=int(days))
+        events_qs = events_qs.filter(detected_at__gte=cutoff)
 
     events = list(events_qs)
 
@@ -246,18 +252,38 @@ def dashboard(request):
         widths = {1:28,2:24,3:22,4:18,5:32,6:32,7:16,8:16,9:16,10:18,11:16}
         return _make_excel_response('historical_changes.xlsx', headers, rows, widths)
 
+    # Watchlist activity since last visit (Feature 10)
+    watchlist = list(request.session.get('watchlist', []))
+    last_visit_str = request.session.get('last_visit')
+    watchlist_activity = []
+    if watchlist and last_visit_str:
+        try:
+            last_visit_dt = date.fromisoformat(last_visit_str)
+            watchlist_activity = list(
+                ChangeEvent.objects.filter(
+                    person__company_id__in=watchlist,
+                    detected_at__gt=last_visit_dt,
+                ).select_related('person', 'person__company').order_by('-detected_at')[:10]
+            )
+        except ValueError:
+            pass
+    request.session['last_visit'] = str(today)
+
     return render(request, 'tracker/dashboard.html', {
-        'latest_run':       latest_run,
-        'companies':        companies,
-        'company_filter':   company_filter,
-        'region_filter':    region_filter,
-        'group_filter':     group_filter,
-        'function_filter':  function_filter,
-        'senior_emea_only': senior_emea_only,
-        'events':           events,
-        'hires':            hires,
-        'leavers':          leavers,
-        'promotions':       promotions,
+        'latest_run':        latest_run,
+        'companies':         companies,
+        'company_filter':    company_filter,
+        'region_filter':     region_filter,
+        'group_filter':      group_filter,
+        'function_filter':   function_filter,
+        'senior_emea_only':  senior_emea_only,
+        'events':            events,
+        'hires':             hires,
+        'leavers':           leavers,
+        'promotions':        promotions,
+        'days':              days,
+        'watchlist':         watchlist,
+        'watchlist_activity': watchlist_activity,
     })
 
 
@@ -394,11 +420,13 @@ def firms(request):
         'promotions': sum(f['promotions'] for f in firm_stats),
     }
 
+    watchlist = list(request.session.get('watchlist', []))
     return render(request, 'tracker/firms.html', {
-        'firm_stats': firm_stats,
-        'sort_by':    sort_by,
-        'totals':     totals,
+        'firm_stats':  firm_stats,
+        'sort_by':     sort_by,
+        'totals':      totals,
         'latest_date': latest_date,
+        'watchlist':   watchlist,
     })
 
 
@@ -479,6 +507,7 @@ def firm_detail(request, company_id):
         ]
         return _make_excel_response(f'{company.name}_{tab}.xlsx', headers, rows, {i: 22 for i in range(1, 10)})
 
+    watchlist = list(request.session.get('watchlist', []))
     return render(request, 'tracker/firm_detail.html', {
         'company':    company,
         'tab':        tab,
@@ -488,6 +517,7 @@ def firm_detail(request, company_id):
         'leavers':    leavers,
         'promotions': promotions,
         'all_events': events,
+        'is_watched': company.id in watchlist,
     })
 
 
@@ -665,4 +695,95 @@ def signals(request):
         'health_chart_json':  health_chart_json,
         'pyramid_chart_json': pyramid_chart_json,
         'today':              today,
+    })
+
+
+@login_required
+def search(request):
+    q = request.GET.get('q', '').strip()
+    firm_results = []
+    person_results = []
+    event_results = []
+    if q:
+        firm_results = list(Company.objects.filter(name__icontains=q).order_by('name')[:20])
+        person_results = list(
+            PersonSnapshot.objects.filter(
+                Q(person__full_name__icontains=q) | Q(job_title__icontains=q)
+            ).order_by('person_id', '-scraped_at').distinct('person_id')
+            .select_related('person', 'person__company')[:30]
+        )
+        for snap in person_results:
+            snap.region = infer_region(snap.location or '')
+            snap.seniority_group = infer_seniority_group(snap.seniority or '')
+            snap.function = infer_function_web(snap.job_title or '')
+        event_results = list(
+            ChangeEvent.objects.filter(
+                Q(person__full_name__icontains=q) |
+                Q(new_title__icontains=q) |
+                Q(previous_title__icontains=q)
+            ).select_related('person', 'person__company').order_by('-detected_at')[:20]
+        )
+    return render(request, 'tracker/search_results.html', {
+        'q':              q,
+        'firm_results':   firm_results,
+        'person_results': person_results,
+        'event_results':  event_results,
+    })
+
+
+@login_required
+def watchlist_toggle(request, company_id):
+    if request.method != 'POST':
+        return redirect('firms')
+    watchlist = list(request.session.get('watchlist', []))
+    if company_id in watchlist:
+        watchlist.remove(company_id)
+    else:
+        watchlist.append(company_id)
+    request.session['watchlist'] = watchlist
+    next_url = request.POST.get('next') or request.META.get('HTTP_REFERER') or '/'
+    return redirect(next_url)
+
+
+@login_required
+def firm_report(request, company_id):
+    company = get_object_or_404(Company, id=company_id)
+
+    team_qs = PersonSnapshot.objects.filter(
+        person__company=company
+    ).order_by('person_id', '-scraped_at').distinct('person_id').select_related('person')
+
+    snap_by_person = {}
+    team = []
+    for snap in team_qs:
+        snap.region = infer_region(snap.location or '')
+        snap.seniority_group = infer_seniority_group(snap.seniority or '')
+        snap.function = infer_function_web(snap.job_title or '')
+        snap_by_person[snap.person_id] = snap
+        team.append(snap)
+    team.sort(key=lambda p: p.person.full_name)
+
+    events_qs = ChangeEvent.objects.filter(
+        person__company=company
+    ).select_related('person').order_by('-detected_at', '-id')
+    events = list(events_qs)
+    for e in events:
+        snap = snap_by_person.get(e.person_id)
+        e.region = infer_region(snap.location if snap else '')
+        e.function = infer_function_web(e.new_title or e.previous_title or '')
+        e.seniority_group = infer_seniority_group(snap.seniority if snap else '')
+
+    hires      = [e for e in events if e.event_type == 'hire']
+    leavers    = [e for e in events if e.event_type == 'leaver']
+    promotions = [e for e in events if e.event_type in ('promotion', 'role_change')]
+    senior_leavers = [e for e in leavers if e.seniority_group == 'Senior']
+
+    return render(request, 'tracker/firm_report.html', {
+        'company':        company,
+        'team':           team,
+        'hires':          hires,
+        'leavers':        leavers,
+        'promotions':     promotions,
+        'senior_leavers': senior_leavers,
+        'generated_at':   date.today(),
     })

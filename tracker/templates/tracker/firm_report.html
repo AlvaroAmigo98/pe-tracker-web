@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ company.name }} — PE Tracker Report</title>
+  <style>
+    @media print {
+      @page { margin: 18mm 16mm; }
+      .no-print { display: none !important; }
+      body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color: #1a1a2e; background: #fff; line-height: 1.5; }
+
+    .header { background: #06080F; color: white; padding: 28px 32px; display: flex; align-items: flex-start; justify-content: space-between; }
+    .header-brand { font-size: 11px; color: rgba(255,255,255,.5); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .1em; }
+    .header-firm { font-size: 26px; font-weight: 800; color: white; letter-spacing: -0.5px; }
+    .header-meta { font-size: 11px; color: rgba(255,255,255,.5); margin-top: 4px; }
+    .header-right { text-align: right; font-size: 11px; color: rgba(255,255,255,.5); }
+
+    .content { padding: 28px 32px; }
+
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px; }
+    .stat { border: 1px solid #E5E7EB; border-radius: 8px; padding: 14px 16px; }
+    .stat-num { font-size: 28px; font-weight: 800; line-height: 1; letter-spacing: -1px; }
+    .stat-label { font-size: 10px; color: #6B7280; text-transform: uppercase; letter-spacing: .07em; margin-top: 4px; font-weight: 600; }
+
+    .section { margin-bottom: 28px; }
+    .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: #6B7280; border-bottom: 1px solid #E5E7EB; padding-bottom: 6px; margin-bottom: 12px; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 6px 10px; font-size: 9px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: .08em; background: #F9FAFB; border-bottom: 1px solid #E5E7EB; }
+    td { padding: 7px 10px; border-bottom: 1px solid #F3F4F6; font-size: 11px; color: #374151; }
+    tr:last-child td { border-bottom: none; }
+
+    .badge { display: inline-flex; align-items: center; font-size: 9px; font-weight: 700; padding: 1px 7px; border-radius: 99px; letter-spacing: .02em; }
+    .b-hire   { background: #D1FAE5; color: #065F46; }
+    .b-leave  { background: #FEE2E2; color: #991B1B; }
+    .b-promo  { background: #FEF3C7; color: #92400E; }
+    .b-senior { background: #FEF3C7; color: #92400E; }
+    .b-junior { background: #DBEAFE; color: #1E40AF; }
+
+    .highlight-box { background: #FFF7ED; border: 1px solid #FED7AA; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px; }
+    .highlight-box .hb-title { font-size: 11px; font-weight: 700; color: #9A3412; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .07em; }
+
+    .print-btn { position: fixed; bottom: 24px; right: 24px; background: #6366F1; color: white; border: none; border-radius: 8px; padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(99,102,241,.4); }
+    .print-btn:hover { background: #4F46E5; }
+
+    .footer { border-top: 1px solid #E5E7EB; padding: 12px 32px; font-size: 10px; color: #9CA3AF; display: flex; justify-content: space-between; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-brand">PE Tracker · Firm Report</div>
+    <div class="header-firm">{{ company.name }}</div>
+    <div class="header-meta">Generated {{ generated_at|date:"d M Y" }} · Confidential</div>
+  </div>
+  <div class="header-right">
+    <div style="font-size:28px;font-weight:800;color:white">{{ team|length }}</div>
+    <div>tracked employees</div>
+  </div>
+</div>
+
+<div class="content">
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-num" style="color:#059669">{{ hires|length }}</div>
+      <div class="stat-label">Hires</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" style="color:#DC2626">{{ leavers|length }}</div>
+      <div class="stat-label">Leavers</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" style="color:#D97706">{{ promotions|length }}</div>
+      <div class="stat-label">Promotions</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" style="color:#DC2626">{{ senior_leavers|length }}</div>
+      <div class="stat-label">Senior leavers</div>
+    </div>
+  </div>
+
+  {% if senior_leavers %}
+  <div class="highlight-box">
+    <div class="hb-title">Senior departures ({{ senior_leavers|length }})</div>
+    <table>
+      <thead><tr><th>Name</th><th>Previous title</th><th>Date</th></tr></thead>
+      <tbody>
+        {% for e in senior_leavers %}
+        <tr>
+          <td style="font-weight:600">{{ e.person.full_name }}</td>
+          <td>{{ e.previous_title|default:"—" }}</td>
+          <td>{{ e.detected_at|date:"d M Y" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  <div class="section">
+    <div class="section-title">Current team ({{ team|length }})</div>
+    <table>
+      <thead><tr><th>Name</th><th>Title</th><th>Level</th><th>Function</th><th>Region</th><th>Location</th></tr></thead>
+      <tbody>
+        {% for snap in team %}
+        <tr>
+          <td style="font-weight:600">{{ snap.person.full_name }}</td>
+          <td>{{ snap.job_title|default:"—" }}</td>
+          <td><span class="badge {% if snap.seniority_group == 'Senior' %}b-senior{% else %}b-junior{% endif %}">{{ snap.seniority_group }}</span></td>
+          <td>{{ snap.function }}</td>
+          <td>{{ snap.region }}</td>
+          <td>{{ snap.location|default:"—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if leavers %}
+  <div class="section">
+    <div class="section-title">Leavers ({{ leavers|length }})</div>
+    <table>
+      <thead><tr><th>Name</th><th>Previous title</th><th>Level</th><th>Date</th></tr></thead>
+      <tbody>
+        {% for e in leavers %}
+        <tr>
+          <td style="font-weight:600">{{ e.person.full_name }}</td>
+          <td>{{ e.previous_title|default:"—" }}</td>
+          <td><span class="badge {% if e.seniority_group == 'Senior' %}b-senior{% else %}b-junior{% endif %}">{{ e.seniority_group }}</span></td>
+          <td>{{ e.detected_at|date:"d M Y" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if hires %}
+  <div class="section">
+    <div class="section-title">Hires ({{ hires|length }})</div>
+    <table>
+      <thead><tr><th>Name</th><th>New title</th><th>Date</th></tr></thead>
+      <tbody>
+        {% for e in hires %}
+        <tr>
+          <td style="font-weight:600">{{ e.person.full_name }}</td>
+          <td>{{ e.new_title|default:"—" }}</td>
+          <td>{{ e.detected_at|date:"d M Y" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+</div>
+
+<div class="footer">
+  <span>{{ company.name }} · PE Tracker Report</span>
+  <span>Generated {{ generated_at|date:"d M Y" }}</span>
+</div>
+
+<button class="print-btn no-print" onclick="window.print()">Print / Save PDF</button>
+
+</body>
+</html>

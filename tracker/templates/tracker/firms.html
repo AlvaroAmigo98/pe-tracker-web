@@ -65,7 +65,16 @@
         <td>{% if f.leavers %}<span style="color:var(--leave);font-weight:700">{{ f.leavers }}</span>{% else %}<span class="subtle">—</span>{% endif %}</td>
         <td>{% if f.promotions %}<span style="color:var(--promo);font-weight:700">{{ f.promotions }}</span>{% else %}<span class="subtle">—</span>{% endif %}</td>
         <td>{% if f.activity %}<span class="badge badge-role">{{ f.activity }}</span>{% else %}<span class="subtle">—</span>{% endif %}</td>
-        <td><a href="/firms/{{ f.company.id }}/" style="color:var(--accent);font-size:12px;font-weight:600;text-decoration:none" onclick="event.stopPropagation()">View →</a></td>
+        <td onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:8px;border:none">
+          <a href="/firms/{{ f.company.id }}/" style="color:var(--accent);font-size:12px;font-weight:600;text-decoration:none">View →</a>
+          <form method="post" action="{% url 'watchlist_toggle' f.company.id %}" style="display:inline">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <button type="submit" style="background:none;border:none;cursor:pointer;font-size:15px;color:{% if f.company.id in watchlist %}#FBBF24{% else %}var(--text-3){% endif %};padding:0;line-height:1" title="{% if f.company.id in watchlist %}Unwatch{% else %}Watch{% endif %}">
+              {% if f.company.id in watchlist %}★{% else %}☆{% endif %}
+            </button>
+          </form>
+        </td>
       </tr>
       {% empty %}
       <tr><td colspan="7"><div class="empty">No firms found.</div></td></tr>

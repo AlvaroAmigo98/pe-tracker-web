@@ -5,6 +5,16 @@
   <a href="{% url 'firms' %}" style="color:var(--text-2);text-decoration:none;font-size:13px;font-weight:500;transition:color .15s" onmouseover="this.style.color='var(--text-1)'" onmouseout="this.style.color='var(--text-2)'">← All firms</a>
   <div style="width:1px;height:16px;background:var(--border)"></div>
   <span style="font-size:20px;font-weight:800;color:var(--text-1);letter-spacing:-0.4px">{{ company.name }}</span>
+  <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+    <a href="{% url 'firm_report' company.id %}" target="_blank" class="btn-ghost" style="height:32px;padding:5px 14px;font-size:12px">Print Report</a>
+    <form method="post" action="{% url 'watchlist_toggle' company.id %}" style="display:inline">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <button type="submit" class="btn-ghost" style="height:32px;padding:5px 12px;font-size:16px;line-height:1" title="{% if is_watched %}Remove from watchlist{% else %}Add to watchlist{% endif %}">
+        {% if is_watched %}★{% else %}☆{% endif %}
+      </button>
+    </form>
+  </div>
 </div>
 
 <div class="stats-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:24px">
@@ -35,6 +45,7 @@
   <a href="?tab=leavers{% if search %}&q={{ search }}{% endif %}"    class="tab-btn {% if tab == 'leavers'    %}active{% endif %}">Leavers ({{ leavers|length }})</a>
   <a href="?tab=hires{% if search %}&q={{ search }}{% endif %}"      class="tab-btn {% if tab == 'hires'      %}active{% endif %}">Hires ({{ hires|length }})</a>
   <a href="?tab=promotions{% if search %}&q={{ search }}{% endif %}" class="tab-btn {% if tab == 'promotions' %}active{% endif %}">Promotions ({{ promotions|length }})</a>
+  <a href="?tab=timeline"                                            class="tab-btn {% if tab == 'timeline'   %}active{% endif %}">Timeline</a>
 </div>
 
 <form method="get" id="search-form">
@@ -113,6 +124,39 @@
   <div class="card-header"><span class="card-title">Promotions &amp; role changes — {{ promotions|length }}</span></div>
   {% if promotions %}{% include 'tracker/_events_table.html' with events=promotions %}
   {% else %}<div class="empty">No promotions recorded{% if search %} matching "{{ search }}"{% endif %}.</div>{% endif %}
+</div>
+
+{% elif tab == 'timeline' %}
+<div class="card">
+  <div class="card-header"><span class="card-title">Timeline — {{ all_events|length }} events</span></div>
+  <div style="padding:24px 28px">
+    {% for e in all_events %}
+    <div style="display:flex;gap:18px;margin-bottom:0">
+      <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+        <div style="width:10px;height:10px;border-radius:50%;margin-top:3px;flex-shrink:0;
+          background:{% if e.event_type == 'hire' %}var(--hire){% elif e.event_type == 'leaver' %}var(--leave){% else %}var(--promo){% endif %}">
+        </div>
+        {% if not forloop.last %}<div style="width:1px;flex:1;min-height:28px;background:var(--border);margin:4px 0"></div>{% endif %}
+      </div>
+      <div style="padding-bottom:20px;flex:1">
+        <div style="font-size:11px;color:var(--text-2);margin-bottom:2px">{{ e.detected_at|date:"d M Y" }}</div>
+        <span style="font-weight:600;color:var(--text-1)">{{ e.person.full_name }}</span>
+        <span style="margin-left:8px">
+          {% if e.event_type == 'hire' %}<span class="badge badge-hire">Hire</span>
+          {% elif e.event_type == 'leaver' %}<span class="badge badge-leave">Leaver</span>
+          {% else %}<span class="badge badge-promo">Promotion</span>{% endif %}
+        </span>
+        <div style="font-size:12px;color:var(--text-2);margin-top:2px">
+          {% if e.event_type == 'hire' %}Joined as {{ e.new_title|default:"—" }}
+          {% elif e.event_type == 'leaver' %}Left — was {{ e.previous_title|default:"—" }}
+          {% else %}{{ e.previous_title|default:"—" }} → {{ e.new_title|default:"—" }}{% endif %}
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="empty">No events recorded.</div>
+    {% endfor %}
+  </div>
 </div>
 {% endif %}
 

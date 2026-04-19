@@ -1,0 +1,112 @@
+{% extends 'tracker/base.html' %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <div class="page-title">Search{% if q %}: "{{ q }}"{% endif %}</div>
+    {% if q %}
+    <div class="page-meta">{{ firm_results|length }} firm{{ firm_results|length|pluralize }} · {{ person_results|length }} person{{ person_results|length|pluralize }} · {{ event_results|length }} event{{ event_results|length|pluralize }}</div>
+    {% endif %}
+  </div>
+</div>
+
+<form method="get" style="margin-bottom:24px">
+  <div class="filter-bar">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search firms, people, events…" style="min-width:360px" autofocus>
+    <button type="submit" class="btn">Search</button>
+    <a href="{% url 'search' %}" class="btn btn-gray">Clear</a>
+  </div>
+</form>
+
+{% if not q %}
+<div class="empty" style="padding:80px">Type something above to search across firms, people and events.</div>
+{% else %}
+
+{% if firm_results %}
+<div class="card" style="margin-bottom:20px">
+  <div class="card-header"><span class="card-title">Firms ({{ firm_results|length }})</span></div>
+  <table>
+    <thead><tr><th>Name</th><th></th></tr></thead>
+    <tbody>
+      {% for c in firm_results %}
+      <tr style="cursor:pointer" onclick="window.location='/firms/{{ c.id }}/'">
+        <td class="name-cell">{{ c.name }}</td>
+        <td><a href="/firms/{{ c.id }}/" style="color:var(--accent);font-size:12px;font-weight:600;text-decoration:none" onclick="event.stopPropagation()">View →</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if person_results %}
+<div class="card" style="margin-bottom:20px">
+  <div class="card-header"><span class="card-title">People ({{ person_results|length }})</span></div>
+  <table>
+    <thead><tr><th>Name</th><th>Company</th><th>Title</th><th>Level</th><th>Function</th><th>Region</th></tr></thead>
+    <tbody>
+      {% for snap in person_results %}
+      <tr style="cursor:pointer" onclick="window.location='/firms/{{ snap.person.company_id }}/'">
+        <td class="name-cell">{{ snap.person.full_name }}</td>
+        <td class="subtle">{{ snap.person.company.name }}</td>
+        <td class="subtle">{{ snap.job_title|default:"—" }}</td>
+        <td>
+          {% if snap.seniority_group == 'Senior' %}<span class="badge badge-senior">Senior</span>
+          {% else %}<span class="badge badge-junior">Junior</span>{% endif %}
+        </td>
+        <td>
+          {% if snap.function == 'Buyout / PE' %}<span class="badge badge-buyout">Buyout / PE</span>
+          {% elif snap.function == 'Investment (General)' %}<span class="badge badge-invest">Investment</span>
+          {% elif snap.function == 'Infrastructure' %}<span class="badge badge-infra">Infra</span>
+          {% elif snap.function == 'Real Estate' %}<span class="badge badge-re">Real Estate</span>
+          {% elif snap.function == 'Credit / Debt' %}<span class="badge badge-credit">Credit</span>
+          {% elif snap.function == 'Venture Capital' %}<span class="badge badge-vc">VC</span>
+          {% elif snap.function == 'Advisory' %}<span class="badge badge-advisory">Advisory</span>
+          {% elif snap.function == 'Operations' %}<span class="badge badge-ops">Ops</span>
+          {% else %}<span class="subtle">{{ snap.function }}</span>{% endif %}
+        </td>
+        <td>
+          {% if snap.region == 'EMEA' %}<span class="badge badge-emea">EMEA</span>
+          {% elif snap.region == 'North America' %}<span class="badge badge-na">N. America</span>
+          {% elif snap.region == 'APAC' %}<span class="badge badge-apac">APAC</span>
+          {% else %}<span class="subtle">—</span>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if event_results %}
+<div class="card">
+  <div class="card-header"><span class="card-title">Events ({{ event_results|length }})</span></div>
+  <table>
+    <thead><tr><th>Name</th><th>Company</th><th>Type</th><th>Previous title</th><th>New title</th><th>Date</th></tr></thead>
+    <tbody>
+      {% for e in event_results %}
+      <tr style="cursor:pointer" onclick="window.location='/firms/{{ e.person.company_id }}/?tab={% if e.event_type == 'leaver' %}leavers{% elif e.event_type == 'hire' %}hires{% else %}promotions{% endif %}'">
+        <td class="name-cell">{{ e.person.full_name }}</td>
+        <td class="subtle">{{ e.person.company.name }}</td>
+        <td>
+          {% if e.event_type == 'hire' %}<span class="badge badge-hire">Hire</span>
+          {% elif e.event_type == 'leaver' %}<span class="badge badge-leave">Leaver</span>
+          {% else %}<span class="badge badge-promo">Promotion</span>{% endif %}
+        </td>
+        <td class="subtle">{{ e.previous_title|default:"—" }}</td>
+        <td class="subtle">{{ e.new_title|default:"—" }}</td>
+        <td class="subtle">{{ e.detected_at|date:"d M Y" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if not firm_results and not person_results and not event_results %}
+<div class="empty" style="padding:80px">No results found for "{{ q }}".</div>
+{% endif %}
+
+{% endif %}
+
+{% endblock %}

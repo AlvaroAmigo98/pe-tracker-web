@@ -301,6 +301,10 @@
       <a href="{% url 'firms' %}"     class="{% if request.resolver_match.url_name == 'firms' or request.resolver_match.url_name == 'firm_detail' %}active{% endif %}">Firms</a>
       <a href="{% url 'signals' %}"   class="{% if request.resolver_match.url_name == 'signals' %}active{% endif %}">Signals</a>
     </div>
+    <form action="{% url 'search' %}" method="get" style="flex:0 0 auto;display:flex;align-items:center">
+      <input type="text" name="q" value="{{ request.GET.q }}" placeholder="⌕  Search firms, people…"
+             style="width:220px;border-radius:20px;font-size:12px;height:32px;padding:0 14px;min-width:0">
+    </form>
     <div class="topbar-right">
       <div class="topbar-user">
         <div class="topbar-avatar">{{ request.user.username|slice:":2" }}</div>
