@@ -101,8 +101,7 @@ _db_config.setdefault('OPTIONS', {}).update({
 DATABASES = {'default': _db_config}
 
 import sys
-_all_env_keys = [k for k in os.environ if any(x in k.upper() for x in ('DB', 'DATABASE', 'SUPABASE', 'POSTGRES', 'PASSWORD', 'SECRET', 'RAILWAY'))]
-print(f"[STARTUP] relevant_env_keys={sorted(_all_env_keys)}", file=sys.stderr, flush=True)
+print(f"[STARTUP] ALL_ENV_KEYS={sorted(os.environ.keys())}", file=sys.stderr, flush=True)
 print(f"[STARTUP] DATABASE_URL set={bool(os.environ.get('DATABASE_URL'))} "
       f"SUPABASE_PW_len={len(os.environ.get('SUPABASE_DB_PASSWORD',''))} "
       f"parsed_pw_len={len(_db_config.get('PASSWORD') or '')}",
