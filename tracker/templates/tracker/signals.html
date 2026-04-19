@@ -1,245 +1,431 @@
 {% extends 'tracker/base.html' %}
 {% block content %}
 <style>
-  .signals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-  .signal-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.05em; }
-  .badge-alert  { background: #fcebeb; color: #a32d2d; }
-  .badge-warn   { background: #faeeda; color: #854f0b; }
-  .badge-info   { background: #e6f1fb; color: #185fa5; }
-  .badge-good   { background: #e1f5ee; color: #0f6e56; }
-  .section-label { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
-  .section-label span { font-size: 18px; font-weight: 700; color: #1a1a2e; }
-  .chart-wrap { padding: 18px; position: relative; }
-  .health-net { font-weight: 600; }
-  .health-pos { color: #0f6e56; }
-  .health-neg { color: #a32d2d; }
-  .days-pill { background: #f0f0f0; color: #555; font-size: 11px; border-radius: 99px; padding: 2px 8px; white-space: nowrap; }
-  .follower-names { color: #888; font-size: 12px; max-width: 280px; }
-  @media (max-width: 900px) { .signals-grid { grid-template-columns: 1fr; } }
+  /* ── Design tokens ── */
+  :root {
+    --d-bg:       #06080F;
+    --d-surface:  rgba(255,255,255,0.035);
+    --d-surface2: rgba(255,255,255,0.06);
+    --d-border:   rgba(255,255,255,0.07);
+    --d-border2:  rgba(255,255,255,0.12);
+    --d-text1:    #E8EEFF;
+    --d-text2:    #7B8CAA;
+    --d-text3:    #3E4C63;
+    --red:        #FF3B5C;
+    --red-glow:   rgba(255,59,92,0.18);
+    --amber:      #F59E0B;
+    --amber-glow: rgba(245,158,11,0.18);
+    --blue:       #38BDF8;
+    --blue-glow:  rgba(56,189,248,0.18);
+    --green:      #10B981;
+    --green-glow: rgba(16,185,129,0.18);
+    --purple:     #A78BFA;
+    --purple-glow:rgba(167,139,250,0.18);
+  }
+
+  /* ── Page header ── */
+  .sig-header { margin-bottom: 36px; }
+  .sig-title {
+    font-size: 30px; font-weight: 800; letter-spacing: -0.8px;
+    background: linear-gradient(135deg, #E8EEFF 0%, #7B8CAA 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 6px;
+  }
+  .sig-meta { font-size: 13px; color: var(--d-text2); display: flex; align-items: center; gap: 12px; }
+  .live-dot {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 600; color: var(--green);
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .live-dot::before {
+    content: '';
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+    animation: pulse-dot 2s infinite;
+  }
+  @keyframes pulse-dot {
+    0%,100% { opacity: 1; box-shadow: 0 0 6px var(--green); }
+    50%      { opacity: 0.5; box-shadow: 0 0 12px var(--green); }
+  }
+
+  /* ── Stat cards ── */
+  .sig-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 28px; }
+  .sig-stat {
+    background: var(--d-surface);
+    border: 1px solid var(--d-border);
+    border-radius: 14px;
+    padding: 20px 22px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color .2s, transform .2s;
+  }
+  .sig-stat::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--accent-color, rgba(255,255,255,0.15));
+    border-radius: 14px 14px 0 0;
+  }
+  .sig-stat:hover { border-color: var(--d-border2); transform: translateY(-2px); }
+  .sig-stat-num {
+    font-size: 42px; font-weight: 800; line-height: 1; letter-spacing: -2px;
+    color: var(--accent-color, var(--d-text1));
+    text-shadow: 0 0 30px var(--accent-glow, transparent);
+    margin-bottom: 6px;
+  }
+  .sig-stat-label { font-size: 11px; font-weight: 600; color: var(--d-text2); text-transform: uppercase; letter-spacing: 0.07em; }
+  .sig-stat-icon { position: absolute; top: 18px; right: 20px; font-size: 22px; opacity: 0.12; }
+
+  /* ── Dark cards ── */
+  .dcard {
+    background: var(--d-surface);
+    border: 1px solid var(--d-border);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    backdrop-filter: blur(8px);
+  }
+  .dcard-header {
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--d-border);
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+    background: rgba(255,255,255,0.02);
+  }
+  .dcard-title { font-size: 14px; font-weight: 700; color: var(--d-text1); letter-spacing: -0.2px; }
+  .dcard-sub { font-size: 12px; color: var(--d-text2); margin-top: 3px; line-height: 1.4; }
+
+  /* ── Signal badges ── */
+  .sbadge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 99px;
+    text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap;
+  }
+  .sbadge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+  .sbadge-red    { background: var(--red-glow);    color: var(--red);    border: 1px solid rgba(255,59,92,0.25); }
+  .sbadge-amber  { background: var(--amber-glow);  color: var(--amber);  border: 1px solid rgba(245,158,11,0.25); }
+  .sbadge-blue   { background: var(--blue-glow);   color: var(--blue);   border: 1px solid rgba(56,189,248,0.25); }
+  .sbadge-green  { background: var(--green-glow);  color: var(--green);  border: 1px solid rgba(16,185,129,0.25); }
+  .sbadge-purple { background: var(--purple-glow); color: var(--purple); border: 1px solid rgba(167,139,250,0.25); }
+
+  /* ── Dark tables ── */
+  .dtable { width: 100%; border-collapse: collapse; }
+  .dtable th {
+    padding: 10px 18px; font-size: 10px; font-weight: 700; color: var(--d-text3);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--d-border);
+    white-space: nowrap; text-align: left;
+  }
+  .dtable td { padding: 13px 18px; font-size: 13px; color: var(--d-text2); border-bottom: 1px solid rgba(255,255,255,0.03); }
+  .dtable tbody tr:last-child td { border-bottom: none; }
+  .dtable tbody tr { transition: background .12s; }
+  .dtable tbody tr:hover td { background: rgba(255,255,255,0.03); }
+  .dtable .dn { font-weight: 600; color: var(--d-text1); }
+
+  /* ── Days pill ── */
+  .dpill {
+    display: inline-block; font-size: 11px; font-weight: 600;
+    padding: 2px 9px; border-radius: 99px;
+    background: rgba(255,255,255,0.06); color: var(--d-text2);
+    border: 1px solid var(--d-border);
+  }
+
+  /* ── Net change ── */
+  .net-pos { color: var(--green); font-weight: 700; }
+  .net-neg { color: var(--red);   font-weight: 700; }
+
+  /* ── Section grid ── */
+  .sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+
+  /* ── Health grid ── */
+  .health-grid { display: grid; grid-template-columns: 420px 1fr; gap: 0; }
+  .health-table-col { border-right: 1px solid var(--d-border); overflow-y: auto; max-height: 440px; }
+
+  /* ── Chart wrapper ── */
+  .chart-wrap { padding: 24px; }
+
+  /* ── Empty state ── */
+  .dempty {
+    padding: 48px 24px; text-align: center;
+    color: var(--d-text3); font-size: 13px; font-weight: 500;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .dempty::before { content: '—'; font-size: 24px; color: var(--d-text3); }
+
+  /* ── Section label ── */
+  .sig-section-label {
+    font-size: 10px; font-weight: 700; color: var(--d-text3);
+    text-transform: uppercase; letter-spacing: 0.12em;
+    margin-bottom: 12px; padding-left: 2px;
+  }
+
+  /* ── Rank number ── */
+  .rank { font-size: 11px; color: var(--d-text3); font-weight: 600; min-width: 22px; }
+
+  /* ── Scroll ── */
+  .health-table-col::-webkit-scrollbar { width: 4px; }
+  .health-table-col::-webkit-scrollbar-track { background: transparent; }
+  .health-table-col::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+  @media (max-width: 900px) {
+    .sig-grid { grid-template-columns: 1fr; }
+    .health-grid { grid-template-columns: 1fr; }
+    .sig-stats { grid-template-columns: repeat(2,1fr); }
+  }
 </style>
 
-<div class="page-header">
-  <div>
-    <div class="page-title">Intelligence Signals</div>
-    <div class="page-meta" style="margin-top:4px">Senior leaver intelligence · updated {{ today }}</div>
+<!-- ── Page Header ───────────────────────────────────────────────────────── -->
+<div class="sig-header">
+  <div class="sig-title">Intelligence Signals</div>
+  <div class="sig-meta">
+    <span class="live-dot">Live</span>
+    <span>Senior personnel movement · PE universe · {{ today|date:"d M Y" }}</span>
   </div>
 </div>
 
-<!-- Summary stat row -->
-<div class="stats-row" style="grid-template-columns: repeat(5,1fr); margin-bottom:24px;">
-  <div class="stat-card">
-    <div class="stat-num" style="color:#a32d2d">{{ in_market|length }}</div>
-    <div class="stat-label">In market</div>
+<!-- ── Stat Strip ─────────────────────────────────────────────────────────── -->
+<div class="sig-stats">
+  <div class="sig-stat" style="--accent-color:var(--red); --accent-glow:var(--red-glow)">
+    <div class="sig-stat-icon">🎯</div>
+    <div class="sig-stat-num">{{ in_market|length }}</div>
+    <div class="sig-stat-label">In market</div>
   </div>
-  <div class="stat-card">
-    <div class="stat-num" style="color:#854f0b">{{ cascade_alerts|length }}</div>
-    <div class="stat-label">Cascade alerts</div>
+  <div class="sig-stat" style="--accent-color:var(--amber); --accent-glow:var(--amber-glow)">
+    <div class="sig-stat-icon">⚡</div>
+    <div class="sig-stat-num">{{ cascade_alerts|length }}</div>
+    <div class="sig-stat-label">Cascade alerts</div>
   </div>
-  <div class="stat-card">
-    <div class="stat-num" style="color:#185fa5">{{ liftout_signals|length }}</div>
-    <div class="stat-label">Lift-out signals</div>
+  <div class="sig-stat" style="--accent-color:var(--blue); --accent-glow:var(--blue-glow)">
+    <div class="sig-stat-icon">🚀</div>
+    <div class="sig-stat-num">{{ liftout_signals|length }}</div>
+    <div class="sig-stat-label">Lift-out signals</div>
   </div>
-  <div class="stat-card">
-    <div class="stat-num" style="color:#1a1a2e">{{ health_scores|length }}</div>
-    <div class="stat-label">Firms tracked</div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-num" style="color:#0f6e56">
-      {% for h in health_scores %}{% if h.net > 0 %}{% if forloop.last %}{{ forloop.counter }}{% endif %}{% endif %}{% endfor %}
-    </div>
-    <div class="stat-label">Growing firms</div>
+  <div class="sig-stat" style="--accent-color:var(--purple); --accent-glow:var(--purple-glow)">
+    <div class="sig-stat-icon">🏦</div>
+    <div class="sig-stat-num">{{ health_scores|length }}</div>
+    <div class="sig-stat-label">Firms tracked</div>
   </div>
 </div>
 
 <!-- ── Section 1: In Market ──────────────────────────────────────────────── -->
-<div class="card" style="margin-bottom:20px;">
-  <div class="card-header">
+<div class="sig-section-label">01 — In Market Window</div>
+<div class="dcard" style="margin-bottom:28px; border-color:rgba(255,59,92,0.2); box-shadow: 0 0 40px rgba(255,59,92,0.04);">
+  <div class="dcard-header">
     <div>
-      <div class="card-title">In Market Window</div>
-      <div class="subtle" style="margin-top:2px">Senior leavers (last 180 days) with no reappearance at any tracked firm — prime recruitment targets</div>
+      <div class="dcard-title">Senior Executives Available for Hire</div>
+      <div class="dcard-sub">Partner/MD · Director · VP — left within 180 days, not yet rehired at any tracked firm</div>
     </div>
-    <span class="signal-badge badge-alert">{{ in_market|length }} available</span>
+    <span class="sbadge sbadge-red">{{ in_market|length }} available</span>
   </div>
   {% if in_market %}
-  <table>
+  <table class="dtable">
     <thead>
       <tr>
+        <th>#</th>
         <th>Name</th>
-        <th>Firm</th>
-        <th>Title when left</th>
+        <th>Previous Firm</th>
+        <th>Title</th>
         <th>Level</th>
-        <th>Left</th>
-        <th>Days since</th>
+        <th>Detected</th>
+        <th>Days Out</th>
       </tr>
     </thead>
     <tbody>
       {% for e in in_market %}
       <tr>
-        <td class="name-cell">{{ e.person.full_name }}</td>
-        <td>{{ e.person.company.name }}</td>
-        <td>{{ e.previous_title|default:"—" }}</td>
-        <td><span class="signal-badge badge-alert">{{ e.previous_level|default:"—" }}</span></td>
-        <td>{{ e.detected_at|date:"d M Y" }}</td>
-        <td><span class="days-pill">{{ e.days_since }}d</span></td>
+        <td class="rank">{{ forloop.counter }}</td>
+        <td class="dn">{{ e.person.full_name }}</td>
+        <td style="color:var(--d-text2)">{{ e.person.company.name }}</td>
+        <td style="color:var(--d-text2); max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ e.previous_title|default:"—" }}</td>
+        <td><span class="sbadge sbadge-red">{{ e.previous_level|default:"—" }}</span></td>
+        <td style="color:var(--d-text3); font-size:12px">{{ e.detected_at|date:"d M Y" }}</td>
+        <td>
+          <span class="dpill"
+            {% if e.days_since > 90 %}style="color:var(--red); border-color:rgba(255,59,92,0.3);"
+            {% elif e.days_since > 45 %}style="color:var(--amber); border-color:rgba(245,158,11,0.3);"
+            {% else %}style="color:var(--green); border-color:rgba(16,185,129,0.3);"{% endif %}>
+            {{ e.days_since }}d
+          </span>
+        </td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
   {% else %}
-  <div class="empty">No senior leavers in the in-market window yet.</div>
+  <div class="dempty">No senior leavers in the window yet.</div>
   {% endif %}
 </div>
 
-<div class="signals-grid">
+<!-- ── Sections 2 + 3: Cascade + Liftout ─────────────────────────────────── -->
+<div class="sig-grid">
 
-  <!-- ── Section 2: Cascade Alerts ────────────────────────────────────────── -->
-  <div class="card">
-    <div class="card-header">
-      <div>
-        <div class="card-title">Cascade Departure Alerts</div>
-        <div class="subtle" style="margin-top:2px">Senior leaver followed by 2+ colleagues within 8 weeks</div>
+  <!-- Cascade Alerts -->
+  <div>
+    <div class="sig-section-label">02 — Cascade Departure Alerts</div>
+    <div class="dcard" style="border-color:rgba(245,158,11,0.2); box-shadow:0 0 40px rgba(245,158,11,0.04);">
+      <div class="dcard-header">
+        <div>
+          <div class="dcard-title">Cascade Departures</div>
+          <div class="dcard-sub">Senior leaver followed by 2+ colleagues within 8 weeks</div>
+        </div>
+        <span class="sbadge sbadge-amber">{{ cascade_alerts|length }} signals</span>
       </div>
-      <span class="signal-badge badge-warn">{{ cascade_alerts|length }} signals</span>
+      {% if cascade_alerts %}
+      <table class="dtable">
+        <thead>
+          <tr><th>Firm</th><th>Trigger</th><th>Followed by</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+          {% for a in cascade_alerts %}
+          <tr>
+            <td class="dn">{{ a.firm }}</td>
+            <td>
+              <div style="color:var(--d-text1); font-weight:600">{{ a.trigger_name }}</div>
+              <div style="color:var(--d-text3); font-size:11px; margin-top:1px">{{ a.trigger_title }}</div>
+            </td>
+            <td>
+              <span class="sbadge sbadge-amber">+{{ a.count }}</span>
+              <div style="color:var(--d-text3); font-size:11px; margin-top:4px; max-width:180px; line-height:1.4">{{ a.follower_names }}</div>
+            </td>
+            <td style="color:var(--d-text3); font-size:11px; white-space:nowrap">{{ a.trigger_date|date:"d M Y" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="dempty">No cascade patterns detected yet.</div>
+      {% endif %}
     </div>
-    {% if cascade_alerts %}
-    <table>
-      <thead>
-        <tr>
-          <th>Firm</th>
-          <th>Trigger</th>
-          <th>Followers</th>
-          <th>Date</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for alert in cascade_alerts %}
-        <tr>
-          <td class="name-cell">{{ alert.firm }}</td>
-          <td>
-            <div>{{ alert.trigger_name }}</div>
-            <div class="subtle">{{ alert.trigger_title }}</div>
-          </td>
-          <td>
-            <span class="signal-badge badge-warn">+{{ alert.count }}</span>
-            <div class="follower-names" style="margin-top:3px">{{ alert.follower_names }}</div>
-          </td>
-          <td class="subtle">{{ alert.trigger_date|date:"d M Y" }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    {% else %}
-    <div class="empty">No cascade patterns detected yet.</div>
-    {% endif %}
   </div>
 
-  <!-- ── Section 3: Lift-out Signals ──────────────────────────────────────── -->
-  <div class="card">
-    <div class="card-header">
-      <div>
-        <div class="card-title">Lift-out / Spinout Signals</div>
-        <div class="subtle" style="margin-top:2px">4+ people leaving same firm within 21 days — potential team poach or fund launch</div>
+  <!-- Lift-out Signals -->
+  <div>
+    <div class="sig-section-label">03 — Lift-out / Spinout Signals</div>
+    <div class="dcard" style="border-color:rgba(56,189,248,0.2); box-shadow:0 0 40px rgba(56,189,248,0.04);">
+      <div class="dcard-header">
+        <div>
+          <div class="dcard-title">Team Lift-outs &amp; Spinouts</div>
+          <div class="dcard-sub">4+ departures from the same firm within 21 days — potential fund launch or mass poach</div>
+        </div>
+        <span class="sbadge sbadge-blue">{{ liftout_signals|length }} signals</span>
       </div>
-      <span class="signal-badge badge-info">{{ liftout_signals|length }} signals</span>
+      {% if liftout_signals %}
+      <table class="dtable">
+        <thead>
+          <tr><th>Firm</th><th>Volume</th><th>Window</th><th>People</th></tr>
+        </thead>
+        <tbody>
+          {% for s in liftout_signals %}
+          <tr>
+            <td class="dn">{{ s.firm }}</td>
+            <td><span class="sbadge sbadge-blue">{{ s.count }} left</span></td>
+            <td style="color:var(--d-text3); font-size:11px; white-space:nowrap">{{ s.start|date:"d M" }} – {{ s.end|date:"d M Y" }}</td>
+            <td style="color:var(--d-text3); font-size:11px; line-height:1.4; max-width:180px;">{{ s.names }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="dempty">No lift-out signals detected yet.</div>
+      {% endif %}
     </div>
-    {% if liftout_signals %}
-    <table>
-      <thead>
-        <tr>
-          <th>Firm</th>
-          <th>Leavers</th>
-          <th>Window</th>
-          <th>People</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for s in liftout_signals %}
-        <tr>
-          <td class="name-cell">{{ s.firm }}</td>
-          <td><span class="signal-badge badge-info">{{ s.count }}</span></td>
-          <td class="subtle">{{ s.start|date:"d M" }} – {{ s.end|date:"d M Y" }}</td>
-          <td class="follower-names">{{ s.names }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    {% else %}
-    <div class="empty">No lift-out signals detected yet.</div>
-    {% endif %}
   </div>
 
 </div>
 
-<!-- ── Section 4: Firm Health Score ─────────────────────────────────────────── -->
-<div class="card" style="margin-bottom:20px;">
-  <div class="card-header">
+<!-- ── Section 4: Firm Health Score ─────────────────────────────────────── -->
+<div class="sig-section-label">04 — Firm Health Score</div>
+<div class="dcard" style="margin-bottom:28px;">
+  <div class="dcard-header">
     <div>
-      <div class="card-title">Firm Health Score</div>
-      <div class="subtle" style="margin-top:2px">90-day net headcount change + senior attrition rate — sorted worst to best</div>
+      <div class="dcard-title">90-Day Net Headcount Change</div>
+      <div class="dcard-sub">Net gain or loss in headcount over rolling 90 days · senior attrition rate · sorted worst first</div>
     </div>
   </div>
-  <div style="display:grid; grid-template-columns:1fr 1fr; gap:0; align-items:start;">
-    <!-- Table -->
-    <div style="border-right:1px solid #f0f0f0; overflow-y:auto; max-height:420px;">
-      <table>
+  <div class="health-grid">
+    <div class="health-table-col">
+      <table class="dtable">
         <thead>
           <tr>
+            <th>#</th>
             <th>Firm</th>
-            <th>Net Δ (90d)</th>
-            <th>Senior leavers</th>
+            <th>Net Δ</th>
+            <th>Sr. Left</th>
             <th>Attrition</th>
           </tr>
         </thead>
         <tbody>
           {% for h in health_scores %}
           <tr>
-            <td class="name-cell">{{ h.firm }}</td>
+            <td class="rank">{{ forloop.counter }}</td>
+            <td class="dn">{{ h.firm }}</td>
             <td>
-              <span class="health-net {% if h.net >= 0 %}health-pos{% else %}health-neg{% endif %}">
+              <span class="{% if h.net >= 0 %}net-pos{% else %}net-neg{% endif %}">
                 {% if h.net > 0 %}+{% endif %}{{ h.net }}
               </span>
             </td>
-            <td>{% if h.senior_leavers > 0 %}<span class="signal-badge badge-alert">{{ h.senior_leavers }}</span>{% else %}<span class="subtle">—</span>{% endif %}</td>
-            <td class="subtle">{{ h.attrition_rate }}%</td>
+            <td>{% if h.senior_leavers > 0 %}<span class="sbadge sbadge-red">{{ h.senior_leavers }}</span>{% else %}<span style="color:var(--d-text3)">—</span>{% endif %}</td>
+            <td style="color:var(--d-text3); font-size:12px">{{ h.attrition_rate }}%</td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
-    <!-- Chart -->
     <div class="chart-wrap">
-      <canvas id="healthChart" height="380"></canvas>
+      <canvas id="healthChart"></canvas>
     </div>
   </div>
 </div>
 
-<!-- ── Section 5: Seniority Pyramid ─────────────────────────────────────────── -->
-<div class="card" style="margin-bottom:20px;">
-  <div class="card-header">
+<!-- ── Section 5: Seniority Pyramid ─────────────────────────────────────── -->
+<div class="sig-section-label">05 — Seniority Pyramid</div>
+<div class="dcard">
+  <div class="dcard-header">
     <div>
-      <div class="card-title">Seniority Pyramid — Top 15 Firms by Headcount</div>
-      <div class="subtle" style="margin-top:2px">Current breakdown of Partner/MD · Director · VP · Principal · Associate · Analyst</div>
+      <div class="dcard-title">Headcount by Seniority — Top 15 Firms</div>
+      <div class="dcard-sub">Current snapshot · Partner/MD · Director · VP · Principal · Associate · Analyst</div>
     </div>
   </div>
-  <div class="chart-wrap" style="padding:24px;">
-    <canvas id="pyramidChart" height="320"></canvas>
+  <div class="chart-wrap" style="padding: 28px 28px 20px;">
+    <canvas id="pyramidChart" height="280"></canvas>
   </div>
 </div>
 
+<!-- ── Charts ─────────────────────────────────────────────────────────────── -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 (function() {
-  // ── Chart 4: Firm Health Score ──────────────────────────────────────────
+  const GRID  = 'rgba(255,255,255,0.05)';
+  const TICK  = '#3E4C63';
+  const FONT  = { family: "'Inter', sans-serif" };
+
+  Chart.defaults.color = '#7B8CAA';
+  Chart.defaults.borderColor = GRID;
+
+  // ── Health Score Chart ────────────────────────────────────────────────────
   const hd = {{ health_chart_json|safe }};
-  new Chart(document.getElementById('healthChart'), {
+  // Override colors with dark-theme neon
+  const hColors = hd.net.map(v => v < 0
+    ? 'rgba(255,59,92,0.75)'
+    : 'rgba(16,185,129,0.75)'
+  );
+  const hBorders = hd.net.map(v => v < 0 ? '#FF3B5C' : '#10B981');
+
+  const healthCtx = document.getElementById('healthChart');
+  const numBars = hd.labels.length;
+  healthCtx.height = Math.max(280, numBars * 26);
+
+  new Chart(healthCtx, {
     type: 'bar',
     data: {
       labels: hd.labels,
       datasets: [{
-        label: 'Net headcount change (90d)',
+        label: 'Net headcount (90d)',
         data: hd.net,
-        backgroundColor: hd.colors,
-        borderRadius: 4,
+        backgroundColor: hColors,
+        borderColor: hBorders,
+        borderWidth: 1,
+        borderRadius: 5,
+        borderSkipped: false,
       }]
     },
     options: {
@@ -249,26 +435,43 @@
       plugins: {
         legend: { display: false },
         tooltip: {
+          backgroundColor: '#0D1424',
+          borderColor: 'rgba(255,255,255,0.1)',
+          borderWidth: 1,
+          titleColor: '#E8EEFF',
+          bodyColor: '#7B8CAA',
+          padding: 10,
           callbacks: {
-            label: ctx => (ctx.raw >= 0 ? '+' : '') + ctx.raw + ' headcount',
+            label: ctx => ' ' + (ctx.raw >= 0 ? '+' : '') + ctx.raw + ' headcount',
           }
         }
       },
       scales: {
         x: {
-          grid: { color: '#f0f0f0' },
-          ticks: { font: { size: 11 } },
+          grid: { color: GRID },
+          ticks: { font: { ...FONT, size: 11 }, color: TICK },
+          border: { color: GRID },
         },
         y: {
-          ticks: { font: { size: 11 }, color: '#333' },
           grid: { display: false },
+          ticks: { font: { ...FONT, size: 11 }, color: '#94A3B8' },
+          border: { color: GRID },
         }
       }
     }
   });
 
-  // ── Chart 5: Seniority Pyramid ──────────────────────────────────────────
+  // ── Seniority Pyramid Chart ───────────────────────────────────────────────
   const pd = {{ pyramid_chart_json|safe }};
+  const pyramidColors = ['#6366F1','#8B5CF6','#A78BFA','#38BDF8','#34D399','#FBBF24'];
+  pd.datasets.forEach((ds, i) => {
+    ds.backgroundColor = pyramidColors[i] || '#7B8CAA';
+    ds.borderColor      = 'rgba(0,0,0,0.3)';
+    ds.borderWidth      = 1;
+    ds.borderRadius     = 3;
+    ds.borderSkipped    = false;
+  });
+
   new Chart(document.getElementById('pyramidChart'), {
     type: 'bar',
     data: pd,
@@ -278,25 +481,33 @@
       plugins: {
         legend: {
           position: 'bottom',
-          labels: { font: { size: 11 }, padding: 16, boxWidth: 12 }
+          labels: { font: { ...FONT, size: 11 }, padding: 20, boxWidth: 12, color: '#7B8CAA', usePointStyle: true, pointStyleWidth: 8 }
         },
         tooltip: {
+          backgroundColor: '#0D1424',
+          borderColor: 'rgba(255,255,255,0.1)',
+          borderWidth: 1,
+          titleColor: '#E8EEFF',
+          bodyColor: '#7B8CAA',
+          padding: 10,
           mode: 'index',
           callbacks: {
-            label: ctx => ctx.dataset.label + ': ' + ctx.raw,
+            label: ctx => ' ' + ctx.dataset.label + ': ' + ctx.raw,
           }
         }
       },
       scales: {
         x: {
           stacked: true,
-          ticks: { font: { size: 10 }, maxRotation: 35, color: '#333' },
           grid: { display: false },
+          ticks: { font: { ...FONT, size: 10 }, color: TICK, maxRotation: 35 },
+          border: { color: GRID },
         },
         y: {
           stacked: true,
-          grid: { color: '#f0f0f0' },
-          ticks: { font: { size: 11 } },
+          grid: { color: GRID },
+          ticks: { font: { ...FONT, size: 11 }, color: TICK },
+          border: { color: GRID },
         }
       }
     }

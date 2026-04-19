@@ -5,7 +5,7 @@
   <div>
     <div class="page-title">Dashboard</div>
     {% if latest_run %}
-    <div class="page-meta" style="margin-top:4px">Last scrape: {{ latest_run.ran_at|date:"d M Y, H:i" }} · {{ latest_run.total_rows|default:"0" }} employees across {{ latest_run.firms_ok }} firms</div>
+    <div class="page-meta">Last scrape: {{ latest_run.ran_at|date:"d M Y, H:i" }} · {{ latest_run.total_rows|default:"0" }} employees across {{ latest_run.firms_ok }} firms</div>
     {% endif %}
   </div>
 </div>
@@ -65,10 +65,10 @@
         <span class="chevron">▾</span>
       </div>
       <div class="dropdown-panel" id="d-region">
-        <label><input type="checkbox" name="region" value="EMEA" {% if 'EMEA' in region_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> EMEA</label>
+        <label><input type="checkbox" name="region" value="EMEA"         {% if 'EMEA'         in region_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> EMEA</label>
         <label><input type="checkbox" name="region" value="North America" {% if 'North America' in region_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> North America</label>
-        <label><input type="checkbox" name="region" value="APAC" {% if 'APAC' in region_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> APAC</label>
-        <label><input type="checkbox" name="region" value="Unknown" {% if 'Unknown' in region_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Unknown</label>
+        <label><input type="checkbox" name="region" value="APAC"         {% if 'APAC'         in region_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> APAC</label>
+        <label><input type="checkbox" name="region" value="Unknown"      {% if 'Unknown'      in region_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Unknown</label>
       </div>
     </div>
 
@@ -78,21 +78,21 @@
         <span class="chevron">▾</span>
       </div>
       <div class="dropdown-panel" id="d-function">
-        <label><input type="checkbox" name="function" value="Buyout / PE" {% if 'Buyout / PE' in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Buyout / PE</label>
-        <label><input type="checkbox" name="function" value="Growth Equity" {% if 'Growth Equity' in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Growth Equity</label>
-        <label><input type="checkbox" name="function" value="Infrastructure" {% if 'Infrastructure' in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Infrastructure</label>
-        <label><input type="checkbox" name="function" value="Real Estate" {% if 'Real Estate' in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Real Estate</label>
-        <label><input type="checkbox" name="function" value="Credit / Debt" {% if 'Credit / Debt' in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Credit / Debt</label>
-        <label><input type="checkbox" name="function" value="Venture Capital" {% if 'Venture Capital' in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Venture Capital</label>
+        <label><input type="checkbox" name="function" value="Buyout / PE"          {% if 'Buyout / PE'          in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Buyout / PE</label>
+        <label><input type="checkbox" name="function" value="Growth Equity"        {% if 'Growth Equity'        in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Growth Equity</label>
+        <label><input type="checkbox" name="function" value="Infrastructure"       {% if 'Infrastructure'       in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Infrastructure</label>
+        <label><input type="checkbox" name="function" value="Real Estate"          {% if 'Real Estate'          in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Real Estate</label>
+        <label><input type="checkbox" name="function" value="Credit / Debt"        {% if 'Credit / Debt'        in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Credit / Debt</label>
+        <label><input type="checkbox" name="function" value="Venture Capital"      {% if 'Venture Capital'      in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Venture Capital</label>
         <label><input type="checkbox" name="function" value="Investment (General)" {% if 'Investment (General)' in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Investment (General)</label>
-        <label><input type="checkbox" name="function" value="Advisory" {% if 'Advisory' in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Advisory</label>
-        <label><input type="checkbox" name="function" value="Operations" {% if 'Operations' in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Operations</label>
+        <label><input type="checkbox" name="function" value="Advisory"             {% if 'Advisory'             in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Advisory</label>
+        <label><input type="checkbox" name="function" value="Operations"           {% if 'Operations'           in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Operations</label>
       </div>
     </div>
 
-    <a href="?senior_emea=1" class="btn btn-red" style="text-decoration:none">⚑ Senior EMEA Leavers</a>
+    <a href="?senior_emea=1" class="btn btn-red">⚑ Senior EMEA Leavers</a>
     <button type="submit" name="export" value="excel" class="btn btn-green">↓ Export Excel</button>
-    <a href="/" class="btn btn-gray" style="text-decoration:none">Clear</a>
+    <a href="/" class="btn btn-gray">Clear</a>
   </div>
 </form>
 
@@ -121,15 +121,16 @@
       {% for e in events %}
       <tr>
         <td class="name-cell">{{ e.person.full_name }}</td>
-        <td style="color:var(--text-2)">{{ e.person.company.name }}</td>
+        <td class="subtle">{{ e.person.company.name }}</td>
         <td>
-          {% if e.function == 'Buyout / PE' %}<span class="badge badge-promo">Buyout / PE</span>
-          {% elif e.function == 'Investment (General)' %}<span class="badge badge-hire">Investment</span>
-          {% elif e.function == 'Advisory' %}<span class="badge badge-hire">Advisory</span>
-          {% elif e.function == 'Infrastructure' %}<span class="badge badge-role">Infrastructure</span>
-          {% elif e.function == 'Real Estate' %}<span class="badge badge-role">Real Estate</span>
-          {% elif e.function == 'Credit / Debt' %}<span class="badge badge-role">Credit / Debt</span>
-          {% elif e.function == 'Operations' %}<span class="badge" style="background:#F1F0EC;color:#5F5E5A">Operations</span>
+          {% if e.function == 'Buyout / PE' %}<span class="badge badge-buyout">Buyout / PE</span>
+          {% elif e.function == 'Investment (General)' %}<span class="badge badge-invest">Investment</span>
+          {% elif e.function == 'Advisory' %}<span class="badge badge-advisory">Advisory</span>
+          {% elif e.function == 'Infrastructure' %}<span class="badge badge-infra">Infra</span>
+          {% elif e.function == 'Real Estate' %}<span class="badge badge-re">Real Estate</span>
+          {% elif e.function == 'Credit / Debt' %}<span class="badge badge-credit">Credit</span>
+          {% elif e.function == 'Venture Capital' %}<span class="badge badge-vc">VC</span>
+          {% elif e.function == 'Operations' %}<span class="badge badge-ops">Ops</span>
           {% else %}<span class="subtle">—</span>{% endif %}
         </td>
         <td>
@@ -146,9 +147,9 @@
           {% endif %}
         </td>
         <td>
-          {% if e.region == 'EMEA' %}<span class="badge" style="background:#ECFDF5;color:#065F46">EMEA</span>
-          {% elif e.region == 'North America' %}<span class="badge" style="background:#EFF6FF;color:#1E40AF">N. America</span>
-          {% elif e.region == 'APAC' %}<span class="badge" style="background:#FFFBEB;color:#78350F">APAC</span>
+          {% if e.region == 'EMEA' %}<span class="badge badge-emea">EMEA</span>
+          {% elif e.region == 'North America' %}<span class="badge badge-na">N. America</span>
+          {% elif e.region == 'APAC' %}<span class="badge badge-apac">APAC</span>
           {% else %}<span class="subtle">—</span>{% endif %}
         </td>
         <td class="subtle">{{ e.detected_at|date:"d M Y" }}</td>

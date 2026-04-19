@@ -4,13 +4,13 @@
 <div class="page-header">
   <div>
     <div class="page-title">Firms</div>
-    {% if latest_date %}<div class="page-meta" style="margin-top:4px">Headcount as of {{ latest_date|date:"d M Y" }}</div>{% endif %}
+    {% if latest_date %}<div class="page-meta">Headcount as of {{ latest_date|date:"d M Y" }}</div>{% endif %}
   </div>
 </div>
 
 <div class="stats-row" style="grid-template-columns:repeat(4,1fr)">
   <div class="stat-card">
-    <div class="stat-indicator" style="background:var(--text-1)"></div>
+    <div class="stat-indicator" style="background:var(--text-2)"></div>
     <div class="stat-num" style="color:var(--text-1)">{{ totals.headcount }}</div>
     <div class="stat-label">Total headcount</div>
   </div>
@@ -34,25 +34,25 @@
 <div class="card">
   <div class="card-header">
     <span class="card-title">{{ firm_stats|length }} firms</span>
-    <div style="display:flex;gap:4px;align-items:center">
-      <a href="?sort=leavers"    class="sort-link {% if sort_by == 'leavers' %}sort-active{% endif %}">Leavers</a>
-      <a href="?sort=hires"      class="sort-link {% if sort_by == 'hires' %}sort-active{% endif %}">Hires</a>
+    <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">
+      <a href="?sort=leavers"    class="sort-link {% if sort_by == 'leavers'    %}sort-active{% endif %}">Leavers</a>
+      <a href="?sort=hires"      class="sort-link {% if sort_by == 'hires'      %}sort-active{% endif %}">Hires</a>
       <a href="?sort=promotions" class="sort-link {% if sort_by == 'promotions' %}sort-active{% endif %}">Promotions</a>
-      <a href="?sort=headcount"  class="sort-link {% if sort_by == 'headcount' %}sort-active{% endif %}">Headcount</a>
-      <a href="?sort=activity"   class="sort-link {% if sort_by == 'activity' %}sort-active{% endif %}">Activity</a>
-      <a href="?sort=name"       class="sort-link {% if sort_by == 'name' %}sort-active{% endif %}">A–Z</a>
+      <a href="?sort=headcount"  class="sort-link {% if sort_by == 'headcount'  %}sort-active{% endif %}">Headcount</a>
+      <a href="?sort=activity"   class="sort-link {% if sort_by == 'activity'   %}sort-active{% endif %}">Activity</a>
+      <a href="?sort=name"       class="sort-link {% if sort_by == 'name'       %}sort-active{% endif %}">A–Z</a>
     </div>
   </div>
 
   <table>
     <thead>
       <tr>
-        <th><a href="?sort=name" style="color:inherit;text-decoration:none">Firm {% if sort_by == 'name' %}<span class="sort-arrow">▴</span>{% endif %}</a></th>
-        <th><a href="?sort=headcount" style="color:inherit;text-decoration:none">Headcount {% if sort_by == 'headcount' %}<span class="sort-arrow">▴</span>{% endif %}</a></th>
-        <th><a href="?sort=hires" style="color:inherit;text-decoration:none">Hires {% if sort_by == 'hires' %}<span class="sort-arrow">▴</span>{% endif %}</a></th>
-        <th><a href="?sort=leavers" style="color:inherit;text-decoration:none">Leavers {% if sort_by == 'leavers' %}<span class="sort-arrow">▴</span>{% endif %}</a></th>
-        <th><a href="?sort=promotions" style="color:inherit;text-decoration:none">Promotions {% if sort_by == 'promotions' %}<span class="sort-arrow">▴</span>{% endif %}</a></th>
-        <th><a href="?sort=activity" style="color:inherit;text-decoration:none">Activity {% if sort_by == 'activity' %}<span class="sort-arrow">▴</span>{% endif %}</a></th>
+        <th>Firm</th>
+        <th>Headcount</th>
+        <th>Hires</th>
+        <th>Leavers</th>
+        <th>Promotions</th>
+        <th>Activity</th>
         <th></th>
       </tr>
     </thead>
@@ -60,12 +60,12 @@
       {% for f in firm_stats %}
       <tr style="cursor:pointer" onclick="window.location='/firms/{{ f.company.id }}/'">
         <td class="name-cell">{{ f.company.name }}</td>
-        <td>{% if f.headcount %}<strong>{{ f.headcount }}</strong>{% else %}<span class="subtle">—</span>{% endif %}</td>
-        <td>{% if f.hires %}<span style="color:var(--hire);font-weight:600">+{{ f.hires }}</span>{% else %}<span class="subtle">—</span>{% endif %}</td>
-        <td>{% if f.leavers %}<span style="color:var(--leave);font-weight:600">{{ f.leavers }}</span>{% else %}<span class="subtle">—</span>{% endif %}</td>
-        <td>{% if f.promotions %}<span style="color:var(--promo);font-weight:600">{{ f.promotions }}</span>{% else %}<span class="subtle">—</span>{% endif %}</td>
+        <td>{% if f.headcount %}<strong style="color:var(--text-1)">{{ f.headcount }}</strong>{% else %}<span class="subtle">—</span>{% endif %}</td>
+        <td>{% if f.hires %}<span style="color:var(--hire);font-weight:700">+{{ f.hires }}</span>{% else %}<span class="subtle">—</span>{% endif %}</td>
+        <td>{% if f.leavers %}<span style="color:var(--leave);font-weight:700">{{ f.leavers }}</span>{% else %}<span class="subtle">—</span>{% endif %}</td>
+        <td>{% if f.promotions %}<span style="color:var(--promo);font-weight:700">{{ f.promotions }}</span>{% else %}<span class="subtle">—</span>{% endif %}</td>
         <td>{% if f.activity %}<span class="badge badge-role">{{ f.activity }}</span>{% else %}<span class="subtle">—</span>{% endif %}</td>
-        <td><a href="/firms/{{ f.company.id }}/" style="color:var(--accent);font-size:12px;font-weight:500;text-decoration:none" onclick="event.stopPropagation()">View →</a></td>
+        <td><a href="/firms/{{ f.company.id }}/" style="color:var(--accent);font-size:12px;font-weight:600;text-decoration:none" onclick="event.stopPropagation()">View →</a></td>
       </tr>
       {% empty %}
       <tr><td colspan="7"><div class="empty">No firms found.</div></td></tr>

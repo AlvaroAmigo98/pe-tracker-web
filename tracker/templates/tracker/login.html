@@ -6,90 +6,100 @@
   <title>PE Tracker — Sign in</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Inter', -apple-system, sans-serif;
-      background: #F1F5F9;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      background: #06080F;
+      display: flex; align-items: center; justify-content: center;
       min-height: 100vh;
       -webkit-font-smoothing: antialiased;
+      position: relative; overflow: hidden;
     }
-    .login-wrap {
-      width: 100%;
-      max-width: 380px;
-      padding: 20px;
+    /* Subtle background glow */
+    body::before {
+      content: '';
+      position: fixed; top: -20%; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 400px;
+      background: radial-gradient(ellipse, rgba(99,102,241,.12) 0%, transparent 70%);
+      pointer-events: none;
     }
+    body::after {
+      content: '';
+      position: fixed; bottom: -10%; right: 10%;
+      width: 400px; height: 300px;
+      background: radial-gradient(ellipse, rgba(244,63,94,.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .login-wrap { width: 100%; max-width: 380px; padding: 20px; position: relative; z-index: 1; }
+
     .login-brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      justify-content: center;
-      margin-bottom: 32px;
+      display: flex; align-items: center; gap: 10px;
+      justify-content: center; margin-bottom: 36px;
     }
     .login-icon {
       width: 36px; height: 36px;
       background: linear-gradient(135deg, #6366F1, #4F46E5);
       border-radius: 9px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 15px; font-weight: 700; color: white; letter-spacing: -0.5px;
+      font-size: 14px; font-weight: 800; color: white; letter-spacing: -0.5px;
+      box-shadow: 0 0 20px rgba(99,102,241,.45);
     }
-    .login-brand-name { font-size: 18px; font-weight: 700; color: #0F172A; letter-spacing: -0.3px; }
+    .login-brand-name { font-size: 18px; font-weight: 800; color: #E2E8F4; letter-spacing: -0.4px; }
+
     .login-card {
-      background: white;
-      border-radius: 12px;
-      border: 1px solid #E2E8F0;
-      box-shadow: 0 4px 12px rgba(15,23,42,.08), 0 2px 4px rgba(15,23,42,.04);
+      background: #0C1220;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.08);
+      box-shadow: 0 24px 48px rgba(0,0,0,.6), 0 0 0 1px rgba(99,102,241,.1);
       padding: 36px 36px 32px;
     }
-    h1 { font-size: 18px; font-weight: 700; color: #0F172A; margin-bottom: 4px; letter-spacing: -0.3px; }
+    h1 { font-size: 20px; font-weight: 800; color: #E2E8F4; margin-bottom: 4px; letter-spacing: -0.4px; }
     .subtitle { font-size: 13px; color: #64748B; margin-bottom: 28px; }
-    label { display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px; letter-spacing: 0.01em; }
+
+    label { display: block; font-size: 11px; font-weight: 700; color: #64748B; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.07em; }
     input {
       width: 100%;
-      border: 1px solid #E2E8F0;
-      border-radius: 8px;
-      padding: 9px 12px;
-      font-size: 14px;
-      font-family: inherit;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 9px;
+      padding: 10px 14px;
+      font-size: 14px; font-family: inherit;
       outline: none;
       margin-bottom: 16px;
-      color: #0F172A;
+      background: #111B2E;
+      color: #E2E8F4;
       transition: border-color .15s, box-shadow .15s;
     }
+    input::placeholder { color: #334155; }
     input:focus {
-      border-color: #4F46E5;
-      box-shadow: 0 0 0 3px rgba(79,70,229,.1);
+      border-color: #6366F1;
+      box-shadow: 0 0 0 3px rgba(99,102,241,.15);
     }
+
     button {
       width: 100%;
-      background: #4F46E5;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 10px;
-      font-size: 14px;
-      font-family: inherit;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 4px;
-      transition: background .15s;
+      background: linear-gradient(135deg, #6366F1, #4F46E5);
+      color: white; border: none; border-radius: 9px;
+      padding: 11px;
+      font-size: 14px; font-family: inherit; font-weight: 700;
+      cursor: pointer; margin-top: 4px;
+      transition: opacity .15s, transform .1s;
       letter-spacing: 0.01em;
+      box-shadow: 0 4px 16px rgba(99,102,241,.35);
     }
-    button:hover { background: #4338CA; }
+    button:hover { opacity: .92; }
+    button:active { transform: scale(.99); }
+
     .error {
-      background: #FEF2F2;
-      color: #7F1D1D;
-      border: 1px solid #FECACA;
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 13px;
-      margin-bottom: 20px;
+      background: rgba(244,63,94,.1);
+      color: #FDA4AF;
+      border: 1px solid rgba(244,63,94,.25);
+      border-radius: 9px;
+      padding: 10px 14px; font-size: 13px; margin-bottom: 20px;
     }
-    .login-footer { text-align: center; margin-top: 20px; font-size: 12px; color: #94A3B8; }
+    .login-footer { text-align: center; margin-top: 20px; font-size: 12px; color: #2D3A4E; letter-spacing: 0.02em; }
   </style>
 </head>
 <body>
@@ -100,16 +110,16 @@
     </div>
     <div class="login-card">
       <h1>Welcome back</h1>
-      <p class="subtitle">Sign in to access your dashboard</p>
+      <p class="subtitle">Sign in to access your intelligence dashboard</p>
       {% if form.errors %}
         <div class="error">Incorrect username or password. Please try again.</div>
       {% endif %}
       <form method="post">
         {% csrf_token %}
         <label>Username</label>
-        <input type="text" name="username" autofocus autocomplete="username">
+        <input type="text" name="username" autofocus autocomplete="username" placeholder="Enter username">
         <label>Password</label>
-        <input type="password" name="password" autocomplete="current-password">
+        <input type="password" name="password" autocomplete="current-password" placeholder="••••••••">
         <button type="submit">Sign in →</button>
       </form>
     </div>
