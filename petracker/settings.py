@@ -79,33 +79,29 @@ WSGI_APPLICATION = 'petracker.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 
-_db_password = (
-    os.environ.get('SUPABASE_DB_PASSWORD') or
-    os.environ.get('DB_PASSWORD') or
-    os.environ.get('DATABASE_PASSWORD') or
-    os.environ.get('POSTGRES_PASSWORD') or
-    'vCqK3qmYrZTdi4gL'
-)
-
-_db_url = (
-    os.environ.get('DATABASE_URL') or
-    f'postgresql://postgres.dvtkpsqcwfekntaslwwn:{_db_password}'
-    f'@aws-1-eu-west-2.pooler.supabase.com:6543/postgres'
-    f'?sslmode=require'
-)
-_db_config = dj_database_url.parse(_db_url, conn_max_age=0, ssl_require=False)
-_db_config.setdefault('OPTIONS', {}).update({
-    'gssencmode': 'disable',
-    'channel_binding': 'disable',
-})
-DATABASES = {'default': _db_config}
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres.dvtkpsqcwfekntaslwwn',
+        'PASSWORD': (
+            os.environ.get('SUPABASE_DB_PASSWORD') or
+            os.environ.get('DB_PASSWORD') or
+            'vCqK3qmYrZTdi4gL'
+        ),
+        'HOST': 'aws-1-eu-west-2.pooler.supabase.com',
+        'PORT': '6543',
+        'OPTIONS': {
+            'sslmode': 'require',
+            'gssencmode': 'disable',
+            'channel_binding': 'disable',
+        },
+    }
+}
 
 import sys
-print(f"[STARTUP] ALL_ENV_KEYS={sorted(os.environ.keys())}", file=sys.stderr, flush=True)
-print(f"[STARTUP] DATABASE_URL set={bool(os.environ.get('DATABASE_URL'))} "
-      f"SUPABASE_PW_len={len(os.environ.get('SUPABASE_DB_PASSWORD',''))} "
-      f"parsed_pw_len={len(_db_config.get('PASSWORD') or '')}",
-      file=sys.stderr, flush=True)
+_pw = DATABASES['default']['PASSWORD'] or ''
+print(f"[STARTUP] pw_len={len(_pw)} pw_prefix={_pw[:4]}", file=sys.stderr, flush=True)
 
 
 # Password validation
