@@ -35,24 +35,12 @@
   <div class="card-header">
     <span class="card-title">{{ firm_stats|length }} firms</span>
     <div style="display:flex;gap:4px;align-items:center">
-      <span style="font-size:11px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-right:6px">Sort</span>
-      {% for s,label in sort_options %}
-      <a href="?sort={{ s }}"
-         style="font-size:12px;font-weight:{% if sort_by == s %}600{% else %}400{% endif %};
-                color:{% if sort_by == s %}var(--accent){% else %}var(--text-3){% endif %};
-                text-decoration:none;padding:3px 8px;border-radius:5px;
-                background:{% if sort_by == s %}var(--role-bg){% else %}transparent{% endif %};
-                transition:all .1s">
-        {{ label }}
-      </a>
-      {% empty %}
-      <a href="?sort=leavers"    style="font-size:12px;font-weight:{% if sort_by == 'leavers' %}600{% else %}400{% endif %};color:{% if sort_by == 'leavers' %}var(--accent){% else %}var(--text-3){% endif %};text-decoration:none;padding:3px 8px;border-radius:5px;background:{% if sort_by == 'leavers' %}var(--role-bg){% else %}transparent{% endif %}">Leavers</a>
-      <a href="?sort=hires"      style="font-size:12px;font-weight:{% if sort_by == 'hires' %}600{% else %}400{% endif %};color:{% if sort_by == 'hires' %}var(--accent){% else %}var(--text-3){% endif %};text-decoration:none;padding:3px 8px;border-radius:5px;background:{% if sort_by == 'hires' %}var(--role-bg){% else %}transparent{% endif %}">Hires</a>
-      <a href="?sort=promotions" style="font-size:12px;font-weight:{% if sort_by == 'promotions' %}600{% else %}400{% endif %};color:{% if sort_by == 'promotions' %}var(--accent){% else %}var(--text-3){% endif %};text-decoration:none;padding:3px 8px;border-radius:5px;background:{% if sort_by == 'promotions' %}var(--role-bg){% else %}transparent{% endif %}">Promotions</a>
-      <a href="?sort=headcount"  style="font-size:12px;font-weight:{% if sort_by == 'headcount' %}600{% else %}400{% endif %};color:{% if sort_by == 'headcount' %}var(--accent){% else %}var(--text-3){% endif %};text-decoration:none;padding:3px 8px;border-radius:5px;background:{% if sort_by == 'headcount' %}var(--role-bg){% else %}transparent{% endif %}">Headcount</a>
-      <a href="?sort=activity"   style="font-size:12px;font-weight:{% if sort_by == 'activity' %}600{% else %}400{% endif %};color:{% if sort_by == 'activity' %}var(--accent){% else %}var(--text-3){% endif %};text-decoration:none;padding:3px 8px;border-radius:5px;background:{% if sort_by == 'activity' %}var(--role-bg){% else %}transparent{% endif %}">Activity</a>
-      <a href="?sort=name"       style="font-size:12px;font-weight:{% if sort_by == 'name' %}600{% else %}400{% endif %};color:{% if sort_by == 'name' %}var(--accent){% else %}var(--text-3){% endif %};text-decoration:none;padding:3px 8px;border-radius:5px;background:{% if sort_by == 'name' %}var(--role-bg){% else %}transparent{% endif %}">A–Z</a>
-      {% endempty %}
+      <a href="?sort=leavers"    class="sort-link {% if sort_by == 'leavers' %}sort-active{% endif %}">Leavers</a>
+      <a href="?sort=hires"      class="sort-link {% if sort_by == 'hires' %}sort-active{% endif %}">Hires</a>
+      <a href="?sort=promotions" class="sort-link {% if sort_by == 'promotions' %}sort-active{% endif %}">Promotions</a>
+      <a href="?sort=headcount"  class="sort-link {% if sort_by == 'headcount' %}sort-active{% endif %}">Headcount</a>
+      <a href="?sort=activity"   class="sort-link {% if sort_by == 'activity' %}sort-active{% endif %}">Activity</a>
+      <a href="?sort=name"       class="sort-link {% if sort_by == 'name' %}sort-active{% endif %}">A–Z</a>
     </div>
   </div>
 
