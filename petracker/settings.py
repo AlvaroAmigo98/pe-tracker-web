@@ -84,7 +84,7 @@ _db_password = (
     os.environ.get('DB_PASSWORD') or
     os.environ.get('DATABASE_PASSWORD') or
     os.environ.get('POSTGRES_PASSWORD') or
-    ''
+    'vCqK3qmYrZTdi4gL'
 )
 
 _db_url = (
