@@ -1,112 +1,70 @@
 {% extends 'tracker/base.html' %}
 {% block content %}
-<style>
-  .firm-header { display:flex; align-items:center; gap:16px; margin-bottom:20px; flex-wrap:wrap; }
-  .firm-name { font-size:22px; font-weight:700; color:#1a1a2e; }
-  .back-link { color:#888; text-decoration:none; font-size:13px; }
-  .back-link:hover { color:#333; }
-  .mini-stats { display:flex; gap:10px; flex-wrap:wrap; }
-  .mini-stat { background:white; border:1px solid #e8e8e8; border-radius:8px; padding:10px 16px; text-align:center; min-width:90px; }
-  .mini-stat .n { font-size:22px; font-weight:700; line-height:1; }
-  .mini-stat .l { font-size:11px; color:#888; margin-top:3px; }
 
-  .tabs { display:flex; gap:0; border-bottom:2px solid #f0f0f0; margin-bottom:18px; }
-  .tab-btn { padding:8px 18px; font-size:13px; font-weight:500; color:#888; cursor:pointer; text-decoration:none; border-bottom:2px solid transparent; margin-bottom:-2px; transition:all 0.15s; white-space:nowrap; }
-  .tab-btn:hover { color:#1a1a2e; }
-  .tab-btn.active { color:#1a1a2e; border-bottom-color:#1a1a2e; font-weight:600; }
-
-  .toolbar { display:flex; gap:8px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
-  .search-input { border:1px solid #ddd; border-radius:7px; padding:7px 12px; font-size:13px; outline:none; min-width:240px; }
-  .search-input:focus { border-color:#1a1a2e; }
-</style>
-
-<div class="firm-header">
-  <a href="{% url 'firms' %}" class="back-link">← All firms</a>
-  <span class="firm-name">{{ company.name }}</span>
+<div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;flex-wrap:wrap">
+  <a href="{% url 'firms' %}" style="color:var(--text-3);text-decoration:none;font-size:13px;font-weight:500">← All firms</a>
+  <div style="width:1px;height:16px;background:var(--border)"></div>
+  <span style="font-size:20px;font-weight:700;color:var(--text-1);letter-spacing:-0.3px">{{ company.name }}</span>
 </div>
 
-<div class="mini-stats" style="margin-bottom:20px">
-  <div class="mini-stat">
-    <div class="n" style="color:#1a1a2e">{{ team|length }}</div>
-    <div class="l">Team</div>
+<div class="stats-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:24px">
+  <div class="stat-card">
+    <div class="stat-indicator" style="background:var(--text-1)"></div>
+    <div class="stat-num" style="color:var(--text-1)">{{ team|length }}</div>
+    <div class="stat-label">Team</div>
   </div>
-  <div class="mini-stat">
-    <div class="n" style="color:#1D9E75">{{ hires|length }}</div>
-    <div class="l">Hires</div>
+  <div class="stat-card">
+    <div class="stat-indicator" style="background:var(--hire)"></div>
+    <div class="stat-num" style="color:var(--hire)">{{ hires|length }}</div>
+    <div class="stat-label">Hires</div>
   </div>
-  <div class="mini-stat">
-    <div class="n" style="color:#E24B4A">{{ leavers|length }}</div>
-    <div class="l">Leavers</div>
+  <div class="stat-card">
+    <div class="stat-indicator" style="background:var(--leave)"></div>
+    <div class="stat-num" style="color:var(--leave)">{{ leavers|length }}</div>
+    <div class="stat-label">Leavers</div>
   </div>
-  <div class="mini-stat">
-    <div class="n" style="color:#BA7517">{{ promotions|length }}</div>
-    <div class="l">Promotions</div>
+  <div class="stat-card">
+    <div class="stat-indicator" style="background:var(--promo)"></div>
+    <div class="stat-num" style="color:var(--promo)">{{ promotions|length }}</div>
+    <div class="stat-label">Promotions</div>
   </div>
 </div>
 
 <div class="tabs">
-  <a href="?tab=team{% if search %}&q={{ search }}{% endif %}"
-     class="tab-btn {% if tab == 'team' %}active{% endif %}">
-    Team ({{ team|length }})
-  </a>
-  <a href="?tab=leavers{% if search %}&q={{ search }}{% endif %}"
-     class="tab-btn {% if tab == 'leavers' %}active{% endif %}">
-    Leavers ({{ leavers|length }})
-  </a>
-  <a href="?tab=hires{% if search %}&q={{ search }}{% endif %}"
-     class="tab-btn {% if tab == 'hires' %}active{% endif %}">
-    Hires ({{ hires|length }})
-  </a>
-  <a href="?tab=promotions{% if search %}&q={{ search }}{% endif %}"
-     class="tab-btn {% if tab == 'promotions' %}active{% endif %}">
-    Promotions ({{ promotions|length }})
-  </a>
+  <a href="?tab=team{% if search %}&q={{ search }}{% endif %}" class="tab-btn {% if tab == 'team' %}active{% endif %}">Team ({{ team|length }})</a>
+  <a href="?tab=leavers{% if search %}&q={{ search }}{% endif %}" class="tab-btn {% if tab == 'leavers' %}active{% endif %}">Leavers ({{ leavers|length }})</a>
+  <a href="?tab=hires{% if search %}&q={{ search }}{% endif %}" class="tab-btn {% if tab == 'hires' %}active{% endif %}">Hires ({{ hires|length }})</a>
+  <a href="?tab=promotions{% if search %}&q={{ search }}{% endif %}" class="tab-btn {% if tab == 'promotions' %}active{% endif %}">Promotions ({{ promotions|length }})</a>
 </div>
 
 <form method="get" id="search-form">
   <input type="hidden" name="tab" value="{{ tab }}">
-  <div class="toolbar">
-    <input type="text" name="q" value="{{ search }}" placeholder="Search by name or title…" class="search-input">
+  <div class="filter-bar" style="margin-bottom:20px">
+    <input type="text" name="q" value="{{ search }}" placeholder="Search by name or title…" style="min-width:260px">
     <button type="submit" class="btn">Search</button>
-    <a href="?tab={{ tab }}" class="btn" style="background:#888;text-decoration:none">Clear</a>
-
+    <a href="?tab={{ tab }}" class="btn btn-gray" style="text-decoration:none">Clear</a>
     {% if tab == 'team' %}
-    <a href="?tab=team&q={{ search }}&export=team" class="btn" style="background:#1d6f42;text-decoration:none">Export Excel</a>
+    <a href="?tab=team&q={{ search }}&export=team" class="btn btn-green" style="text-decoration:none">↓ Export Excel</a>
     {% else %}
-    <a href="?tab={{ tab }}&q={{ search }}&export=events" class="btn" style="background:#1d6f42;text-decoration:none">Export Excel</a>
+    <a href="?tab={{ tab }}&q={{ search }}&export=events" class="btn btn-green" style="text-decoration:none">↓ Export Excel</a>
     {% endif %}
   </div>
 </form>
 
 {% if tab == 'team' %}
 <div class="card">
-  <div class="card-header">
-    <span class="card-title">Current team — {{ team|length }} people</span>
-  </div>
+  <div class="card-header"><span class="card-title">Current team — {{ team|length }} people</span></div>
   {% if team %}
   <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Title</th>
-        <th>Level</th>
-        <th>Function</th>
-        <th>Region</th>
-        <th>Location</th>
-        <th>Last seen</th>
-      </tr>
-    </thead>
+    <thead><tr><th>Name</th><th>Title</th><th>Level</th><th>Function</th><th>Region</th><th>Location</th><th>Last seen</th></tr></thead>
     <tbody>
       {% for snap in team %}
       <tr>
         <td class="name-cell">{{ snap.person.full_name }}</td>
-        <td>{{ snap.job_title|default:"—" }}</td>
+        <td style="color:var(--text-2)">{{ snap.job_title|default:"—" }}</td>
         <td>
-          {% if snap.seniority_group == 'Senior' %}
-            <span class="badge badge-promo">Senior</span>
-          {% else %}
-            <span class="badge badge-role">Junior</span>
-          {% endif %}
+          {% if snap.seniority_group == 'Senior' %}<span class="badge badge-promo">Senior</span>
+          {% else %}<span class="badge badge-role">Junior</span>{% endif %}
         </td>
         <td>
           {% if snap.function == 'Buyout / PE' %}<span class="badge badge-promo">Buyout / PE</span>
@@ -115,16 +73,16 @@
           {% elif snap.function == 'Infrastructure' %}<span class="badge badge-role">Infrastructure</span>
           {% elif snap.function == 'Real Estate' %}<span class="badge badge-role">Real Estate</span>
           {% elif snap.function == 'Credit / Debt' %}<span class="badge badge-role">Credit / Debt</span>
-          {% elif snap.function == 'Operations' %}<span class="badge" style="background:#f1efe8;color:#5f5e5a">Operations</span>
+          {% elif snap.function == 'Operations' %}<span class="badge" style="background:#F1F0EC;color:#5F5E5A">Operations</span>
           {% else %}<span class="subtle">{{ snap.function }}</span>{% endif %}
         </td>
         <td>
-          {% if snap.region == 'EMEA' %}<span class="badge" style="background:#e1f5ee;color:#0f6e56">EMEA</span>
-          {% elif snap.region == 'North America' %}<span class="badge" style="background:#e6f1fb;color:#185fa5">N. America</span>
-          {% elif snap.region == 'APAC' %}<span class="badge" style="background:#faeeda;color:#854f0b">APAC</span>
+          {% if snap.region == 'EMEA' %}<span class="badge" style="background:#ECFDF5;color:#065F46">EMEA</span>
+          {% elif snap.region == 'North America' %}<span class="badge" style="background:#EFF6FF;color:#1E40AF">N. America</span>
+          {% elif snap.region == 'APAC' %}<span class="badge" style="background:#FFFBEB;color:#78350F">APAC</span>
           {% else %}<span class="subtle">—</span>{% endif %}
         </td>
-        <td>{{ snap.location|default:"—" }}</td>
+        <td style="color:var(--text-2)">{{ snap.location|default:"—" }}</td>
         <td class="subtle">{{ snap.scraped_at|date:"d M Y" }}</td>
       </tr>
       {% endfor %}
@@ -137,38 +95,23 @@
 
 {% elif tab == 'leavers' %}
 <div class="card">
-  <div class="card-header">
-    <span class="card-title">Leavers — {{ leavers|length }}</span>
-  </div>
-  {% if leavers %}
-  {% include 'tracker/_events_table.html' with events=leavers %}
-  {% else %}
-  <div class="empty">No leavers recorded{% if search %} matching "{{ search }}"{% endif %}.</div>
-  {% endif %}
+  <div class="card-header"><span class="card-title">Leavers — {{ leavers|length }}</span></div>
+  {% if leavers %}{% include 'tracker/_events_table.html' with events=leavers %}
+  {% else %}<div class="empty">No leavers recorded{% if search %} matching "{{ search }}"{% endif %}.</div>{% endif %}
 </div>
 
 {% elif tab == 'hires' %}
 <div class="card">
-  <div class="card-header">
-    <span class="card-title">Hires — {{ hires|length }}</span>
-  </div>
-  {% if hires %}
-  {% include 'tracker/_events_table.html' with events=hires %}
-  {% else %}
-  <div class="empty">No hires recorded{% if search %} matching "{{ search }}"{% endif %}.</div>
-  {% endif %}
+  <div class="card-header"><span class="card-title">Hires — {{ hires|length }}</span></div>
+  {% if hires %}{% include 'tracker/_events_table.html' with events=hires %}
+  {% else %}<div class="empty">No hires recorded{% if search %} matching "{{ search }}"{% endif %}.</div>{% endif %}
 </div>
 
 {% elif tab == 'promotions' %}
 <div class="card">
-  <div class="card-header">
-    <span class="card-title">Promotions &amp; role changes — {{ promotions|length }}</span>
-  </div>
-  {% if promotions %}
-  {% include 'tracker/_events_table.html' with events=promotions %}
-  {% else %}
-  <div class="empty">No promotions recorded{% if search %} matching "{{ search }}"{% endif %}.</div>
-  {% endif %}
+  <div class="card-header"><span class="card-title">Promotions &amp; role changes — {{ promotions|length }}</span></div>
+  {% if promotions %}{% include 'tracker/_events_table.html' with events=promotions %}
+  {% else %}<div class="empty">No promotions recorded{% if search %} matching "{{ search }}"{% endif %}.</div>{% endif %}
 </div>
 {% endif %}
 

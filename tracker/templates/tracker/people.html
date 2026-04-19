@@ -1,33 +1,18 @@
 {% extends 'tracker/base.html' %}
 {% block content %}
-<style>
-  .filter-wrap { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; align-items:flex-start; }
-  .dropdown { position:relative; display:inline-block; }
-  .dropdown-btn { border:1px solid #ddd; border-radius:7px; padding:7px 12px; font-size:13px; background:white; color:#333; cursor:pointer; display:flex; align-items:center; gap:6px; white-space:nowrap; }
-  .dropdown-btn:hover { border-color:#1a1a2e; }
-  .dropdown-btn .count { background:#1a1a2e; color:white; border-radius:99px; padding:1px 6px; font-size:11px; }
-  .dropdown-panel { display:none; position:absolute; top:calc(100% + 4px); left:0; background:white; border:1px solid #ddd; border-radius:8px; padding:8px 0; min-width:200px; z-index:100; box-shadow:0 4px 12px rgba(0,0,0,0.1); max-height:300px; overflow-y:auto; }
-  .dropdown-panel.open { display:block; }
-  .dropdown-panel label { display:flex; align-items:center; gap:8px; padding:6px 14px; font-size:13px; cursor:pointer; color:#333; }
-  .dropdown-panel label:hover { background:#f5f5f5; }
-  .dropdown-panel input[type=checkbox] { width:14px; height:14px; cursor:pointer; }
-  .search-input { border:1px solid #ddd; border-radius:7px; padding:7px 12px; font-size:13px; outline:none; min-width:220px; }
-  .search-input:focus { border-color:#1a1a2e; }
-  .btn { background:#1a1a2e; color:white; border:none; border-radius:7px; padding:7px 16px; font-size:13px; cursor:pointer; text-decoration:none; display:inline-block; }
-  .btn-green { background:#0f6e56; }
-  .btn-clear { background:#888; }
-</style>
 
-<div class="page-title">People</div>
+<div class="page-header">
+  <div class="page-title">People</div>
+</div>
 
 <form method="get" id="filter-form">
-  <div class="filter-wrap">
-    <input type="text" name="q" value="{{ search }}" placeholder="Search by name or title…" class="search-input">
+  <div class="filter-bar">
+    <input type="text" name="q" value="{{ search }}" placeholder="Search name or title…">
 
-    <!-- Company -->
     <div class="dropdown">
       <div class="dropdown-btn" onclick="toggleDropdown('company-panel')">
-        Companies {% if company_filter %}<span class="count">{{ company_filter|length }}</span>{% endif %} ▾
+        Companies {% if company_filter %}<span class="count">{{ company_filter|length }}</span>{% endif %}
+        <span class="chevron">▾</span>
       </div>
       <div class="dropdown-panel" id="company-panel">
         {% for c in companies %}
@@ -41,10 +26,10 @@
       </div>
     </div>
 
-    <!-- Level -->
     <div class="dropdown">
       <div class="dropdown-btn" onclick="toggleDropdown('group-panel')">
-        Level {% if group_filter %}<span class="count">{{ group_filter|length }}</span>{% endif %} ▾
+        Level {% if group_filter %}<span class="count">{{ group_filter|length }}</span>{% endif %}
+        <span class="chevron">▾</span>
       </div>
       <div class="dropdown-panel" id="group-panel">
         <label><input type="checkbox" name="group" value="Senior" {% if 'Senior' in group_filter %}checked{% endif %} onchange="document.getElementById('filter-form').submit()"> Senior</label>
@@ -52,10 +37,10 @@
       </div>
     </div>
 
-    <!-- Function -->
     <div class="dropdown">
       <div class="dropdown-btn" onclick="toggleDropdown('function-panel')">
-        Function {% if function_filter %}<span class="count">{{ function_filter|length }}</span>{% endif %} ▾
+        Function {% if function_filter %}<span class="count">{{ function_filter|length }}</span>{% endif %}
+        <span class="chevron">▾</span>
       </div>
       <div class="dropdown-panel" id="function-panel">
         <label><input type="checkbox" name="function" value="Buyout / PE" {% if 'Buyout / PE' in function_filter %}checked{% endif %} onchange="document.getElementById('filter-form').submit()"> Buyout / PE</label>
@@ -71,10 +56,10 @@
       </div>
     </div>
 
-    <!-- Region -->
     <div class="dropdown">
       <div class="dropdown-btn" onclick="toggleDropdown('region-panel')">
-        Region {% if region_filter %}<span class="count">{{ region_filter|length }}</span>{% endif %} ▾
+        Region {% if region_filter %}<span class="count">{{ region_filter|length }}</span>{% endif %}
+        <span class="chevron">▾</span>
       </div>
       <div class="dropdown-panel" id="region-panel">
         <label><input type="checkbox" name="region" value="EMEA" {% if 'EMEA' in region_filter %}checked{% endif %} onchange="document.getElementById('filter-form').submit()"> EMEA</label>
@@ -84,18 +69,16 @@
       </div>
     </div>
 
-    <!-- Last seen -->
-    <select name="last_seen" onchange="document.getElementById('filter-form').submit()"
-      style="border:1px solid #ddd;border-radius:7px;padding:7px 12px;font-size:13px;background:white;color:#333;outline:none;">
+    <select name="last_seen" onchange="document.getElementById('filter-form').submit()">
       <option value="">Any date</option>
-      <option value="7" {% if last_seen_filter == '7' %}selected{% endif %}>Last 7 days</option>
+      <option value="7"  {% if last_seen_filter == '7'  %}selected{% endif %}>Last 7 days</option>
       <option value="30" {% if last_seen_filter == '30' %}selected{% endif %}>Last 30 days</option>
       <option value="90" {% if last_seen_filter == '90' %}selected{% endif %}>Last 90 days</option>
     </select>
 
     <button type="submit" class="btn">Search</button>
-    <a href="/people/" class="btn btn-clear">Clear</a>
-    <a href="?{{ request.GET.urlencode }}&export=excel" class="btn btn-green">Export Excel</a>
+    <a href="/people/" class="btn btn-gray" style="text-decoration:none">Clear</a>
+    <a href="?{{ request.GET.urlencode }}&export=excel" class="btn btn-green" style="text-decoration:none">↓ Excel</a>
   </div>
 </form>
 
@@ -111,7 +94,7 @@
         <th>Company</th>
         <th>Title</th>
         <th>Level</th>
-        <th>Group</th>
+        <th>Seniority</th>
         <th>Function</th>
         <th>Region</th>
         <th>Location</th>
@@ -122,9 +105,9 @@
       {% for snap in people %}
       <tr>
         <td class="name-cell">{{ snap.person.full_name }}</td>
-        <td>{{ snap.person.company.name }}</td>
-        <td>{{ snap.job_title|default:"—" }}</td>
-        <td>{{ snap.seniority|default:"—" }}</td>
+        <td style="color:var(--text-2)">{{ snap.person.company.name }}</td>
+        <td style="color:var(--text-2)">{{ snap.job_title|default:"—" }}</td>
+        <td style="color:var(--text-2);font-size:12px">{{ snap.seniority|default:"—" }}</td>
         <td>
           {% if snap.seniority_group == 'Senior' %}
             <span class="badge badge-promo">Senior</span>
@@ -133,47 +116,31 @@
           {% endif %}
         </td>
         <td>
-          {% if snap.function == 'Buyout / PE' %}
-            <span class="badge badge-promo">Buyout / PE</span>
-          {% elif snap.function == 'Growth Equity' %}
-            <span class="badge badge-promo">Growth Equity</span>
-          {% elif snap.function == 'Infrastructure' %}
-            <span class="badge badge-role">Infrastructure</span>
-          {% elif snap.function == 'Real Estate' %}
-            <span class="badge badge-role">Real Estate</span>
-          {% elif snap.function == 'Credit / Debt' %}
-            <span class="badge badge-role">Credit / Debt</span>
-          {% elif snap.function == 'Venture Capital' %}
-            <span class="badge badge-role">Venture Capital</span>
-          {% elif snap.function == 'Investment (General)' %}
-            <span class="badge badge-hire">Investment</span>
-          {% elif snap.function == 'Advisory' %}
-            <span class="badge badge-hire">Advisory</span>
-          {% elif snap.function == 'Operations' %}
-            <span class="badge" style="background:#f1efe8;color:#5f5e5a">Operations</span>
-          {% else %}
-            <span class="subtle">—</span>
-          {% endif %}
+          {% if snap.function == 'Buyout / PE' %}<span class="badge badge-promo">Buyout / PE</span>
+          {% elif snap.function == 'Growth Equity' %}<span class="badge badge-promo">Growth Equity</span>
+          {% elif snap.function == 'Infrastructure' %}<span class="badge badge-role">Infrastructure</span>
+          {% elif snap.function == 'Real Estate' %}<span class="badge badge-role">Real Estate</span>
+          {% elif snap.function == 'Credit / Debt' %}<span class="badge badge-role">Credit / Debt</span>
+          {% elif snap.function == 'Venture Capital' %}<span class="badge badge-role">Venture Capital</span>
+          {% elif snap.function == 'Investment (General)' %}<span class="badge badge-hire">Investment</span>
+          {% elif snap.function == 'Advisory' %}<span class="badge badge-hire">Advisory</span>
+          {% elif snap.function == 'Operations' %}<span class="badge" style="background:#F1F0EC;color:#5F5E5A">Operations</span>
+          {% else %}<span class="subtle">—</span>{% endif %}
         </td>
         <td>
-          {% if snap.region == 'EMEA' %}
-            <span class="badge" style="background:#e1f5ee;color:#0f6e56">EMEA</span>
-          {% elif snap.region == 'North America' %}
-            <span class="badge" style="background:#e6f1fb;color:#185fa5">N. America</span>
-          {% elif snap.region == 'APAC' %}
-            <span class="badge" style="background:#faeeda;color:#854f0b">APAC</span>
-          {% else %}
-            <span class="subtle">—</span>
-          {% endif %}
+          {% if snap.region == 'EMEA' %}<span class="badge" style="background:#ECFDF5;color:#065F46">EMEA</span>
+          {% elif snap.region == 'North America' %}<span class="badge" style="background:#EFF6FF;color:#1E40AF">N. America</span>
+          {% elif snap.region == 'APAC' %}<span class="badge" style="background:#FFFBEB;color:#78350F">APAC</span>
+          {% else %}<span class="subtle">—</span>{% endif %}
         </td>
-        <td>{{ snap.location|default:"—" }}</td>
+        <td style="color:var(--text-2)">{{ snap.location|default:"—" }}</td>
         <td class="subtle">{{ snap.scraped_at|date:"d M Y" }}</td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
   {% else %}
-  <div class="empty">No people found matching your search.</div>
+  <div class="empty">No people found matching your filters.</div>
   {% endif %}
 </div>
 

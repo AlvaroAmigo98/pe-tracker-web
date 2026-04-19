@@ -1,46 +1,40 @@
 {% extends 'tracker/base.html' %}
 {% block content %}
-<style>
-  .dropdown { position:relative; display:inline-block; }
-  .dropdown-btn { border:1px solid #ddd; border-radius:7px; padding:7px 12px; font-size:13px; background:white; color:#333; cursor:pointer; display:flex; align-items:center; gap:6px; white-space:nowrap; }
-  .dropdown-btn:hover { border-color:#1a1a2e; }
-  .dropdown-btn .count { background:#1a1a2e; color:white; border-radius:99px; padding:1px 6px; font-size:11px; }
-  .dropdown-panel { display:none; position:absolute; top:calc(100% + 4px); left:0; background:white; border:1px solid #ddd; border-radius:8px; padding:8px 0; min-width:200px; z-index:100; box-shadow:0 4px 12px rgba(0,0,0,0.1); max-height:300px; overflow-y:auto; }
-  .dropdown-panel.open { display:block; }
-  .dropdown-panel label { display:flex; align-items:center; gap:8px; padding:6px 14px; font-size:13px; cursor:pointer; color:#333; }
-  .dropdown-panel label:hover { background:#f5f5f5; }
-  .dropdown-panel input[type=checkbox] { width:14px; height:14px; cursor:pointer; }
-</style>
 
-<div class="page-title">Dashboard</div>
-
-{% if latest_run %}
-<p class="subtle" style="margin-bottom:18px">
-  Last scrape: {{ latest_run.ran_at|date:"d M Y, H:i" }} — {{ latest_run.total_rows|default:"0" }} employees across {{ latest_run.firms_ok }} firms
-</p>
-{% endif %}
+<div class="page-header">
+  <div>
+    <div class="page-title">Dashboard</div>
+    {% if latest_run %}
+    <div class="page-meta" style="margin-top:4px">Last scrape: {{ latest_run.ran_at|date:"d M Y, H:i" }} · {{ latest_run.total_rows|default:"0" }} employees across {{ latest_run.firms_ok }} firms</div>
+    {% endif %}
+  </div>
+</div>
 
 <div class="stats-row">
   <div class="stat-card">
-    <div class="stat-num" style="color:#1D9E75">{{ hires|length }}</div>
+    <div class="stat-indicator" style="background:var(--hire)"></div>
+    <div class="stat-num" style="color:var(--hire)">{{ hires|length }}</div>
     <div class="stat-label">New hires</div>
   </div>
   <div class="stat-card">
-    <div class="stat-num" style="color:#E24B4A">{{ leavers|length }}</div>
+    <div class="stat-indicator" style="background:var(--leave)"></div>
+    <div class="stat-num" style="color:var(--leave)">{{ leavers|length }}</div>
     <div class="stat-label">Leavers</div>
   </div>
   <div class="stat-card">
-    <div class="stat-num" style="color:#BA7517">{{ promotions|length }}</div>
-    <div class="stat-label">Promotions / role changes</div>
+    <div class="stat-indicator" style="background:var(--promo)"></div>
+    <div class="stat-num" style="color:var(--promo)">{{ promotions|length }}</div>
+    <div class="stat-label">Promotions &amp; role changes</div>
   </div>
 </div>
 
 <form method="get" id="dash-form">
-  <div class="filter-bar" style="margin-bottom:16px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
+  <div class="filter-bar">
 
     <div class="dropdown">
       <div class="dropdown-btn" onclick="toggleDropdown('d-company')">
-        Companies {% if company_filter %}<span class="count">{{ company_filter|length }}</span>{% endif %} ▾
+        Companies {% if company_filter %}<span class="count">{{ company_filter|length }}</span>{% endif %}
+        <span class="chevron">▾</span>
       </div>
       <div class="dropdown-panel" id="d-company">
         {% for c in companies %}
@@ -56,7 +50,8 @@
 
     <div class="dropdown">
       <div class="dropdown-btn" onclick="toggleDropdown('d-group')">
-        Level {% if group_filter %}<span class="count">{{ group_filter|length }}</span>{% endif %} ▾
+        Level {% if group_filter %}<span class="count">{{ group_filter|length }}</span>{% endif %}
+        <span class="chevron">▾</span>
       </div>
       <div class="dropdown-panel" id="d-group">
         <label><input type="checkbox" name="group" value="Senior" {% if 'Senior' in group_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Senior</label>
@@ -66,7 +61,8 @@
 
     <div class="dropdown">
       <div class="dropdown-btn" onclick="toggleDropdown('d-region')">
-        Region {% if region_filter %}<span class="count">{{ region_filter|length }}</span>{% endif %} ▾
+        Region {% if region_filter %}<span class="count">{{ region_filter|length }}</span>{% endif %}
+        <span class="chevron">▾</span>
       </div>
       <div class="dropdown-panel" id="d-region">
         <label><input type="checkbox" name="region" value="EMEA" {% if 'EMEA' in region_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> EMEA</label>
@@ -78,7 +74,8 @@
 
     <div class="dropdown">
       <div class="dropdown-btn" onclick="toggleDropdown('d-function')">
-        Function {% if function_filter %}<span class="count">{{ function_filter|length }}</span>{% endif %} ▾
+        Function {% if function_filter %}<span class="count">{{ function_filter|length }}</span>{% endif %}
+        <span class="chevron">▾</span>
       </div>
       <div class="dropdown-panel" id="d-function">
         <label><input type="checkbox" name="function" value="Buyout / PE" {% if 'Buyout / PE' in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Buyout / PE</label>
@@ -93,16 +90,16 @@
       </div>
     </div>
 
-    <a href="?senior_emea=1" class="btn" style="background:#a32d2d;text-decoration:none">⚑ Senior EMEA Leavers</a>
-    <button type="submit" name="export" value="excel" class="btn" style="background:#1d6f42;">Download Excel</button>
-    <a href="/" class="btn" style="background:#888;text-decoration:none">Clear</a>
+    <a href="?senior_emea=1" class="btn btn-red" style="text-decoration:none">⚑ Senior EMEA Leavers</a>
+    <button type="submit" name="export" value="excel" class="btn btn-green">↓ Export Excel</button>
+    <a href="/" class="btn btn-gray" style="text-decoration:none">Clear</a>
   </div>
 </form>
 
 <div class="card">
   <div class="card-header">
     <span class="card-title">
-      {% if senior_emea_only %}Senior EMEA Investment Leavers{% else %}Historical changes{% endif %}
+      {% if senior_emea_only %}Senior EMEA Investment Leavers{% else %}All change events{% endif %}
     </span>
     <span class="subtle">{{ events|length }} events</span>
   </div>
@@ -124,52 +121,35 @@
       {% for e in events %}
       <tr>
         <td class="name-cell">{{ e.person.full_name }}</td>
-        <td>{{ e.person.company.name }}</td>
+        <td style="color:var(--text-2)">{{ e.person.company.name }}</td>
         <td>
-          {% if e.function == 'Buyout / PE' %}
-            <span class="badge badge-promo">Buyout / PE</span>
-          {% elif e.function == 'Investment (General)' %}
-            <span class="badge badge-hire">Investment</span>
-          {% elif e.function == 'Advisory' %}
-            <span class="badge badge-hire">Advisory</span>
-          {% elif e.function == 'Infrastructure' %}
-            <span class="badge badge-role">Infrastructure</span>
-          {% elif e.function == 'Real Estate' %}
-            <span class="badge badge-role">Real Estate</span>
-          {% elif e.function == 'Credit / Debt' %}
-            <span class="badge badge-role">Credit / Debt</span>
-          {% elif e.function == 'Operations' %}
-            <span class="badge" style="background:#f1efe8;color:#5f5e5a">Operations</span>
-          {% else %}
-            <span class="subtle">—</span>
-          {% endif %}
+          {% if e.function == 'Buyout / PE' %}<span class="badge badge-promo">Buyout / PE</span>
+          {% elif e.function == 'Investment (General)' %}<span class="badge badge-hire">Investment</span>
+          {% elif e.function == 'Advisory' %}<span class="badge badge-hire">Advisory</span>
+          {% elif e.function == 'Infrastructure' %}<span class="badge badge-role">Infrastructure</span>
+          {% elif e.function == 'Real Estate' %}<span class="badge badge-role">Real Estate</span>
+          {% elif e.function == 'Credit / Debt' %}<span class="badge badge-role">Credit / Debt</span>
+          {% elif e.function == 'Operations' %}<span class="badge" style="background:#F1F0EC;color:#5F5E5A">Operations</span>
+          {% else %}<span class="subtle">—</span>{% endif %}
         </td>
         <td>
           {% if e.event_type == 'hire' %}<span class="badge badge-hire">Hire</span>
           {% elif e.event_type == 'leaver' %}<span class="badge badge-leave">Leaver</span>
           {% elif e.event_type == 'promotion' %}<span class="badge badge-promo">Promotion</span>
-          {% else %}<span class="badge badge-role">Role change</span>
-          {% endif %}
+          {% else %}<span class="badge badge-role">Role change</span>{% endif %}
         </td>
         <td>
           {% if e.previous_title and e.new_title %}
             <span class="subtle">{{ e.previous_title }} → {{ e.new_title }}</span>
-          {% elif e.new_title %}
-            {{ e.new_title }}
-          {% elif e.previous_title %}
-            <span class="subtle">Last role: {{ e.previous_title }}</span>
+          {% elif e.new_title %}{{ e.new_title }}
+          {% elif e.previous_title %}<span class="subtle">Last: {{ e.previous_title }}</span>
           {% endif %}
         </td>
         <td>
-          {% if e.region == 'EMEA' %}
-            <span class="badge" style="background:#e1f5ee;color:#0f6e56">EMEA</span>
-          {% elif e.region == 'North America' %}
-            <span class="badge" style="background:#e6f1fb;color:#185fa5">N. America</span>
-          {% elif e.region == 'APAC' %}
-            <span class="badge" style="background:#faeeda;color:#854f0b">APAC</span>
-          {% else %}
-            <span class="subtle">—</span>
-          {% endif %}
+          {% if e.region == 'EMEA' %}<span class="badge" style="background:#ECFDF5;color:#065F46">EMEA</span>
+          {% elif e.region == 'North America' %}<span class="badge" style="background:#EFF6FF;color:#1E40AF">N. America</span>
+          {% elif e.region == 'APAC' %}<span class="badge" style="background:#FFFBEB;color:#78350F">APAC</span>
+          {% else %}<span class="subtle">—</span>{% endif %}
         </td>
         <td class="subtle">{{ e.detected_at|date:"d M Y" }}</td>
       </tr>

@@ -2,52 +2,69 @@
 {% block content %}
 
 <div class="page-header">
-  <span class="page-title">Firms</span>
-  {% if latest_date %}<span class="page-meta">Headcount as of {{ latest_date|date:"d M Y" }}</span>{% endif %}
+  <div>
+    <div class="page-title">Firms</div>
+    {% if latest_date %}<div class="page-meta" style="margin-top:4px">Headcount as of {{ latest_date|date:"d M Y" }}</div>{% endif %}
+  </div>
 </div>
 
-<div class="stats-row" style="grid-template-columns: repeat(4,1fr);">
+<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">
   <div class="stat-card">
-    <div class="stat-num" style="color:#1a1a2e">{{ totals.headcount }}</div>
+    <div class="stat-indicator" style="background:var(--text-1)"></div>
+    <div class="stat-num" style="color:var(--text-1)">{{ totals.headcount }}</div>
     <div class="stat-label">Total headcount</div>
   </div>
   <div class="stat-card">
-    <div class="stat-num" style="color:#1D9E75">{{ totals.hires }}</div>
+    <div class="stat-indicator" style="background:var(--hire)"></div>
+    <div class="stat-num" style="color:var(--hire)">{{ totals.hires }}</div>
     <div class="stat-label">Total hires</div>
   </div>
   <div class="stat-card">
-    <div class="stat-num" style="color:#E24B4A">{{ totals.leavers }}</div>
+    <div class="stat-indicator" style="background:var(--leave)"></div>
+    <div class="stat-num" style="color:var(--leave)">{{ totals.leavers }}</div>
     <div class="stat-label">Total leavers</div>
   </div>
   <div class="stat-card">
-    <div class="stat-num" style="color:#BA7517">{{ totals.promotions }}</div>
-    <div class="stat-label">Promotions / role changes</div>
+    <div class="stat-indicator" style="background:var(--promo)"></div>
+    <div class="stat-num" style="color:var(--promo)">{{ totals.promotions }}</div>
+    <div class="stat-label">Promotions &amp; role changes</div>
   </div>
 </div>
 
 <div class="card">
   <div class="card-header">
     <span class="card-title">{{ firm_stats|length }} firms</span>
-    <span class="subtle">
-      Sort by:
-      <a href="?sort=leavers"    style="{% if sort_by == 'leavers'    %}font-weight:600;color:#1a1a2e{% else %}color:#888{% endif %};text-decoration:none;margin:0 4px">Leavers</a>
-      <a href="?sort=hires"      style="{% if sort_by == 'hires'      %}font-weight:600;color:#1a1a2e{% else %}color:#888{% endif %};text-decoration:none;margin:0 4px">Hires</a>
-      <a href="?sort=promotions" style="{% if sort_by == 'promotions' %}font-weight:600;color:#1a1a2e{% else %}color:#888{% endif %};text-decoration:none;margin:0 4px">Promotions</a>
-      <a href="?sort=headcount"  style="{% if sort_by == 'headcount'  %}font-weight:600;color:#1a1a2e{% else %}color:#888{% endif %};text-decoration:none;margin:0 4px">Headcount</a>
-      <a href="?sort=activity"   style="{% if sort_by == 'activity'   %}font-weight:600;color:#1a1a2e{% else %}color:#888{% endif %};text-decoration:none;margin:0 4px">Activity</a>
-      <a href="?sort=name"       style="{% if sort_by == 'name'       %}font-weight:600;color:#1a1a2e{% else %}color:#888{% endif %};text-decoration:none;margin:0 4px">A–Z</a>
-    </span>
+    <div style="display:flex;gap:4px;align-items:center">
+      <span style="font-size:11px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-right:6px">Sort</span>
+      {% for s,label in sort_options %}
+      <a href="?sort={{ s }}"
+         style="font-size:12px;font-weight:{% if sort_by == s %}600{% else %}400{% endif %};
+                color:{% if sort_by == s %}var(--accent){% else %}var(--text-3){% endif %};
+                text-decoration:none;padding:3px 8px;border-radius:5px;
+                background:{% if sort_by == s %}var(--role-bg){% else %}transparent{% endif %};
+                transition:all .1s">
+        {{ label }}
+      </a>
+      {% empty %}
+      <a href="?sort=leavers"    style="font-size:12px;font-weight:{% if sort_by == 'leavers' %}600{% else %}400{% endif %};color:{% if sort_by == 'leavers' %}var(--accent){% else %}var(--text-3){% endif %};text-decoration:none;padding:3px 8px;border-radius:5px;background:{% if sort_by == 'leavers' %}var(--role-bg){% else %}transparent{% endif %}">Leavers</a>
+      <a href="?sort=hires"      style="font-size:12px;font-weight:{% if sort_by == 'hires' %}600{% else %}400{% endif %};color:{% if sort_by == 'hires' %}var(--accent){% else %}var(--text-3){% endif %};text-decoration:none;padding:3px 8px;border-radius:5px;background:{% if sort_by == 'hires' %}var(--role-bg){% else %}transparent{% endif %}">Hires</a>
+      <a href="?sort=promotions" style="font-size:12px;font-weight:{% if sort_by == 'promotions' %}600{% else %}400{% endif %};color:{% if sort_by == 'promotions' %}var(--accent){% else %}var(--text-3){% endif %};text-decoration:none;padding:3px 8px;border-radius:5px;background:{% if sort_by == 'promotions' %}var(--role-bg){% else %}transparent{% endif %}">Promotions</a>
+      <a href="?sort=headcount"  style="font-size:12px;font-weight:{% if sort_by == 'headcount' %}600{% else %}400{% endif %};color:{% if sort_by == 'headcount' %}var(--accent){% else %}var(--text-3){% endif %};text-decoration:none;padding:3px 8px;border-radius:5px;background:{% if sort_by == 'headcount' %}var(--role-bg){% else %}transparent{% endif %}">Headcount</a>
+      <a href="?sort=activity"   style="font-size:12px;font-weight:{% if sort_by == 'activity' %}600{% else %}400{% endif %};color:{% if sort_by == 'activity' %}var(--accent){% else %}var(--text-3){% endif %};text-decoration:none;padding:3px 8px;border-radius:5px;background:{% if sort_by == 'activity' %}var(--role-bg){% else %}transparent{% endif %}">Activity</a>
+      <a href="?sort=name"       style="font-size:12px;font-weight:{% if sort_by == 'name' %}600{% else %}400{% endif %};color:{% if sort_by == 'name' %}var(--accent){% else %}var(--text-3){% endif %};text-decoration:none;padding:3px 8px;border-radius:5px;background:{% if sort_by == 'name' %}var(--role-bg){% else %}transparent{% endif %}">A–Z</a>
+      {% endempty %}
+    </div>
   </div>
 
   <table>
     <thead>
       <tr>
-        <th><a href="?sort=name" style="color:inherit;text-decoration:none">Firm {% if sort_by == 'name' %}▴{% endif %}</a></th>
-        <th><a href="?sort=headcount" style="color:inherit;text-decoration:none">Headcount {% if sort_by == 'headcount' %}▴{% endif %}</a></th>
-        <th><a href="?sort=hires" style="color:inherit;text-decoration:none">Hires {% if sort_by == 'hires' %}▴{% endif %}</a></th>
-        <th><a href="?sort=leavers" style="color:inherit;text-decoration:none">Leavers {% if sort_by == 'leavers' %}▴{% endif %}</a></th>
-        <th><a href="?sort=promotions" style="color:inherit;text-decoration:none">Promotions {% if sort_by == 'promotions' %}▴{% endif %}</a></th>
-        <th><a href="?sort=activity" style="color:inherit;text-decoration:none">Total activity {% if sort_by == 'activity' %}▴{% endif %}</a></th>
+        <th><a href="?sort=name" style="color:inherit;text-decoration:none">Firm {% if sort_by == 'name' %}<span class="sort-arrow">▴</span>{% endif %}</a></th>
+        <th><a href="?sort=headcount" style="color:inherit;text-decoration:none">Headcount {% if sort_by == 'headcount' %}<span class="sort-arrow">▴</span>{% endif %}</a></th>
+        <th><a href="?sort=hires" style="color:inherit;text-decoration:none">Hires {% if sort_by == 'hires' %}<span class="sort-arrow">▴</span>{% endif %}</a></th>
+        <th><a href="?sort=leavers" style="color:inherit;text-decoration:none">Leavers {% if sort_by == 'leavers' %}<span class="sort-arrow">▴</span>{% endif %}</a></th>
+        <th><a href="?sort=promotions" style="color:inherit;text-decoration:none">Promotions {% if sort_by == 'promotions' %}<span class="sort-arrow">▴</span>{% endif %}</a></th>
+        <th><a href="?sort=activity" style="color:inherit;text-decoration:none">Activity {% if sort_by == 'activity' %}<span class="sort-arrow">▴</span>{% endif %}</a></th>
         <th></th>
       </tr>
     </thead>
@@ -56,27 +73,11 @@
       <tr style="cursor:pointer" onclick="window.location='/firms/{{ f.company.id }}/'">
         <td class="name-cell">{{ f.company.name }}</td>
         <td>{% if f.headcount %}<strong>{{ f.headcount }}</strong>{% else %}<span class="subtle">—</span>{% endif %}</td>
-        <td>
-          {% if f.hires %}
-            <span style="color:#1D9E75;font-weight:600">+{{ f.hires }}</span>
-          {% else %}<span class="subtle">—</span>{% endif %}
-        </td>
-        <td>
-          {% if f.leavers %}
-            <span style="color:#E24B4A;font-weight:600">{{ f.leavers }}</span>
-          {% else %}<span class="subtle">—</span>{% endif %}
-        </td>
-        <td>
-          {% if f.promotions %}
-            <span style="color:#BA7517;font-weight:600">{{ f.promotions }}</span>
-          {% else %}<span class="subtle">—</span>{% endif %}
-        </td>
-        <td>
-          {% if f.activity %}
-            <span class="badge badge-role">{{ f.activity }}</span>
-          {% else %}<span class="subtle">—</span>{% endif %}
-        </td>
-        <td><a href="/firms/{{ f.company.id }}/" style="color:#888;font-size:12px;text-decoration:none" onclick="event.stopPropagation()">View →</a></td>
+        <td>{% if f.hires %}<span style="color:var(--hire);font-weight:600">+{{ f.hires }}</span>{% else %}<span class="subtle">—</span>{% endif %}</td>
+        <td>{% if f.leavers %}<span style="color:var(--leave);font-weight:600">{{ f.leavers }}</span>{% else %}<span class="subtle">—</span>{% endif %}</td>
+        <td>{% if f.promotions %}<span style="color:var(--promo);font-weight:600">{{ f.promotions }}</span>{% else %}<span class="subtle">—</span>{% endif %}</td>
+        <td>{% if f.activity %}<span class="badge badge-role">{{ f.activity }}</span>{% else %}<span class="subtle">—</span>{% endif %}</td>
+        <td><a href="/firms/{{ f.company.id }}/" style="color:var(--accent);font-size:12px;font-weight:500;text-decoration:none" onclick="event.stopPropagation()">View →</a></td>
       </tr>
       {% empty %}
       <tr><td colspan="7"><div class="empty">No firms found.</div></td></tr>
