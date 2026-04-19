@@ -496,33 +496,7 @@ def signals(request):
     today = date.today()
     senior_levels = ['Partner / MD', 'Director', 'VP']
 
-    # ── Feature 1: In Market ──────────────────────────────────────────────────
-    # Senior leavers in last 180 days who have NOT been rehired at any tracked firm
-    window_start = today - timedelta(days=180)
-
-    leaver_pids = set(ChangeEvent.objects.filter(
-        event_type='leaver',
-        detected_at__gte=window_start,
-        previous_level__in=senior_levels,
-    ).values_list('person_id', flat=True))
-
-    rehired_pids = set(ChangeEvent.objects.filter(
-        event_type='hire',
-        detected_at__gte=window_start,
-        person_id__in=leaver_pids,
-    ).values_list('person_id', flat=True))
-
-    in_market = list(ChangeEvent.objects.filter(
-        event_type='leaver',
-        detected_at__gte=window_start,
-        previous_level__in=senior_levels,
-        person_id__in=(leaver_pids - rehired_pids),
-    ).select_related('person', 'person__company').order_by('-detected_at'))
-
-    for e in in_market:
-        e.days_since = (today - e.detected_at).days
-
-    # ── Feature 2: Cascade departure alerts ───────────────────────────────────
+    # ── Feature 1: Cascade departure alerts ───────────────────────────────────
     # Senior (Partner/MD or Director) leaves → 2+ more people leave same firm within 8 weeks
     all_leaver_list = list(ChangeEvent.objects.filter(
         event_type='leaver',
@@ -556,8 +530,15 @@ def signals(request):
             })
 
     cascade_alerts.sort(key=lambda x: -x['count'])
+    seen_cascade_firms = set()
+    deduped_cascades = []
+    for a in cascade_alerts:
+        if a['firm'] not in seen_cascade_firms:
+            seen_cascade_firms.add(a['firm'])
+            deduped_cascades.append(a)
+    cascade_alerts = deduped_cascades
 
-    # ── Feature 3: Lift-out / Spinout detector ────────────────────────────────
+    # ── Feature 2: Lift-out / Spinout detector ────────────────────────────────
     # 4+ people leave same firm within 21 days
     liftout_signals = []
     seen_windows = set()
@@ -678,7 +659,6 @@ def signals(request):
     })
 
     return render(request, 'tracker/signals.html', {
-        'in_market':          in_market,
         'cascade_alerts':     cascade_alerts[:10],
         'liftout_signals':    liftout_signals,
         'health_scores':      health_scores,

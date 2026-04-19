@@ -51,7 +51,7 @@
   }
 
   /* ── Stat cards ── */
-  .sig-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 28px; }
+  .sig-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 28px; }
   .sig-stat {
     background: var(--d-surface);
     border: 1px solid var(--d-border);
@@ -133,6 +133,24 @@
   .net-pos { color: var(--green); font-weight: 700; }
   .net-neg { color: var(--red);   font-weight: 700; }
 
+  /* ── Signal rows (cascade / liftout) ── */
+  .sig-row {
+    display: flex; align-items: stretch; gap: 0;
+    border-bottom: 1px solid var(--d-border);
+    transition: background .12s;
+    text-decoration: none; color: inherit;
+    cursor: pointer;
+  }
+  .sig-row:last-child { border-bottom: none; }
+  .sig-row:hover { background: rgba(255,255,255,0.03); }
+  .sig-row-accent { width: 4px; flex-shrink: 0; }
+  .sig-row-body { padding: 16px 20px; flex: 1; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+  .sig-row-firm { font-size: 14px; font-weight: 700; color: var(--d-text1); min-width: 160px; }
+  .sig-row-detail { flex: 1; min-width: 200px; }
+  .sig-row-meta { font-size: 11px; color: var(--d-text3); }
+  .sig-row-arrow { padding: 16px 18px; display: flex; align-items: center; color: var(--d-text3); font-size: 14px; flex-shrink: 0; transition: color .12s; }
+  .sig-row:hover .sig-row-arrow { color: var(--text-1); }
+
   /* ── Section grid ── */
   .sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
 
@@ -184,11 +202,6 @@
 
 <!-- ── Stat Strip ─────────────────────────────────────────────────────────── -->
 <div class="sig-stats">
-  <div class="sig-stat" style="--accent-color:var(--red); --accent-glow:var(--red-glow)">
-    <div class="sig-stat-icon">🎯</div>
-    <div class="sig-stat-num">{{ in_market|length }}</div>
-    <div class="sig-stat-label">In market</div>
-  </div>
   <div class="sig-stat" style="--accent-color:var(--amber); --accent-glow:var(--amber-glow)">
     <div class="sig-stat-icon">⚡</div>
     <div class="sig-stat-num">{{ cascade_alerts|length }}</div>
@@ -206,91 +219,41 @@
   </div>
 </div>
 
-<!-- ── Section 1: In Market ──────────────────────────────────────────────── -->
-<div class="sig-section-label">01 — In Market Window</div>
-<div class="dcard" style="margin-bottom:28px; border-color:rgba(255,59,92,0.2); box-shadow: 0 0 40px rgba(255,59,92,0.04);">
-  <div class="dcard-header">
-    <div>
-      <div class="dcard-title">Senior Executives Available for Hire</div>
-      <div class="dcard-sub">Partner/MD · Director · VP — left within 180 days, not yet rehired at any tracked firm</div>
-    </div>
-    <span class="sbadge sbadge-red">{{ in_market|length }} available</span>
-  </div>
-  {% if in_market %}
-  <table class="dtable">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Name</th>
-        <th>Previous Firm</th>
-        <th>Title</th>
-        <th>Level</th>
-        <th>Detected</th>
-        <th>Days Out</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for e in in_market %}
-      <tr>
-        <td class="rank">{{ forloop.counter }}</td>
-        <td class="dn">{{ e.person.full_name }}</td>
-        <td style="color:var(--d-text2)">{{ e.person.company.name }}</td>
-        <td style="color:var(--d-text2); max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ e.previous_title|default:"—" }}</td>
-        <td><span class="sbadge sbadge-red">{{ e.previous_level|default:"—" }}</span></td>
-        <td style="color:var(--d-text3); font-size:12px">{{ e.detected_at|date:"d M Y" }}</td>
-        <td>
-          <span class="dpill"
-            {% if e.days_since > 90 %}style="color:var(--red); border-color:rgba(255,59,92,0.3);"
-            {% elif e.days_since > 45 %}style="color:var(--amber); border-color:rgba(245,158,11,0.3);"
-            {% else %}style="color:var(--green); border-color:rgba(16,185,129,0.3);"{% endif %}>
-            {{ e.days_since }}d
-          </span>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% else %}
-  <div class="dempty">No senior leavers in the window yet.</div>
-  {% endif %}
-</div>
-
-<!-- ── Sections 2 + 3: Cascade + Liftout ─────────────────────────────────── -->
+<!-- ── Sections 1 + 2: Cascade + Liftout ─────────────────────────────────── -->
 <div class="sig-grid">
 
   <!-- Cascade Alerts -->
   <div>
-    <div class="sig-section-label">02 — Cascade Departure Alerts</div>
+    <div class="sig-section-label">01 — Cascade Departure Alerts</div>
     <div class="dcard" style="border-color:rgba(245,158,11,0.2); box-shadow:0 0 40px rgba(245,158,11,0.04);">
       <div class="dcard-header">
         <div>
           <div class="dcard-title">Cascade Departures</div>
-          <div class="dcard-sub">Senior leaver followed by 2+ colleagues within 8 weeks</div>
+          <div class="dcard-sub">Senior leaver followed by 2+ colleagues within 8 weeks · one per firm · click to view</div>
         </div>
-        <span class="sbadge sbadge-amber">{{ cascade_alerts|length }} signals</span>
+        <span class="sbadge sbadge-amber">{{ cascade_alerts|length }} firms</span>
       </div>
       {% if cascade_alerts %}
-      <table class="dtable">
-        <thead>
-          <tr><th>Firm</th><th>Trigger</th><th>Followed by</th><th>Date</th></tr>
-        </thead>
-        <tbody>
-          {% for a in cascade_alerts %}
-          <tr>
-            <td class="dn">{{ a.firm }}</td>
-            <td>
-              <div style="color:var(--d-text1); font-weight:600">{{ a.trigger_name }}</div>
-              <div style="color:var(--d-text3); font-size:11px; margin-top:1px">{{ a.trigger_title }}</div>
-            </td>
-            <td>
-              <span class="sbadge sbadge-amber">+{{ a.count }}</span>
-              <div style="color:var(--d-text3); font-size:11px; margin-top:4px; max-width:180px; line-height:1.4">{{ a.follower_names }}</div>
-            </td>
-            <td style="color:var(--d-text3); font-size:11px; white-space:nowrap">{{ a.trigger_date|date:"d M Y" }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+        {% for a in cascade_alerts %}
+        <a href="/firms/{{ a.company_id }}/?tab=leavers" class="sig-row">
+          <div class="sig-row-accent" style="background:var(--amber)"></div>
+          <div class="sig-row-body">
+            <div class="sig-row-firm">{{ a.firm }}</div>
+            <div class="sig-row-detail">
+              <div style="font-size:13px; color:var(--d-text1); font-weight:500; margin-bottom:3px">
+                {{ a.trigger_name }}
+                <span style="color:var(--d-text3); font-weight:400; font-size:11px; margin-left:4px">{{ a.trigger_title }}</span>
+              </div>
+              <div style="font-size:11px; color:var(--d-text3); line-height:1.5">+ {{ a.follower_names }}</div>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:5px; flex-shrink:0;">
+              <span class="sbadge sbadge-amber">{{ a.count }} followed</span>
+              <span class="sig-row-meta">{{ a.trigger_date|date:"d M Y" }}</span>
+            </div>
+          </div>
+          <div class="sig-row-arrow">→</div>
+        </a>
+        {% endfor %}
       {% else %}
       <div class="dempty">No cascade patterns detected yet.</div>
       {% endif %}
@@ -299,31 +262,32 @@
 
   <!-- Lift-out Signals -->
   <div>
-    <div class="sig-section-label">03 — Lift-out / Spinout Signals</div>
+    <div class="sig-section-label">02 — Lift-out / Spinout Signals</div>
     <div class="dcard" style="border-color:rgba(56,189,248,0.2); box-shadow:0 0 40px rgba(56,189,248,0.04);">
       <div class="dcard-header">
         <div>
           <div class="dcard-title">Team Lift-outs &amp; Spinouts</div>
-          <div class="dcard-sub">4+ departures from the same firm within 21 days — potential fund launch or mass poach</div>
+          <div class="dcard-sub">4+ departures from same firm within 21 days · one per firm · click to view</div>
         </div>
-        <span class="sbadge sbadge-blue">{{ liftout_signals|length }} signals</span>
+        <span class="sbadge sbadge-blue">{{ liftout_signals|length }} firms</span>
       </div>
       {% if liftout_signals %}
-      <table class="dtable">
-        <thead>
-          <tr><th>Firm</th><th>Volume</th><th>Window</th><th>People</th></tr>
-        </thead>
-        <tbody>
-          {% for s in liftout_signals %}
-          <tr>
-            <td class="dn">{{ s.firm }}</td>
-            <td><span class="sbadge sbadge-blue">{{ s.count }} left</span></td>
-            <td style="color:var(--d-text3); font-size:11px; white-space:nowrap">{{ s.start|date:"d M" }} – {{ s.end|date:"d M Y" }}</td>
-            <td style="color:var(--d-text3); font-size:11px; line-height:1.4; max-width:180px;">{{ s.names }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+        {% for s in liftout_signals %}
+        <a href="/firms/{{ s.company_id }}/?tab=leavers" class="sig-row">
+          <div class="sig-row-accent" style="background:var(--blue)"></div>
+          <div class="sig-row-body">
+            <div class="sig-row-firm">{{ s.firm }}</div>
+            <div class="sig-row-detail">
+              <div style="font-size:11px; color:var(--d-text3); line-height:1.5">{{ s.names }}</div>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:5px; flex-shrink:0;">
+              <span class="sbadge sbadge-blue">{{ s.count }} leavers</span>
+              <span class="sig-row-meta">{{ s.start|date:"d M" }} – {{ s.end|date:"d M Y" }}</span>
+            </div>
+          </div>
+          <div class="sig-row-arrow" style="transition: color .12s">→</div>
+        </a>
+        {% endfor %}
       {% else %}
       <div class="dempty">No lift-out signals detected yet.</div>
       {% endif %}
@@ -332,8 +296,8 @@
 
 </div>
 
-<!-- ── Section 4: Firm Health Score ─────────────────────────────────────── -->
-<div class="sig-section-label">04 — Firm Health Score</div>
+<!-- ── Section 3: Firm Health Score ─────────────────────────────────────── -->
+<div class="sig-section-label">03 — Firm Health Score</div>
 <div class="dcard" style="margin-bottom:28px;">
   <div class="dcard-header">
     <div>
@@ -377,7 +341,7 @@
 </div>
 
 <!-- ── Section 5: Seniority Pyramid ─────────────────────────────────────── -->
-<div class="sig-section-label">05 — Seniority Pyramid</div>
+<div class="sig-section-label">04 — Seniority Pyramid</div>
 <div class="dcard">
   <div class="dcard-header">
     <div>
