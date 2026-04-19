@@ -301,6 +301,7 @@
       <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a>
       <a href="{% url 'people' %}" class="{% if request.resolver_match.url_name == 'people' %}active{% endif %}">People</a>
       <a href="{% url 'firms' %}" class="{% if request.resolver_match.url_name == 'firms' or request.resolver_match.url_name == 'firm_detail' %}active{% endif %}">Firms</a>
+      <a href="{% url 'signals' %}" class="{% if request.resolver_match.url_name == 'signals' %}active{% endif %}">Signals</a>
     </div>
     <div class="topbar-right">
       <div class="topbar-user">
