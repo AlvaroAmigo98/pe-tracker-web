@@ -100,6 +100,13 @@ _db_config.setdefault('OPTIONS', {}).update({
 })
 DATABASES = {'default': _db_config}
 
+import sys
+print(f"[STARTUP] DATABASE_URL set={bool(os.environ.get('DATABASE_URL'))} "
+      f"SUPABASE_PW_len={len(os.environ.get('SUPABASE_DB_PASSWORD',''))} "
+      f"parsed_pw_len={len(_db_config.get('PASSWORD') or '')} "
+      f"parsed_user={_db_config.get('USER','?')[:20]}",
+      file=sys.stderr, flush=True)
+
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
