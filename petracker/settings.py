@@ -87,7 +87,7 @@ DATABASES = {
         'PASSWORD': (
             os.environ.get('SUPABASE_DB_PASSWORD') or
             os.environ.get('DB_PASSWORD') or
-            'KBLPQENABrmJvyXs'
+            'oThRKySFJ86iTATu'
         ),
         'HOST': 'aws-1-eu-west-2.pooler.supabase.com',
         'PORT': '6543',
