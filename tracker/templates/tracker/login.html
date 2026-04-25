@@ -111,10 +111,12 @@
     <div class="login-card">
       <h1>Welcome back</h1>
       <p class="subtitle">Sign in to access your intelligence dashboard</p>
-      {% if form.errors %}
+      {% if locked %}
+        <div class="error">Too many failed sign-in attempts. This IP has been locked for 1 hour. Please try again later.</div>
+      {% elif form.errors %}
         <div class="error">Incorrect username or password. Please try again.</div>
       {% endif %}
-      <form method="post">
+      <form method="post" {% if locked %}style="opacity:.4;pointer-events:none"{% endif %}>
         {% csrf_token %}
         <label>Username</label>
         <input type="text" name="username" autofocus autocomplete="username" placeholder="Enter username">

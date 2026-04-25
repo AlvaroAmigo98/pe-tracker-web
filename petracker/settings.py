@@ -46,13 +46,14 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'tracker.middleware.SecurityHeadersMiddleware',
 ]
 
 ROOT_URLCONF = 'petracker.urls'
@@ -86,8 +87,7 @@ DATABASES = {
         'USER': 'postgres.dvtkpsqcwfekntaslwwn',
         'PASSWORD': (
             os.environ.get('SUPABASE_DB_PASSWORD') or
-            os.environ.get('DB_PASSWORD') or
-            'vCqK3qmYrZTdi4gL'
+            os.environ.get('DB_PASSWORD')
         ),
         'HOST': 'aws-1-eu-west-2.pooler.supabase.com',
         'PORT': '6543',
@@ -99,9 +99,6 @@ DATABASES = {
     }
 }
 
-import sys
-_pw = DATABASES['default']['PASSWORD'] or ''
-print(f"[STARTUP] pw_len={len(_pw)} pw_prefix={_pw[:4]}", file=sys.stderr, flush=True)
 
 
 # Password validation
@@ -144,3 +141,55 @@ LOGIN_REDIRECT_URL = '/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 CSRF_TRUSTED_ORIGINS = ['https://pe-tracker-web-production.up.railway.app']
+
+# ── Session security (#3) ─────────────────────────────────────────────────────
+SESSION_COOKIE_SECURE   = not DEBUG   # HTTPS-only in production
+SESSION_COOKIE_HTTPONLY = True        # JS cannot read session cookie
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_AGE      = 8 * 60 * 60  # 8-hour sessions
+
+# ── CSRF (#3) ─────────────────────────────────────────────────────────────────
+CSRF_COOKIE_SECURE = not DEBUG
+
+# ── HTTPS / HSTS (#2) ─────────────────────────────────────────────────────────
+# Railway terminates TLS upstream — tell Django to trust the forwarded proto header
+SECURE_PROXY_SSL_HEADER      = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT          = not DEBUG
+SECURE_HSTS_SECONDS          = 31_536_000 if not DEBUG else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
+SECURE_HSTS_PRELOAD          = not DEBUG
+
+# ── Content-type / framing (#2) ───────────────────────────────────────────────
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+
+# ── Cache — used by login rate limiter (#1) ───────────────────────────────────
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'pe-tracker',
+    }
+}
+
+# ── Audit logging (#6) ────────────────────────────────────────────────────────
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'audit': {'format': '[AUDIT] %(asctime)s %(levelname)s %(message)s'},
+    },
+    'handlers': {
+        'console': {'class': 'logging.StreamHandler', 'formatter': 'audit'},
+    },
+    'loggers': {
+        'tracker.audit': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+    },
+}
+
+# ── Test database override ────────────────────────────────────────────────────
+import sys as _sys
+if 'test' in _sys.argv:
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': ':memory:',
+    }

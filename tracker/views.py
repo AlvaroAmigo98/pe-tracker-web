@@ -1,14 +1,57 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import LoginView
 from django.http import HttpResponse, JsonResponse
 from django.db.models import Count, Max, Q
+from django.core.cache import cache
 from .models import Company, Person, PersonSnapshot, ChangeEvent, ScrapeRun
 
 import json
+import logging
 import openpyxl
 from openpyxl.styles import Font, PatternFill
 from openpyxl.utils import get_column_letter
 from datetime import date, timedelta
+
+audit_logger = logging.getLogger('tracker.audit')
+
+_RATE_LIMIT     = 5      # max failed attempts
+_RATE_WINDOW    = 3600   # lockout window in seconds (1 hour)
+
+
+def _client_ip(request):
+    forwarded = request.META.get('HTTP_X_FORWARDED_FOR', '')
+    return forwarded.split(',')[0].strip() if forwarded else request.META.get('REMOTE_ADDR', '?')
+
+
+class RateLimitedLoginView(LoginView):
+    """LoginView that locks an IP after 5 consecutive failed attempts for 1 hour."""
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.method == 'POST':
+            ip = _client_ip(request)
+            attempts = cache.get(f'login_fail_{ip}', 0)
+            if attempts >= _RATE_LIMIT:
+                return render(request, 'tracker/login.html', {
+                    'form': self.get_form_class()(),
+                    'locked': True,
+                })
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_invalid(self, form):
+        ip = _client_ip(self.request)
+        key = f'login_fail_{ip}'
+        attempts = cache.get(key, 0) + 1
+        cache.set(key, attempts, timeout=_RATE_WINDOW)
+        audit_logger.warning('LOGIN_FAILED username=%s ip=%s attempts=%d',
+                             form.data.get('username', '?'), ip, attempts)
+        return super().form_invalid(form)
+
+    def form_valid(self, form):
+        ip = _client_ip(self.request)
+        cache.delete(f'login_fail_{ip}')
+        audit_logger.info('LOGIN user=%s ip=%s', form.get_user().username, ip)
+        return super().form_valid(form)
 
 
 SENIORITY_GROUP = {
@@ -256,6 +299,8 @@ def dashboard(request):
     promotions = [e for e in events if e.event_type in ('promotion', 'role_change')]
 
     if export == 'excel':
+        audit_logger.info('EXPORT view=dashboard user=%s ip=%s rows=%d',
+                          request.user.username, _client_ip(request), len(events))
         headers = [
             'Name', 'Company', 'Function', 'Change Type', 'Previous Title',
             'New Title', 'Previous Level', 'New Level', 'Region',
@@ -362,6 +407,8 @@ def people(request):
         people = [p for p in people if p.scraped_at >= cutoff]
 
     if export == 'excel':
+        audit_logger.info('EXPORT view=people user=%s ip=%s rows=%d',
+                          request.user.username, _client_ip(request), len(people))
         headers = [
             'Name', 'Company', 'Title', 'Seniority', 'Group',
             'Function', 'Region', 'Location', 'Last Seen'
