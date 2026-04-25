@@ -176,13 +176,13 @@ def dashboard(request):
     today            = date.today()
     latest_run       = ScrapeRun.objects.order_by('-ran_at').first()
     companies        = Company.objects.order_by('name')
-    company_filter   = request.GET.getlist('company')
-    region_filter    = request.GET.getlist('region')
-    group_filter     = request.GET.getlist('group')
-    function_filter  = request.GET.getlist('function')
-    senior_emea_only = request.GET.get('senior_emea', '')
-    export           = request.GET.get('export', '')
-    days             = request.GET.get('days', '')
+    company_filter      = request.GET.getlist('company')
+    region_filter       = request.GET.getlist('region')
+    group_filter        = request.GET.getlist('group')
+    function_filter     = request.GET.getlist('function')
+    change_type_filter  = request.GET.getlist('change_type')
+    export              = request.GET.get('export', '')
+    days                = request.GET.get('days', '')
 
     events_qs = ChangeEvent.objects.select_related(
         'person', 'person__company'
@@ -222,13 +222,17 @@ def dashboard(request):
         events = [e for e in events if e.seniority_group in group_filter]
     if function_filter:
         events = [e for e in events if e.function in function_filter]
-    if senior_emea_only:
-        events = [
-            e for e in events
-            if e.seniority_group == 'Senior'
-            and e.region == 'EMEA'
-            and e.function in ('Buyout / PE', 'Investment (General)', 'Advisory')
-        ]
+    if change_type_filter:
+        def _matches_change_type(e):
+            for ct in change_type_filter:
+                if ct == 'hire' and e.event_type == 'hire':
+                    return True
+                if ct == 'leaver' and e.event_type == 'leaver':
+                    return True
+                if ct == 'role_change' and e.event_type in ('promotion', 'role_change'):
+                    return True
+            return False
+        events = [e for e in events if _matches_change_type(e)]
 
     hires      = [e for e in events if e.event_type == 'hire']
     leavers    = [e for e in events if e.event_type == 'leaver']
@@ -275,9 +279,9 @@ def dashboard(request):
         'company_filter':    company_filter,
         'region_filter':     region_filter,
         'group_filter':      group_filter,
-        'function_filter':   function_filter,
-        'senior_emea_only':  senior_emea_only,
-        'events':            events,
+        'function_filter':     function_filter,
+        'change_type_filter':  change_type_filter,
+        'events':              events,
         'hires':             hires,
         'leavers':           leavers,
         'promotions':        promotions,
