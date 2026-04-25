@@ -62,3 +62,15 @@ class ScrapeRun(models.Model):
     class Meta:
         managed  = False
         db_table = 'scrape_run'
+
+
+class ScrapeRunFirm(models.Model):
+    run          = models.ForeignKey(ScrapeRun, models.CASCADE, related_name='firms')
+    firm_name    = models.TextField()
+    row_count    = models.IntegerField(default=0)
+    status       = models.TextField()   # ok | empty | below_threshold | error
+    error_msg    = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed  = False
+        db_table = 'scrape_run_firm'

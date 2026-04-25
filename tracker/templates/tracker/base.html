@@ -369,10 +369,11 @@
       <span class="topbar-title">PE Tracker</span>
     </a>
     <div class="nav">
-      <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a>
-      <a href="{% url 'people' %}"    class="{% if request.resolver_match.url_name == 'people' %}active{% endif %}">People</a>
-      <a href="{% url 'firms' %}"     class="{% if request.resolver_match.url_name == 'firms' or request.resolver_match.url_name == 'firm_detail' %}active{% endif %}">Firms</a>
-      <a href="{% url 'signals' %}"   class="{% if request.resolver_match.url_name == 'signals' %}active{% endif %}">Signals</a>
+      <a href="{% url 'dashboard' %}"   class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a>
+      <a href="{% url 'people' %}"      class="{% if request.resolver_match.url_name == 'people' %}active{% endif %}">People</a>
+      <a href="{% url 'firms' %}"       class="{% if request.resolver_match.url_name == 'firms' or request.resolver_match.url_name == 'firm_detail' %}active{% endif %}">Firms</a>
+      <a href="{% url 'signals' %}"     class="{% if request.resolver_match.url_name == 'signals' %}active{% endif %}">Signals</a>
+      <a href="{% url 'scrape_logs' %}" class="{% if request.resolver_match.url_name == 'scrape_logs' %}active{% endif %}">Scrape Logs</a>
     </div>
     <div class="typeahead-wrap">
       <form action="{% url 'search' %}" method="get" style="display:flex;align-items:center">
@@ -394,10 +395,11 @@
   </div>
 
   <nav class="mobile-nav" id="mobile-nav">
-    <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a>
-    <a href="{% url 'people' %}"    class="{% if request.resolver_match.url_name == 'people' %}active{% endif %}">People</a>
-    <a href="{% url 'firms' %}"     class="{% if request.resolver_match.url_name == 'firms' or request.resolver_match.url_name == 'firm_detail' %}active{% endif %}">Firms</a>
-    <a href="{% url 'signals' %}"   class="{% if request.resolver_match.url_name == 'signals' %}active{% endif %}">Signals</a>
+    <a href="{% url 'dashboard' %}"   class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a>
+    <a href="{% url 'people' %}"      class="{% if request.resolver_match.url_name == 'people' %}active{% endif %}">People</a>
+    <a href="{% url 'firms' %}"       class="{% if request.resolver_match.url_name == 'firms' or request.resolver_match.url_name == 'firm_detail' %}active{% endif %}">Firms</a>
+    <a href="{% url 'signals' %}"     class="{% if request.resolver_match.url_name == 'signals' %}active{% endif %}">Signals</a>
+    <a href="{% url 'scrape_logs' %}" class="{% if request.resolver_match.url_name == 'scrape_logs' %}active{% endif %}">Scrape Logs</a>
   </nav>
   <div class="content">
     {% block content %}{% endblock %}

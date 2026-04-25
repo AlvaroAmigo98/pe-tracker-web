@@ -10,5 +10,6 @@ urlpatterns = [
     path('signals/', views.signals, name='signals'),
     path('search/', views.search, name='search'),
     path('api/search/', views.api_search, name='api_search'),
+    path('scrape-logs/', views.scrape_logs, name='scrape_logs'),
     path('watchlist/toggle/<int:company_id>/', views.watchlist_toggle, name='watchlist_toggle'),
 ]

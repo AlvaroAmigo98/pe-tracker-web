@@ -4,7 +4,7 @@ from django.contrib.auth.views import LoginView
 from django.http import HttpResponse, JsonResponse
 from django.db.models import Count, Max, Q
 from django.core.cache import cache
-from .models import Company, Person, PersonSnapshot, ChangeEvent, ScrapeRun
+from .models import Company, Person, PersonSnapshot, ChangeEvent, ScrapeRun, ScrapeRunFirm
 
 import json
 import logging
@@ -874,3 +874,16 @@ def firm_report(request, company_id):
         'senior_leavers': senior_leavers,
         'generated_at':   date.today(),
     })
+
+
+@login_required
+def scrape_logs(request):
+    runs = list(ScrapeRun.objects.order_by('-ran_at')[:52])
+    run_ids = [r.id for r in runs]
+    firms = ScrapeRunFirm.objects.filter(run_id__in=run_ids).order_by('firm_name')
+    firms_by_run = {}
+    for f in firms:
+        firms_by_run.setdefault(f.run_id, []).append(f)
+    for r in runs:
+        r.firm_details = firms_by_run.get(r.id, [])
+    return render(request, 'tracker/scrape_logs.html', {'runs': runs})

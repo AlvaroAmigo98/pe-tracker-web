@@ -1,0 +1,184 @@
+{% extends "tracker/base.html" %}
+{% block content %}
+<style>
+  .logs-wrap { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+  .logs-header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 28px; }
+  .logs-header h1 { font-size: 22px; font-weight: 800; color: var(--text-1); letter-spacing: -.4px; }
+  .logs-header p  { font-size: 13px; color: var(--text-2); }
+
+  /* Run cards */
+  .run-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .run-header {
+    display: flex; align-items: center; gap: 16px;
+    padding: 16px 20px; cursor: pointer;
+    user-select: none;
+  }
+  .run-header:hover { background: rgba(255,255,255,.03); }
+  .run-date  { font-size: 14px; font-weight: 700; color: var(--text-1); min-width: 200px; }
+  .run-stats { display: flex; gap: 12px; flex: 1; }
+  .stat-pill {
+    font-size: 11px; font-weight: 700; padding: 3px 10px;
+    border-radius: 20px; letter-spacing: .03em;
+  }
+  .pill-ok     { background: var(--hire-bg);  color: var(--hire-text);  }
+  .pill-fail   { background: var(--leave-bg); color: var(--leave-text); }
+  .pill-rows   { background: rgba(99,102,241,.12); color: #a5b4fc; }
+  .run-toggle  { margin-left: auto; font-size: 12px; color: var(--text-2); }
+  .run-status-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+  }
+  .dot-ok    { background: var(--hire); }
+  .dot-warn  { background: var(--promo); }
+  .dot-fail  { background: var(--leave); }
+
+  /* Firm table */
+  .firm-table-wrap {
+    border-top: 1px solid var(--border);
+    padding: 0 20px 16px;
+    display: none;
+  }
+  .firm-table-wrap.open { display: block; }
+  .firm-table {
+    width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 12px;
+  }
+  .firm-table th {
+    text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .07em; color: var(--text-2); padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .firm-table td { padding: 7px 10px; border-bottom: 1px solid rgba(255,255,255,.04); }
+  .firm-table tr:last-child td { border-bottom: none; }
+  .firm-table tr:hover td { background: rgba(255,255,255,.02); }
+  .status-badge {
+    font-size: 10px; font-weight: 700; padding: 2px 8px;
+    border-radius: 20px; letter-spacing: .04em; display: inline-block;
+  }
+  .s-ok         { background: var(--hire-bg);  color: var(--hire-text);  }
+  .s-empty      { background: var(--leave-bg); color: var(--leave-text); }
+  .s-error      { background: var(--leave-bg); color: var(--leave-text); }
+  .s-below      { background: var(--promo-bg); color: var(--promo-text); }
+  .error-msg    { font-size: 11px; color: var(--leave-text); max-width: 380px; word-break: break-word; }
+  .no-data      { color: var(--text-2); font-size: 13px; padding: 16px 0; }
+
+  /* Search box */
+  .logs-search { margin-bottom: 20px; }
+  .logs-search input {
+    width: 280px; border-radius: 8px; font-size: 13px; height: 34px;
+    padding: 0 14px; background: var(--surface2); border: 1px solid var(--border2);
+    color: var(--text-1); outline: none;
+  }
+  .logs-search input:focus { border-color: var(--accent); }
+  .empty-state { text-align: center; padding: 60px 0; color: var(--text-2); font-size: 14px; }
+</style>
+
+<div class="logs-wrap">
+  <div class="logs-header">
+    <h1>Scrape Logs</h1>
+    <p>Monitor weekly scrape runs — click a row to expand per-firm results</p>
+  </div>
+
+  {% if not runs %}
+    <div class="empty-state">No scrape runs recorded yet. Logs will appear here after the next weekly run.</div>
+  {% else %}
+    <div class="logs-search">
+      <input type="text" id="firm-search" placeholder="Filter firms…" autocomplete="off">
+    </div>
+
+    {% for run in runs %}
+      {% with nfail=run.firms_failed|default:0 nok=run.firms_ok|default:0 %}
+      <div class="run-card" data-run-id="{{ run.id }}">
+        <div class="run-header" onclick="toggleRun({{ run.id }})">
+          <div class="run-status-dot {% if nfail > 0 %}dot-fail{% else %}dot-ok{% endif %}"></div>
+          <div class="run-date">{{ run.ran_at|date:"D, d M Y  H:i" }} UTC</div>
+          <div class="run-stats">
+            <span class="stat-pill pill-rows">{{ run.total_rows|default:0 }} rows</span>
+            <span class="stat-pill pill-ok">{{ nok }} ok</span>
+            {% if nfail > 0 %}
+              <span class="stat-pill pill-fail">{{ nfail }} failed</span>
+            {% endif %}
+          </div>
+          <span class="run-toggle" id="toggle-{{ run.id }}">▼ expand</span>
+        </div>
+
+        <div class="firm-table-wrap" id="firms-{{ run.id }}">
+          {% if run.firm_details %}
+            <table class="firm-table">
+              <thead>
+                <tr>
+                  <th>Firm</th>
+                  <th>Rows</th>
+                  <th>Status</th>
+                  <th>Error</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for f in run.firm_details %}
+                <tr class="firm-row" data-firm="{{ f.firm_name|lower }}">
+                  <td>{{ f.firm_name }}</td>
+                  <td>{{ f.row_count }}</td>
+                  <td>
+                    {% if f.status == 'ok' %}
+                      <span class="status-badge s-ok">OK</span>
+                    {% elif f.status == 'empty' %}
+                      <span class="status-badge s-empty">EMPTY</span>
+                    {% elif f.status == 'below_threshold' %}
+                      <span class="status-badge s-below">LOW</span>
+                    {% else %}
+                      <span class="status-badge s-error">ERROR</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if f.error_msg %}
+                      <span class="error-msg">{{ f.error_msg|truncatechars:120 }}</span>
+                    {% else %}—{% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% else %}
+            <p class="no-data">No per-firm detail for this run (recorded before this feature was added).</p>
+          {% endif %}
+        </div>
+      </div>
+      {% endwith %}
+    {% endfor %}
+  {% endif %}
+</div>
+
+<script>
+  function toggleRun(id) {
+    const wrap   = document.getElementById('firms-' + id);
+    const toggle = document.getElementById('toggle-' + id);
+    const open   = wrap.classList.toggle('open');
+    toggle.textContent = open ? '▲ collapse' : '▼ expand';
+  }
+
+  document.getElementById('firm-search')?.addEventListener('input', function () {
+    const q = this.value.toLowerCase().trim();
+    document.querySelectorAll('.run-card').forEach(card => {
+      if (!q) {
+        card.querySelectorAll('.firm-row').forEach(r => r.style.display = '');
+        return;
+      }
+      // Auto-expand card when filtering
+      const wrap = card.querySelector('.firm-table-wrap');
+      if (q && wrap && !wrap.classList.contains('open')) {
+        wrap.classList.add('open');
+        const id = card.dataset.runId;
+        const toggle = document.getElementById('toggle-' + id);
+        if (toggle) toggle.textContent = '▲ collapse';
+      }
+      card.querySelectorAll('.firm-row').forEach(r => {
+        r.style.display = r.dataset.firm.includes(q) ? '' : 'none';
+      });
+    });
+  });
+</script>
+{% endblock %}
