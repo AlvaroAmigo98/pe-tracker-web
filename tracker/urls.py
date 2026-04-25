@@ -9,5 +9,6 @@ urlpatterns = [
     path('firms/<int:company_id>/report/', views.firm_report, name='firm_report'),
     path('signals/', views.signals, name='signals'),
     path('search/', views.search, name='search'),
+    path('api/search/', views.api_search, name='api_search'),
     path('watchlist/toggle/<int:company_id>/', views.watchlist_toggle, name='watchlist_toggle'),
 ]

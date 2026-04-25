@@ -101,7 +101,9 @@
     </tbody>
   </table>
   {% else %}
-  <div class="empty">No team members found{% if search %} matching "{{ search }}"{% endif %}.</div>
+  <div class="empty">
+    {% if search %}No team members found matching "{{ search }}" — <a href="?tab=team" style="color:var(--accent)">clear search</a>{% else %}No team data scraped yet for this firm.{% endif %}
+  </div>
   {% endif %}
 </div>
 
@@ -109,21 +111,21 @@
 <div class="card">
   <div class="card-header"><span class="card-title">Leavers — {{ leavers|length }}</span></div>
   {% if leavers %}{% include 'tracker/_events_table.html' with events=leavers %}
-  {% else %}<div class="empty">No leavers recorded{% if search %} matching "{{ search }}"{% endif %}.</div>{% endif %}
+  {% else %}<div class="empty">{% if search %}No leavers matching "{{ search }}" — <a href="?tab=leavers" style="color:var(--accent)">clear search</a>{% else %}No leavers recorded for this firm yet.{% endif %}</div>{% endif %}
 </div>
 
 {% elif tab == 'hires' %}
 <div class="card">
   <div class="card-header"><span class="card-title">Hires — {{ hires|length }}</span></div>
   {% if hires %}{% include 'tracker/_events_table.html' with events=hires %}
-  {% else %}<div class="empty">No hires recorded{% if search %} matching "{{ search }}"{% endif %}.</div>{% endif %}
+  {% else %}<div class="empty">{% if search %}No hires matching "{{ search }}" — <a href="?tab=hires" style="color:var(--accent)">clear search</a>{% else %}No hires recorded for this firm yet.{% endif %}</div>{% endif %}
 </div>
 
 {% elif tab == 'promotions' %}
 <div class="card">
   <div class="card-header"><span class="card-title">Promotions &amp; role changes — {{ promotions|length }}</span></div>
   {% if promotions %}{% include 'tracker/_events_table.html' with events=promotions %}
-  {% else %}<div class="empty">No promotions recorded{% if search %} matching "{{ search }}"{% endif %}.</div>{% endif %}
+  {% else %}<div class="empty">{% if search %}No promotions matching "{{ search }}" — <a href="?tab=promotions" style="color:var(--accent)">clear search</a>{% else %}No promotions recorded for this firm yet.{% endif %}</div>{% endif %}
 </div>
 
 {% elif tab == 'timeline' %}

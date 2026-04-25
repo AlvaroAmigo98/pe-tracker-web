@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.db.models import Count, Max, Q
 from .models import Company, Person, PersonSnapshot, ChangeEvent, ScrapeRun
 
@@ -183,6 +183,8 @@ def dashboard(request):
     change_type_filter  = request.GET.getlist('change_type')
     export              = request.GET.get('export', '')
     days                = request.GET.get('days', '')
+    date_from           = request.GET.get('date_from', '')
+    date_to             = request.GET.get('date_to', '')
 
     events_qs = ChangeEvent.objects.select_related(
         'person', 'person__company'
@@ -191,6 +193,16 @@ def dashboard(request):
     if days and days.isdigit():
         cutoff = today - timedelta(days=int(days))
         events_qs = events_qs.filter(detected_at__gte=cutoff)
+    if date_from:
+        try:
+            events_qs = events_qs.filter(detected_at__gte=date.fromisoformat(date_from))
+        except ValueError:
+            date_from = ''
+    if date_to:
+        try:
+            events_qs = events_qs.filter(detected_at__lte=date.fromisoformat(date_to))
+        except ValueError:
+            date_to = ''
 
     events = list(events_qs)
 
@@ -206,6 +218,7 @@ def dashboard(request):
             if snap.person_id not in latest_snapshot_by_person:
                 latest_snapshot_by_person[snap.person_id] = snap
 
+    seven_days_ago = today - timedelta(days=7)
     for e in events:
         latest_snap = latest_snapshot_by_person.get(e.person_id)
         e.region = infer_region(latest_snap.location if latest_snap else '')
@@ -213,6 +226,10 @@ def dashboard(request):
         e.seniority_group = infer_seniority_group(
             latest_snap.seniority if latest_snap else ''
         )
+        dt = e.detected_at
+        if hasattr(dt, 'date'):
+            dt = dt.date()
+        e.is_new = dt >= seven_days_ago
 
     if company_filter:
         events = [e for e in events if e.person.company.name in company_filter]
@@ -281,6 +298,8 @@ def dashboard(request):
         'group_filter':      group_filter,
         'function_filter':     function_filter,
         'change_type_filter':  change_type_filter,
+        'date_from':           date_from,
+        'date_to':             date_to,
         'events':              events,
         'hires':             hires,
         'leavers':           leavers,
@@ -747,6 +766,23 @@ def watchlist_toggle(request, company_id):
     request.session['watchlist'] = watchlist
     next_url = request.POST.get('next') or request.META.get('HTTP_REFERER') or '/'
     return redirect(next_url)
+
+
+@login_required
+def api_search(request):
+    q = request.GET.get('q', '').strip()
+    results = {'firms': [], 'people': []}
+    if len(q) >= 2:
+        firms = Company.objects.filter(name__icontains=q).order_by('name')[:6]
+        results['firms'] = [{'id': f.id, 'name': f.name} for f in firms]
+        people_qs = PersonSnapshot.objects.filter(
+            Q(person__full_name__icontains=q) | Q(job_title__icontains=q)
+        ).order_by('person_id', '-scraped_at').distinct('person_id').select_related('person', 'person__company')[:6]
+        results['people'] = [
+            {'name': p.person.full_name, 'firm': p.person.company.name, 'title': p.job_title or ''}
+            for p in people_qs
+        ]
+    return JsonResponse(results)
 
 
 @login_required

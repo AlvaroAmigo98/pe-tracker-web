@@ -53,6 +53,7 @@
         <th>Leavers</th>
         <th>Promotions</th>
         <th>Activity</th>
+        <th>Mix</th>
         <th></th>
       </tr>
     </thead>
@@ -65,6 +66,15 @@
         <td>{% if f.leavers %}<span style="color:var(--leave);font-weight:700">{{ f.leavers }}</span>{% else %}<span class="subtle">—</span>{% endif %}</td>
         <td>{% if f.promotions %}<span style="color:var(--promo);font-weight:700">{{ f.promotions }}</span>{% else %}<span class="subtle">—</span>{% endif %}</td>
         <td>{% if f.activity %}<span class="badge badge-role">{{ f.activity }}</span>{% else %}<span class="subtle">—</span>{% endif %}</td>
+        <td>
+          {% if f.activity %}
+          <div style="display:flex;height:6px;border-radius:3px;overflow:hidden;width:72px;gap:1px" title="Hires: {{ f.hires }} · Leavers: {{ f.leavers }} · Promotions: {{ f.promotions }}">
+            {% if f.hires %}<div style="background:var(--hire);flex:{{ f.hires }}"></div>{% endif %}
+            {% if f.leavers %}<div style="background:var(--leave);flex:{{ f.leavers }}"></div>{% endif %}
+            {% if f.promotions %}<div style="background:var(--promo);flex:{{ f.promotions }}"></div>{% endif %}
+          </div>
+          {% else %}<span class="subtle">—</span>{% endif %}
+        </td>
         <td onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:8px;border:none">
           <a href="/firms/{{ f.company.id }}/" style="color:var(--accent);font-size:12px;font-weight:600;text-decoration:none">View →</a>
           <form method="post" action="{% url 'watchlist_toggle' f.company.id %}" style="display:inline">

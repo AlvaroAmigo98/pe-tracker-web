@@ -287,6 +287,9 @@
     .row-link { color: inherit; text-decoration: none; transition: color .12s; }
     .row-link:hover { color: var(--accent); }
 
+    /* ── Recent-event row highlight ──────────────────────────────────────── */
+    .row-new td:first-child { border-left: 2px solid var(--hire); }
+
     /* ── Filter chips ────────────────────────────────────────────────────── */
     .filter-chip {
       display: inline-flex; align-items: center; gap: 5px;
@@ -301,6 +304,53 @@
       transition: color .1s;
     }
     .chip-x:hover { color: var(--text-1); }
+
+    /* ── Typeahead ───────────────────────────────────────────────────────── */
+    .typeahead-wrap { position: relative; flex: 0 0 auto; display: flex; align-items: center; }
+    .typeahead-panel {
+      display: none; position: absolute; top: calc(100% + 8px); right: 0;
+      background: var(--surface); border: 1px solid var(--border2);
+      border-radius: var(--r); padding: 6px 0;
+      min-width: 280px; z-index: 200; box-shadow: var(--shadow-md);
+    }
+    .typeahead-panel.open { display: block; }
+    .typeahead-section { padding: 5px 14px 3px; font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .08em; }
+    .typeahead-item { display: block; padding: 8px 14px; text-decoration: none; color: var(--text-1); font-size: 13px; transition: background .1s; }
+    .typeahead-item:hover { background: var(--surface2); }
+    .typeahead-sub { font-size: 11px; color: var(--text-2); margin-top: 1px; }
+
+    /* ── Mobile nav ──────────────────────────────────────────────────────── */
+    .hamburger { display: none; background: none; border: none; cursor: pointer; padding: 4px; color: var(--text-1); font-size: 22px; line-height: 1; flex-shrink: 0; }
+    .mobile-nav {
+      display: none; position: fixed; top: 56px; left: 0; right: 0; bottom: 0;
+      background: var(--nav); z-index: 49; padding: 16px 20px;
+      border-top: 1px solid var(--border); flex-direction: column; gap: 4px;
+      overflow-y: auto;
+    }
+    .mobile-nav.open { display: flex; }
+    .mobile-nav a { color: var(--text-2); text-decoration: none; padding: 13px 16px; border-radius: var(--r-sm); font-size: 15px; font-weight: 500; transition: color .15s, background .15s; }
+    .mobile-nav a:hover, .mobile-nav a.active { color: white; background: rgba(99,102,241,.2); }
+
+    /* ── Dropdown select-all controls ────────────────────────────────────── */
+    .dropdown-actions { display: flex; gap: 6px; padding: 6px 10px 4px; border-bottom: 1px solid var(--border); }
+    .dropdown-action-btn { background: none; border: 1px solid var(--border); border-radius: 4px; padding: 2px 8px; font-size: 11px; color: var(--text-2); cursor: pointer; font-family: inherit; transition: border-color .1s, color .1s; }
+    .dropdown-action-btn:hover { border-color: var(--border2); color: var(--text-1); }
+
+    /* ── Responsive ──────────────────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .nav { display: none; }
+      .hamburger { display: block; }
+      .topbar { padding: 0 16px; gap: 10px; }
+      .topbar-right { gap: 8px; }
+      .content { padding: 20px 16px 40px; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .filter-bar { gap: 6px; }
+      .page-header { flex-direction: column; gap: 8px; }
+    }
+    @media (max-width: 480px) {
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .stat-num { font-size: 28px; }
+    }
 
     /* ── Misc ────────────────────────────────────────────────────────────── */
     .empty { text-align: center; padding: 52px; color: var(--text-2); font-size: 13px; }
@@ -324,10 +374,14 @@
       <a href="{% url 'firms' %}"     class="{% if request.resolver_match.url_name == 'firms' or request.resolver_match.url_name == 'firm_detail' %}active{% endif %}">Firms</a>
       <a href="{% url 'signals' %}"   class="{% if request.resolver_match.url_name == 'signals' %}active{% endif %}">Signals</a>
     </div>
-    <form action="{% url 'search' %}" method="get" style="flex:0 0 auto;display:flex;align-items:center">
-      <input type="text" name="q" value="{{ request.GET.q }}" placeholder="⌕  Search firms, people…"
-             style="width:220px;border-radius:20px;font-size:12px;height:32px;padding:0 14px;min-width:0">
-    </form>
+    <div class="typeahead-wrap">
+      <form action="{% url 'search' %}" method="get" style="display:flex;align-items:center">
+        <input type="text" name="q" id="topbar-search" value="{{ request.GET.q }}" placeholder="⌕  Search firms, people…"
+               autocomplete="off"
+               style="width:220px;border-radius:20px;font-size:12px;height:32px;padding:0 14px;min-width:0">
+      </form>
+      <div class="typeahead-panel" id="typeahead-panel"></div>
+    </div>
     <div class="topbar-right">
       <div class="topbar-user">
         <div class="topbar-avatar">{{ request.user.username|slice:":2" }}</div>
@@ -336,9 +390,81 @@
       <div class="topbar-divider"></div>
       <a href="{% url 'logout' %}">Log out</a>
     </div>
+    <button class="hamburger" id="hamburger-btn" aria-label="Menu">☰</button>
   </div>
+
+  <nav class="mobile-nav" id="mobile-nav">
+    <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a>
+    <a href="{% url 'people' %}"    class="{% if request.resolver_match.url_name == 'people' %}active{% endif %}">People</a>
+    <a href="{% url 'firms' %}"     class="{% if request.resolver_match.url_name == 'firms' or request.resolver_match.url_name == 'firm_detail' %}active{% endif %}">Firms</a>
+    <a href="{% url 'signals' %}"   class="{% if request.resolver_match.url_name == 'signals' %}active{% endif %}">Signals</a>
+  </nav>
   <div class="content">
     {% block content %}{% endblock %}
   </div>
+
+<script>
+// Mobile nav toggle
+document.getElementById('hamburger-btn').addEventListener('click', function() {
+  document.getElementById('mobile-nav').classList.toggle('open');
+});
+document.getElementById('mobile-nav').querySelectorAll('a').forEach(a => {
+  a.addEventListener('click', () => document.getElementById('mobile-nav').classList.remove('open'));
+});
+
+// Typeahead search
+(function() {
+  const input  = document.getElementById('topbar-search');
+  const panel  = document.getElementById('typeahead-panel');
+  if (!input || !panel) return;
+  let timer;
+  input.addEventListener('input', function() {
+    clearTimeout(timer);
+    const q = this.value.trim();
+    if (q.length < 2) { panel.classList.remove('open'); panel.innerHTML = ''; return; }
+    timer = setTimeout(function() {
+      fetch('/api/search/?q=' + encodeURIComponent(q))
+        .then(r => r.json())
+        .then(function(data) {
+          panel.innerHTML = '';
+          if (!data.firms.length && !data.people.length) { panel.classList.remove('open'); return; }
+          if (data.firms.length) {
+            const sec = document.createElement('div');
+            sec.className = 'typeahead-section';
+            sec.textContent = 'Firms';
+            panel.appendChild(sec);
+            data.firms.forEach(function(f) {
+              const a = document.createElement('a');
+              a.className = 'typeahead-item';
+              a.href = '/firms/' + f.id + '/';
+              a.textContent = f.name;
+              panel.appendChild(a);
+            });
+          }
+          if (data.people.length) {
+            const sec = document.createElement('div');
+            sec.className = 'typeahead-section';
+            sec.textContent = 'People';
+            panel.appendChild(sec);
+            data.people.forEach(function(p) {
+              const a = document.createElement('a');
+              a.className = 'typeahead-item';
+              a.href = '/people/?q=' + encodeURIComponent(p.name);
+              a.innerHTML = p.name + '<div class="typeahead-sub">' + p.firm + (p.title ? ' · ' + p.title : '') + '</div>';
+              panel.appendChild(a);
+            });
+          }
+          panel.classList.add('open');
+        });
+    }, 250);
+  });
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { panel.classList.remove('open'); this.blur(); }
+  });
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.typeahead-wrap')) panel.classList.remove('open');
+  });
+})();
+</script>
 </body>
 </html>
