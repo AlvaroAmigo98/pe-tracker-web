@@ -74,3 +74,14 @@ class ScrapeRunFirm(models.Model):
     class Meta:
         managed  = False
         db_table = 'scrape_run_firm'
+
+
+class AuditLog(models.Model):
+    event_type = models.TextField()          # LOGIN | LOGOUT | LOGIN_FAILED
+    username   = models.TextField()
+    ip_address = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        managed  = False
+        db_table = 'audit_log'

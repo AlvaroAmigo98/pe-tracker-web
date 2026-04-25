@@ -374,6 +374,9 @@
       <a href="{% url 'firms' %}"       class="{% if request.resolver_match.url_name == 'firms' or request.resolver_match.url_name == 'firm_detail' %}active{% endif %}">Firms</a>
       <a href="{% url 'signals' %}"     class="{% if request.resolver_match.url_name == 'signals' %}active{% endif %}">Signals</a>
       <a href="{% url 'scrape_logs' %}" class="{% if request.resolver_match.url_name == 'scrape_logs' %}active{% endif %}">Scrape Logs</a>
+      {% if request.user.is_superuser %}
+      <a href="{% url 'user_admin' %}"  class="{% if request.resolver_match.url_name == 'user_admin' %}active{% endif %}">Users</a>
+      {% endif %}
     </div>
     <div class="typeahead-wrap">
       <form action="{% url 'search' %}" method="get" style="display:flex;align-items:center">
@@ -384,12 +387,23 @@
       <div class="typeahead-panel" id="typeahead-panel"></div>
     </div>
     <div class="topbar-right">
-      <div class="topbar-user">
-        <div class="topbar-avatar">{{ request.user.username|slice:":2" }}</div>
+      <div class="topbar-user" style="cursor:pointer;position:relative" id="user-menu-btn">
+        <div class="topbar-avatar">{{ request.user.username|slice:":2"|upper }}</div>
         <span>{{ request.user.username }}</span>
+        <span style="font-size:10px;color:var(--text-2);margin-left:2px">▾</span>
+        <div id="user-dropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;
+             background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-sm);
+             min-width:160px;z-index:200;box-shadow:var(--shadow-md);overflow:hidden">
+          <a href="{% url 'profile' %}" style="display:block;padding:10px 16px;font-size:13px;
+             color:var(--text-1);text-decoration:none;border-bottom:1px solid var(--border)">My Profile</a>
+          {% if request.user.is_superuser %}
+          <a href="{% url 'user_admin' %}" style="display:block;padding:10px 16px;font-size:13px;
+             color:var(--text-1);text-decoration:none;border-bottom:1px solid var(--border)">User Management</a>
+          {% endif %}
+          <a href="{% url 'logout' %}" style="display:block;padding:10px 16px;font-size:13px;
+             color:var(--leave-text);text-decoration:none">Log out</a>
+        </div>
       </div>
-      <div class="topbar-divider"></div>
-      <a href="{% url 'logout' %}">Log out</a>
     </div>
     <button class="hamburger" id="hamburger-btn" aria-label="Menu">☰</button>
   </div>
@@ -406,6 +420,18 @@
   </div>
 
 <script>
+// User dropdown
+(function() {
+  const btn = document.getElementById('user-menu-btn');
+  const dd  = document.getElementById('user-dropdown');
+  if (!btn) return;
+  btn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+  });
+  document.addEventListener('click', function() { dd.style.display = 'none'; });
+})();
+
 // Mobile nav toggle
 document.getElementById('hamburger-btn').addEventListener('click', function() {
   document.getElementById('mobile-nav').classList.toggle('open');

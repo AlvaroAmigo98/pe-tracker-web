@@ -11,5 +11,7 @@ urlpatterns = [
     path('search/', views.search, name='search'),
     path('api/search/', views.api_search, name='api_search'),
     path('scrape-logs/', views.scrape_logs, name='scrape_logs'),
+    path('profile/',    views.profile,     name='profile'),
+    path('users/',      views.user_admin,  name='user_admin'),
     path('watchlist/toggle/<int:company_id>/', views.watchlist_toggle, name='watchlist_toggle'),
 ]

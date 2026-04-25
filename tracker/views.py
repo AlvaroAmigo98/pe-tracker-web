@@ -4,7 +4,7 @@ from django.contrib.auth.views import LoginView
 from django.http import HttpResponse, JsonResponse
 from django.db.models import Count, Max, Q
 from django.core.cache import cache
-from .models import Company, Person, PersonSnapshot, ChangeEvent, ScrapeRun, ScrapeRunFirm
+from .models import Company, Person, PersonSnapshot, ChangeEvent, ScrapeRun, ScrapeRunFirm, AuditLog
 
 import json
 import logging
@@ -43,8 +43,12 @@ class RateLimitedLoginView(LoginView):
         key = f'login_fail_{ip}'
         attempts = cache.get(key, 0) + 1
         cache.set(key, attempts, timeout=_RATE_WINDOW)
-        audit_logger.warning('LOGIN_FAILED username=%s ip=%s attempts=%d',
-                             form.data.get('username', '?'), ip, attempts)
+        username = form.data.get('username', '?')
+        audit_logger.warning('LOGIN_FAILED username=%s ip=%s attempts=%d', username, ip, attempts)
+        try:
+            AuditLog.objects.create(event_type='LOGIN_FAILED', username=username, ip_address=ip)
+        except Exception:
+            pass
         return super().form_invalid(form)
 
     def form_valid(self, form):
@@ -887,3 +891,120 @@ def scrape_logs(request):
     for r in runs:
         r.firm_details = firms_by_run.get(r.id, [])
     return render(request, 'tracker/scrape_logs.html', {'runs': runs})
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Profile
+# ─────────────────────────────────────────────────────────────────────────────
+
+@login_required
+def profile(request):
+    user = request.user
+    message = None
+    error = None
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'update_details':
+            first_name = request.POST.get('first_name', '').strip()
+            last_name  = request.POST.get('last_name', '').strip()
+            email      = request.POST.get('email', '').strip()
+            user.first_name = first_name
+            user.last_name  = last_name
+            user.email      = email
+            user.save()
+            message = 'Profile updated.'
+
+        elif action == 'change_password':
+            current  = request.POST.get('current_password', '')
+            new_pw   = request.POST.get('new_password', '')
+            confirm  = request.POST.get('confirm_password', '')
+            if not user.check_password(current):
+                error = 'Current password is incorrect.'
+            elif len(new_pw) < 8:
+                error = 'New password must be at least 8 characters.'
+            elif new_pw != confirm:
+                error = 'New passwords do not match.'
+            else:
+                user.set_password(new_pw)
+                user.save()
+                from django.contrib.auth import update_session_auth_hash
+                update_session_auth_hash(request, user)
+                message = 'Password changed successfully.'
+
+    recent_logins = AuditLog.objects.filter(
+        username=user.username, event_type='LOGIN'
+    ).order_by('-created_at')[:10]
+
+    return render(request, 'tracker/profile.html', {
+        'profile_user': user,
+        'message':      message,
+        'error':        error,
+        'recent_logins': recent_logins,
+    })
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# User admin (superuser only)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _superuser_required(view_fn):
+    from functools import wraps
+    @wraps(view_fn)
+    @login_required
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_superuser:
+            return redirect('dashboard')
+        return view_fn(request, *args, **kwargs)
+    return wrapper
+
+
+@_superuser_required
+def user_admin(request):
+    from django.contrib.auth.models import User
+    message = None
+    error   = None
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'create_user':
+            username = request.POST.get('username', '').strip()
+            email    = request.POST.get('email', '').strip()
+            password = request.POST.get('password', '')
+            if not username or not password:
+                error = 'Username and password are required.'
+            elif User.objects.filter(username=username).exists():
+                error = f'Username "{username}" already exists.'
+            elif len(password) < 8:
+                error = 'Password must be at least 8 characters.'
+            else:
+                User.objects.create_user(username=username, email=email, password=password)
+                message = f'User "{username}" created.'
+
+        elif action == 'toggle_user':
+            uid  = request.POST.get('user_id')
+            user = User.objects.filter(id=uid).exclude(id=request.user.id).first()
+            if user:
+                user.is_active = not user.is_active
+                user.save()
+                state = 'activated' if user.is_active else 'deactivated'
+                message = f'User "{user.username}" {state}.'
+
+        elif action == 'delete_user':
+            uid  = request.POST.get('user_id')
+            user = User.objects.filter(id=uid).exclude(id=request.user.id).first()
+            if user:
+                name = user.username
+                user.delete()
+                message = f'User "{name}" deleted.'
+
+    users       = User.objects.order_by('-date_joined')
+    audit_logs  = AuditLog.objects.order_by('-created_at')[:200]
+
+    return render(request, 'tracker/user_admin.html', {
+        'users':      users,
+        'audit_logs': audit_logs,
+        'message':    message,
+        'error':      error,
+    })
