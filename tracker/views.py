@@ -24,6 +24,17 @@ def _client_ip(request):
     return forwarded.split(',')[0].strip() if forwarded else request.META.get('REMOTE_ADDR', '?')
 
 
+def _superuser_required(view_fn):
+    from functools import wraps
+    @wraps(view_fn)
+    @login_required
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_superuser:
+            return redirect('dashboard')
+        return view_fn(request, *args, **kwargs)
+    return wrapper
+
+
 class RateLimitedLoginView(LoginView):
     """LoginView that locks an IP after 5 consecutive failed attempts for 1 hour."""
 
@@ -947,17 +958,6 @@ def profile(request):
 # ─────────────────────────────────────────────────────────────────────────────
 # User admin (superuser only)
 # ─────────────────────────────────────────────────────────────────────────────
-
-def _superuser_required(view_fn):
-    from functools import wraps
-    @wraps(view_fn)
-    @login_required
-    def wrapper(request, *args, **kwargs):
-        if not request.user.is_superuser:
-            return redirect('dashboard')
-        return view_fn(request, *args, **kwargs)
-    return wrapper
-
 
 @_superuser_required
 def user_admin(request):
