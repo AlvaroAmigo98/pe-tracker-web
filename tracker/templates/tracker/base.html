@@ -373,7 +373,9 @@
       <a href="{% url 'people' %}"      class="{% if request.resolver_match.url_name == 'people' %}active{% endif %}">People</a>
       <a href="{% url 'firms' %}"       class="{% if request.resolver_match.url_name == 'firms' or request.resolver_match.url_name == 'firm_detail' %}active{% endif %}">Firms</a>
       <a href="{% url 'signals' %}"     class="{% if request.resolver_match.url_name == 'signals' %}active{% endif %}">Signals</a>
+      {% if request.user.is_superuser %}
       <a href="{% url 'scrape_logs' %}" class="{% if request.resolver_match.url_name == 'scrape_logs' %}active{% endif %}">Scrape Logs</a>
+      {% endif %}
       {% if request.user.is_superuser %}
       <a href="{% url 'user_admin' %}"  class="{% if request.resolver_match.url_name == 'user_admin' %}active{% endif %}">Users</a>
       {% endif %}
@@ -413,7 +415,9 @@
     <a href="{% url 'people' %}"      class="{% if request.resolver_match.url_name == 'people' %}active{% endif %}">People</a>
     <a href="{% url 'firms' %}"       class="{% if request.resolver_match.url_name == 'firms' or request.resolver_match.url_name == 'firm_detail' %}active{% endif %}">Firms</a>
     <a href="{% url 'signals' %}"     class="{% if request.resolver_match.url_name == 'signals' %}active{% endif %}">Signals</a>
+    {% if request.user.is_superuser %}
     <a href="{% url 'scrape_logs' %}" class="{% if request.resolver_match.url_name == 'scrape_logs' %}active{% endif %}">Scrape Logs</a>
+    {% endif %}
   </nav>
   <div class="content">
     {% block content %}{% endblock %}

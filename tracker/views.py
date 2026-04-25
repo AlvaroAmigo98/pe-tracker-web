@@ -880,7 +880,7 @@ def firm_report(request, company_id):
     })
 
 
-@login_required
+@_superuser_required
 def scrape_logs(request):
     runs = list(ScrapeRun.objects.order_by('-ran_at')[:52])
     run_ids = [r.id for r in runs]
