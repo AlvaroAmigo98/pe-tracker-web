@@ -70,6 +70,12 @@ class RateLimitedLoginView(LoginView):
         return super().form_valid(form)
 
 
+def landing(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    return render(request, 'tracker/landing.html')
+
+
 SENIORITY_GROUP = {
     "Partner / MD": "Senior",
     "Director":     "Senior",
