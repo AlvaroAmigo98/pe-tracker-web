@@ -14,4 +14,5 @@ urlpatterns = [
     path('profile/',    views.profile,     name='profile'),
     path('users/',      views.user_admin,  name='user_admin'),
     path('watchlist/toggle/<int:company_id>/', views.watchlist_toggle, name='watchlist_toggle'),
+    path('people/<int:person_id>/', views.person_profile, name='person_profile'),
 ]

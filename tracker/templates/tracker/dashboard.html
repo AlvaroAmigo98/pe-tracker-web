@@ -52,6 +52,55 @@
   </div>
 </div>
 
+<!-- Feature 8 — Notable moves this week -->
+{% if notable_moves %}
+<div style="margin-bottom:20px">
+  <div style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Notable moves this week</div>
+  <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin">
+    {% for e in notable_moves %}
+    <a href="/firms/{{ e.person.company_id }}/"
+       style="flex-shrink:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;text-decoration:none;min-width:200px;max-width:240px;display:block;
+              border-top:3px solid {% if e.event_type == 'hire' %}var(--hire){% elif e.event_type == 'leaver' %}var(--leave){% else %}var(--promo){% endif %}">
+      <div style="font-size:13px;font-weight:600;color:var(--text-1);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ e.person.full_name }}</div>
+      <div style="font-size:11px;color:var(--text-2);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ e.person.company.name }}</div>
+      <div style="display:flex;align-items:center;gap:6px">
+        {% if e.event_type == 'hire' %}<span class="badge badge-hire">Hire</span>
+        {% elif e.event_type == 'leaver' %}<span class="badge badge-leave">Leaver</span>
+        {% elif e.event_type == 'promotion' %}<span class="badge badge-promo">Promotion</span>
+        {% else %}<span class="badge badge-role">Role change</span>{% endif %}
+      </div>
+      <div style="font-size:11px;color:var(--text-3);margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+        {{ e.new_title|default:e.previous_title|default:"—" }}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Feature 1 — Hiring activity trend chart -->
+<div class="card" style="margin-bottom:20px;padding:18px 22px 14px">
+  <div style="font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:12px;letter-spacing:.03em">Hiring activity — last 52 weeks</div>
+  <div style="position:relative;height:180px">
+    <canvas id="trend-chart"></canvas>
+  </div>
+</div>
+
+<!-- Feature 3 — Activity heatmap -->
+<div class="card" style="margin-bottom:20px;padding:18px 22px 18px">
+  <div style="font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:14px;letter-spacing:.03em">Event activity — last 12 months</div>
+  <div id="heatmap-container" style="display:flex;gap:3px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin"></div>
+  <div style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:11px;color:var(--text-3)">
+    <span>Less</span>
+    <div style="width:10px;height:10px;border-radius:2px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08)"></div>
+    <div style="width:10px;height:10px;border-radius:2px;background:#1a3a2a"></div>
+    <div style="width:10px;height:10px;border-radius:2px;background:rgba(16,185,129,0.5)"></div>
+    <div style="width:10px;height:10px;border-radius:2px;background:rgba(16,185,129,0.75)"></div>
+    <div style="width:10px;height:10px;border-radius:2px;background:#10B981"></div>
+    <span>More</span>
+  </div>
+</div>
+
 <form method="get" id="dash-form">
   <input type="hidden" name="days" id="days-input" value="{{ days }}">
   <div class="filter-bar">
@@ -241,7 +290,143 @@
   {% endif %}
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
+// Feature 1 — Trend chart
+(function() {
+  const raw = {{ trend_json|safe }};
+  const ctx = document.getElementById('trend-chart');
+  if (!ctx) return;
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: raw.weeks,
+      datasets: [
+        {
+          label: 'Hires',
+          data: raw.hires,
+          borderColor: 'var(--hire)',
+          backgroundColor: 'rgba(16,185,129,0.08)',
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0.3,
+          fill: true,
+        },
+        {
+          label: 'Leavers',
+          data: raw.leavers,
+          borderColor: 'var(--leave)',
+          backgroundColor: 'rgba(239,68,68,0.08)',
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0.3,
+          fill: true,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          labels: {
+            color: 'rgba(255,255,255,0.45)',
+            font: { size: 11, family: 'inherit' },
+            boxWidth: 12,
+            boxHeight: 2,
+          },
+        },
+        tooltip: {
+          backgroundColor: '#0d1220',
+          borderColor: 'rgba(255,255,255,0.08)',
+          borderWidth: 1,
+          titleColor: 'rgba(255,255,255,0.7)',
+          bodyColor: 'rgba(255,255,255,0.55)',
+          padding: 10,
+        },
+      },
+      scales: {
+        x: {
+          ticks: { color: 'rgba(255,255,255,0.25)', font: { size: 10 }, maxTicksLimit: 13 },
+          grid: { color: 'rgba(255,255,255,0.05)' },
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { color: 'rgba(255,255,255,0.25)', font: { size: 10 }, precision: 0 },
+          grid: { color: 'rgba(255,255,255,0.05)' },
+        },
+      },
+    },
+  });
+})();
+
+// Feature 3 — Activity heatmap
+(function() {
+  const data = {{ heatmap_json|safe }};
+  const container = document.getElementById('heatmap-container');
+  if (!container) return;
+
+  const today = new Date();
+  // Go back 363 days from today
+  const start = new Date(today);
+  start.setDate(today.getDate() - 363);
+  // Snap start to the nearest Monday going backward so columns align
+  const startDay = start.getDay(); // 0=Sun
+  const daysBack = startDay === 0 ? 6 : startDay - 1;
+  start.setDate(start.getDate() - daysBack);
+
+  function colorForCount(c) {
+    if (c === 0) return 'rgba(255,255,255,0.04)';
+    if (c <= 2)  return '#1a3a2a';
+    if (c <= 5)  return 'rgba(16,185,129,0.5)';
+    if (c <= 10) return 'rgba(16,185,129,0.75)';
+    return '#10B981';
+  }
+
+  function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+  function isoDate(d) {
+    return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate());
+  }
+
+  const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const dayLabels = document.createElement('div');
+  dayLabels.style.cssText = 'display:flex;flex-direction:column;gap:2px;margin-right:4px;padding-top:0';
+  DAYS.forEach(function(d, i) {
+    const el = document.createElement('div');
+    el.style.cssText = 'height:10px;font-size:9px;color:rgba(255,255,255,0.2);line-height:10px;min-width:20px;text-align:right';
+    el.textContent = (i % 2 === 0) ? d : '';
+    dayLabels.appendChild(el);
+  });
+  container.appendChild(dayLabels);
+
+  let cur = new Date(start);
+  while (cur <= today) {
+    const col = document.createElement('div');
+    col.style.cssText = 'display:flex;flex-direction:column;gap:2px';
+    for (let row = 0; row < 7; row++) {
+      const cell = document.createElement('div');
+      const iso = isoDate(cur);
+      const count = data[iso] || 0;
+      cell.style.cssText = 'width:10px;height:10px;border-radius:2px;cursor:default';
+      cell.style.background = colorForCount(count);
+      cell.title = iso + ': ' + count + ' event' + (count !== 1 ? 's' : '');
+      col.appendChild(cell);
+      cur.setDate(cur.getDate() + 1);
+      if (cur > today && row < 6) {
+        // Fill remaining cells in last column as empty
+        for (let r2 = row + 1; r2 < 7; r2++) {
+          const empty = document.createElement('div');
+          empty.style.cssText = 'width:10px;height:10px;border-radius:2px;background:transparent';
+          col.appendChild(empty);
+        }
+        break;
+      }
+    }
+    container.appendChild(col);
+  }
+})();
+
 // #1: Period buttons
 function setPeriod(val) {
   document.getElementById('days-input').value = val;

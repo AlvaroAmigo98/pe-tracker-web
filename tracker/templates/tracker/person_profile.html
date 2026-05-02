@@ -1,0 +1,107 @@
+{% extends 'tracker/base.html' %}
+{% block content %}
+
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap">
+  <a href="{% url 'people' %}" style="color:var(--text-2);text-decoration:none;font-size:13px;font-weight:500;transition:color .15s" onmouseover="this.style.color='var(--text-1)'" onmouseout="this.style.color='var(--text-2)'">← All people</a>
+  <div style="width:1px;height:16px;background:var(--border)"></div>
+  <a href="{% url 'firm_detail' company.id %}" style="color:var(--text-2);text-decoration:none;font-size:13px;font-weight:500;transition:color .15s" onmouseover="this.style.color='var(--text-1)'" onmouseout="this.style.color='var(--text-2)'">← {{ company.name }}</a>
+</div>
+
+<div style="margin-bottom:24px">
+  <div style="font-size:22px;font-weight:800;color:var(--text-1);letter-spacing:-0.4px;margin-bottom:4px">{{ person.full_name }}</div>
+  <div style="font-size:13px;color:var(--text-2)">
+    <a href="{% url 'firm_detail' company.id %}" style="color:var(--accent);text-decoration:none;font-weight:600">{{ company.name }}</a>
+    {% if current_snap %}
+    <span style="margin:0 8px;color:var(--text-3)">·</span>
+    <span>{{ current_snap.job_title|default:"—" }}</span>
+    {% if current_snap.seniority %}
+    <span style="margin:0 8px;color:var(--text-3)">·</span>
+    <span class="badge {% if current_snap.seniority_group == 'Senior' %}badge-senior{% else %}badge-junior{% endif %}">{{ current_snap.seniority }}</span>
+    {% endif %}
+    {% if current_snap.location %}
+    <span style="margin:0 8px;color:var(--text-3)">·</span>
+    <span>{{ current_snap.location }}</span>
+    {% endif %}
+    {% endif %}
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+
+  <!-- Snapshot timeline -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Snapshot history ({{ snapshots|length }})</span>
+    </div>
+    {% if snapshots %}
+    <div style="padding:20px 24px">
+      {% for snap in snapshots %}
+      <div style="display:flex;gap:16px;margin-bottom:{% if not forloop.last %}16px{% else %}0{% endif %}">
+        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--accent);margin-top:3px;flex-shrink:0"></div>
+          {% if not forloop.last %}<div style="width:1px;flex:1;min-height:20px;background:var(--border);margin:3px 0"></div>{% endif %}
+        </div>
+        <div style="flex:1;padding-bottom:{% if not forloop.last %}4px{% else %}0{% endif %}">
+          <div style="font-size:11px;color:var(--text-3);margin-bottom:2px">{{ snap.scraped_at|date:"d M Y" }}</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text-1)">{{ snap.job_title|default:"—" }}</div>
+          <div style="font-size:12px;color:var(--text-2);margin-top:2px">
+            {% if snap.seniority %}{{ snap.seniority }}{% endif %}
+            {% if snap.location %}<span style="color:var(--text-3)"> · </span>{{ snap.location }}{% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty">No snapshots recorded.</div>
+    {% endif %}
+  </div>
+
+  <!-- Change events -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Change events ({{ events|length }})</span>
+    </div>
+    {% if events %}
+    <div style="padding:20px 24px">
+      {% for e in events %}
+      <div style="display:flex;gap:16px;margin-bottom:{% if not forloop.last %}16px{% else %}0{% endif %}">
+        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+          <div style="width:8px;height:8px;border-radius:50%;margin-top:3px;flex-shrink:0;
+            background:{% if e.event_type == 'hire' %}var(--hire){% elif e.event_type == 'leaver' %}var(--leave){% else %}var(--promo){% endif %}">
+          </div>
+          {% if not forloop.last %}<div style="width:1px;flex:1;min-height:20px;background:var(--border);margin:3px 0"></div>{% endif %}
+        </div>
+        <div style="flex:1;padding-bottom:{% if not forloop.last %}4px{% else %}0{% endif %}">
+          <div style="font-size:11px;color:var(--text-3);margin-bottom:3px">{{ e.detected_at|date:"d M Y" }}</div>
+          <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+            {% if e.event_type == 'hire' %}<span class="badge badge-hire">Hire</span>
+            {% elif e.event_type == 'leaver' %}<span class="badge badge-leave">Leaver</span>
+            {% elif e.event_type == 'promotion' %}<span class="badge badge-promo">Promotion</span>
+            {% else %}<span class="badge badge-role">Role change</span>{% endif %}
+            {% if e.previous_level or e.new_level %}
+            <span style="font-size:11px;color:var(--text-3)">
+              {% if e.previous_level and e.new_level %}{{ e.previous_level }} → {{ e.new_level }}
+              {% elif e.new_level %}{{ e.new_level }}
+              {% else %}{{ e.previous_level }}{% endif %}
+            </span>
+            {% endif %}
+          </div>
+          <div style="font-size:12px;color:var(--text-2);margin-top:3px">
+            {% if e.previous_title and e.new_title %}{{ e.previous_title }} → {{ e.new_title }}
+            {% elif e.new_title %}{{ e.new_title }}
+            {% elif e.previous_title %}{{ e.previous_title }}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty">No change events recorded.</div>
+    {% endif %}
+  </div>
+
+</div>
+
+{% endblock %}

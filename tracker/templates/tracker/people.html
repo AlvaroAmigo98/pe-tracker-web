@@ -111,7 +111,7 @@
     <tbody>
       {% for snap in people %}
       <tr>
-        <td class="name-cell">{{ snap.person.full_name }}</td>
+        <td class="name-cell"><a href="{% url 'person_profile' snap.person.id %}" class="row-link">{{ snap.person.full_name }}</a></td>
         <td class="subtle">
           <a href="/firms/{{ snap.person.company_id }}/" class="row-link">{{ snap.person.company.name }}</a>
         </td>

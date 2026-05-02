@@ -200,6 +200,32 @@
   </div>
 </div>
 
+<!-- ── Feature 4: Market Pulse ─────────────────────────────────────────── -->
+<div class="dcard" style="border-top:3px solid var(--amber);margin-bottom:28px">
+  <div class="dcard-header">
+    <div>
+      <div class="dcard-title">Market Pulse</div>
+      <div class="dcard-sub">Current calendar month — {{ today|date:"F Y" }}</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0">
+    <div style="padding:22px 24px;border-right:1px solid var(--d-border);text-align:center">
+      <div style="font-size:42px;font-weight:800;line-height:1;letter-spacing:-2px;color:var(--green)">↑ {{ total_hires_month }}</div>
+      <div style="font-size:11px;font-weight:600;color:var(--d-text2);text-transform:uppercase;letter-spacing:.07em;margin-top:8px">Hires</div>
+    </div>
+    <div style="padding:22px 24px;border-right:1px solid var(--d-border);text-align:center">
+      <div style="font-size:42px;font-weight:800;line-height:1;letter-spacing:-2px;color:var(--red)">↓ {{ total_leavers_month }}</div>
+      <div style="font-size:11px;font-weight:600;color:var(--d-text2);text-transform:uppercase;letter-spacing:.07em;margin-top:8px">Leavers</div>
+    </div>
+    <div style="padding:22px 24px;text-align:center">
+      <div style="font-size:42px;font-weight:800;line-height:1;letter-spacing:-2px;color:var(--amber)">
+        Δ {% if net_headcount_month >= 0 %}+{% endif %}{{ net_headcount_month }}
+      </div>
+      <div style="font-size:11px;font-weight:600;color:var(--d-text2);text-transform:uppercase;letter-spacing:.07em;margin-top:8px">Net Headcount</div>
+    </div>
+  </div>
+</div>
+
 <!-- ── Stat Strip ─────────────────────────────────────────────────────────── -->
 <div class="sig-stats">
   <div class="sig-stat" style="--accent-color:var(--amber); --accent-glow:var(--amber-glow)">

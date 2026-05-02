@@ -41,11 +41,13 @@
 </div>
 
 <div class="tabs">
+  <a href="?tab=overview"                                            class="tab-btn {% if tab == 'overview'   %}active{% endif %}">Overview</a>
   <a href="?tab=team{% if search %}&q={{ search }}{% endif %}"       class="tab-btn {% if tab == 'team'       %}active{% endif %}">Team ({{ team|length }})</a>
   <a href="?tab=leavers{% if search %}&q={{ search }}{% endif %}"    class="tab-btn {% if tab == 'leavers'    %}active{% endif %}">Leavers ({{ leavers|length }})</a>
   <a href="?tab=hires{% if search %}&q={{ search }}{% endif %}"      class="tab-btn {% if tab == 'hires'      %}active{% endif %}">Hires ({{ hires|length }})</a>
   <a href="?tab=promotions{% if search %}&q={{ search }}{% endif %}" class="tab-btn {% if tab == 'promotions' %}active{% endif %}">Promotions ({{ promotions|length }})</a>
   <a href="?tab=timeline"                                            class="tab-btn {% if tab == 'timeline'   %}active{% endif %}">Timeline</a>
+  <a href="?tab=talent_flow"                                         class="tab-btn {% if tab == 'talent_flow'%}active{% endif %}">Talent Flow</a>
 </div>
 
 <form method="get" id="search-form">
@@ -62,7 +64,61 @@
   </div>
 </form>
 
-{% if tab == 'team' %}
+{% if tab == 'overview' %}
+<!-- Feature 6 — Overview tab: seniority, function, region breakdowns -->
+<div class="card" style="margin-bottom:20px">
+  <div class="card-header"><span class="card-title">Seniority breakdown</span></div>
+  <div style="padding:20px 24px">
+    {% for item in seniority_breakdown %}
+    {% if item.count > 0 %}
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+      <div style="font-size:12px;color:var(--text-2);min-width:110px;text-align:right">{{ item.level }}</div>
+      <div style="flex:1;background:var(--surface2);border-radius:4px;height:14px;overflow:hidden">
+        <div style="background:var(--accent);height:100%;width:{{ item.pct }}%;border-radius:4px;min-width:2px"></div>
+      </div>
+      <div style="font-size:12px;color:var(--text-1);font-weight:600;min-width:28px">{{ item.count }}</div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:20px">
+  <div class="card-header"><span class="card-title">Function breakdown</span></div>
+  <div style="padding:20px 24px">
+    {% for item in function_breakdown %}
+    {% if item.count > 0 %}
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+      <div style="font-size:12px;color:var(--text-2);min-width:150px;text-align:right">{{ item.fn }}</div>
+      <div style="flex:1;background:var(--surface2);border-radius:4px;height:14px;overflow:hidden">
+        <div style="background:var(--promo);height:100%;width:{{ item.pct }}%;border-radius:4px;min-width:2px"></div>
+      </div>
+      <div style="font-size:12px;color:var(--text-1);font-weight:600;min-width:28px">{{ item.count }}</div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:20px">
+  <div class="card-header"><span class="card-title">Region breakdown</span></div>
+  <div style="padding:20px 24px;display:flex;gap:32px;flex-wrap:wrap">
+    <div style="text-align:center">
+      <div style="font-size:32px;font-weight:800;color:var(--text-1)">{{ region_counts.EMEA }}</div>
+      <div style="font-size:11px;color:var(--text-2);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-top:4px">EMEA</div>
+    </div>
+    <div style="text-align:center">
+      <div style="font-size:32px;font-weight:800;color:var(--text-1)">{{ region_counts.North America }}</div>
+      <div style="font-size:11px;color:var(--text-2);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-top:4px">N. America</div>
+    </div>
+    <div style="text-align:center">
+      <div style="font-size:32px;font-weight:800;color:var(--text-1)">{{ region_counts.APAC }}</div>
+      <div style="font-size:11px;color:var(--text-2);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-top:4px">APAC</div>
+    </div>
+  </div>
+</div>
+
+{% elif tab == 'team' %}
 <div class="card">
   <div class="card-header"><span class="card-title">Current team — {{ team|length }} people</span></div>
   {% if team %}
@@ -71,7 +127,7 @@
     <tbody>
       {% for snap in team %}
       <tr>
-        <td class="name-cell">{{ snap.person.full_name }}</td>
+        <td class="name-cell"><a href="{% url 'person_profile' snap.person.id %}" class="row-link">{{ snap.person.full_name }}</a></td>
         <td class="subtle">{{ snap.job_title|default:"—" }}</td>
         <td>
           {% if snap.seniority_group == 'Senior' %}<span class="badge badge-senior">Senior</span>
@@ -159,6 +215,50 @@
     <div class="empty">No events recorded.</div>
     {% endfor %}
   </div>
+</div>
+
+{% elif tab == 'talent_flow' %}
+<!-- Feature 9 — Talent Flow -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+  {% if talent_outflow or talent_inflow %}
+  <div class="card">
+    <div class="card-header"><span class="card-title">Who left — and where they went</span></div>
+    {% if talent_outflow %}
+    <div style="padding:16px 20px">
+      {% for item in talent_outflow %}
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:13px;color:var(--text-1);font-weight:500;flex:1">{{ item.name }}</span>
+        <span style="font-size:12px;color:var(--text-3)">→</span>
+        <a href="/firms/{{ item.to_firm_id }}/" style="font-size:12px;color:var(--accent);text-decoration:none;font-weight:600">{{ item.to_firm }}</a>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty">No outflow data available.</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="card-title">Who joined — and where they came from</span></div>
+    {% if talent_inflow %}
+    <div style="padding:16px 20px">
+      {% for item in talent_inflow %}
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+        <a href="/firms/{{ item.from_firm_id }}/" style="font-size:12px;color:var(--accent);text-decoration:none;font-weight:600">{{ item.from_firm }}</a>
+        <span style="font-size:12px;color:var(--text-3)">←</span>
+        <span style="font-size:13px;color:var(--text-1);font-weight:500;flex:1">{{ item.name }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty">No inflow data available.</div>
+    {% endif %}
+  </div>
+  {% else %}
+  <div class="card" style="grid-column:1/-1">
+    <div class="empty">No cross-firm movement detected yet.</div>
+  </div>
+  {% endif %}
 </div>
 {% endif %}
 

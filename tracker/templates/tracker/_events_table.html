@@ -12,7 +12,7 @@
   <tbody>
     {% for e in events %}
     <tr>
-      <td class="name-cell">{{ e.person.full_name }}</td>
+      <td class="name-cell"><a href="{% url 'person_profile' e.person.id %}" class="row-link">{{ e.person.full_name }}</a></td>
       <td>
         {% if e.event_type == 'hire' %}<span class="badge badge-hire">Hire</span>
         {% elif e.event_type == 'leaver' %}<span class="badge badge-leave">Leaver</span>
