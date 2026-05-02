@@ -207,275 +207,51 @@
     <div class="sig-stat-num">{{ cascade_alerts|length }}</div>
     <div class="sig-stat-label">Cascade alerts</div>
   </div>
-  <div class="sig-stat" style="--accent-color:var(--blue); --accent-glow:var(--blue-glow)">
-    <div class="sig-stat-icon">🚀</div>
-    <div class="sig-stat-num">{{ liftout_signals|length }}</div>
-    <div class="sig-stat-label">Lift-out signals</div>
+  <div class="sig-stat" style="--accent-color:var(--green); --accent-glow:var(--green-glow)">
+    <div class="sig-stat-icon">📊</div>
+    <div class="sig-stat-num">{{ recent_events }}</div>
+    <div class="sig-stat-label">Events (last 30 days)</div>
   </div>
   <div class="sig-stat" style="--accent-color:var(--purple); --accent-glow:var(--purple-glow)">
     <div class="sig-stat-icon">🏦</div>
-    <div class="sig-stat-num">{{ health_scores|length }}</div>
-    <div class="sig-stat-label">Firms tracked</div>
+    <div class="sig-stat-num">{{ firms_count }}</div>
+    <div class="sig-stat-label">Firms monitored</div>
   </div>
 </div>
 
-<!-- ── Sections 1 + 2: Cascade + Liftout ─────────────────────────────────── -->
-<div class="sig-grid">
-
-  <!-- Cascade Alerts -->
-  <div>
-    <div class="sig-section-label">01 — Cascade Departure Alerts</div>
-    <div class="dcard" style="border-color:rgba(245,158,11,0.2); box-shadow:0 0 40px rgba(245,158,11,0.04);">
-      <div class="dcard-header">
-        <div>
-          <div class="dcard-title">Cascade Departures</div>
-          <div class="dcard-sub">Senior leaver followed by 2+ colleagues within 8 weeks · one per firm · click to view</div>
-        </div>
-        <span class="sbadge sbadge-amber">{{ cascade_alerts|length }} firms</span>
-      </div>
-      {% if cascade_alerts %}
-        {% for a in cascade_alerts %}
-        <a href="/firms/{{ a.company_id }}/?tab=leavers" class="sig-row">
-          <div class="sig-row-accent" style="background:var(--amber)"></div>
-          <div class="sig-row-body">
-            <div class="sig-row-firm">{{ a.firm }}</div>
-            <div class="sig-row-detail">
-              <div style="font-size:13px; color:var(--d-text1); font-weight:500; margin-bottom:3px">
-                {{ a.trigger_name }}
-                <span style="color:var(--d-text3); font-weight:400; font-size:11px; margin-left:4px">{{ a.trigger_title }}</span>
-              </div>
-              <div style="font-size:11px; color:var(--d-text3); line-height:1.5">+ {{ a.follower_names }}</div>
-            </div>
-            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:5px; flex-shrink:0;">
-              <span class="sbadge sbadge-amber">{{ a.count }} followed</span>
-              <span class="sig-row-meta">{{ a.trigger_date|date:"d M Y" }}</span>
-            </div>
-          </div>
-          <div class="sig-row-arrow">→</div>
-        </a>
-        {% endfor %}
-      {% else %}
-      <div class="dempty">No cascade patterns detected yet.</div>
-      {% endif %}
-    </div>
-  </div>
-
-  <!-- Lift-out Signals -->
-  <div>
-    <div class="sig-section-label">02 — Lift-out / Spinout Signals</div>
-    <div class="dcard" style="border-color:rgba(56,189,248,0.2); box-shadow:0 0 40px rgba(56,189,248,0.04);">
-      <div class="dcard-header">
-        <div>
-          <div class="dcard-title">Team Lift-outs &amp; Spinouts</div>
-          <div class="dcard-sub">4+ departures from same firm within 21 days · one per firm · click to view</div>
-        </div>
-        <span class="sbadge sbadge-blue">{{ liftout_signals|length }} firms</span>
-      </div>
-      {% if liftout_signals %}
-        {% for s in liftout_signals %}
-        <a href="/firms/{{ s.company_id }}/?tab=leavers" class="sig-row">
-          <div class="sig-row-accent" style="background:var(--blue)"></div>
-          <div class="sig-row-body">
-            <div class="sig-row-firm">{{ s.firm }}</div>
-            <div class="sig-row-detail">
-              <div style="font-size:11px; color:var(--d-text3); line-height:1.5">{{ s.names }}</div>
-            </div>
-            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:5px; flex-shrink:0;">
-              <span class="sbadge sbadge-blue">{{ s.count }} leavers</span>
-              <span class="sig-row-meta">{{ s.start|date:"d M" }} – {{ s.end|date:"d M Y" }}</span>
-            </div>
-          </div>
-          <div class="sig-row-arrow" style="transition: color .12s">→</div>
-        </a>
-        {% endfor %}
-      {% else %}
-      <div class="dempty">No lift-out signals detected yet.</div>
-      {% endif %}
-    </div>
-  </div>
-
-</div>
-
-<!-- ── Section 3: Firm Health Score ─────────────────────────────────────── -->
-<div class="sig-section-label">03 — Firm Health Score</div>
-<div class="dcard" style="margin-bottom:28px;">
+<!-- ── Cascade Departure Alerts ───────────────────────────────────────────── -->
+<div class="sig-section-label">Cascade Departure Alerts</div>
+<div class="dcard" style="border-color:rgba(245,158,11,0.2); box-shadow:0 0 40px rgba(245,158,11,0.04);">
   <div class="dcard-header">
     <div>
-      <div class="dcard-title">90-Day Net Headcount Change</div>
-      <div class="dcard-sub">Net gain or loss in headcount over rolling 90 days · senior attrition rate · sorted worst first</div>
+      <div class="dcard-title">Cascade Departures</div>
+      <div class="dcard-sub">Senior leaver followed by 2+ colleagues within 8 weeks · one per firm · click to view</div>
     </div>
+    <span class="sbadge sbadge-amber">{{ cascade_alerts|length }} firms</span>
   </div>
-  <div class="health-grid">
-    <div class="health-table-col">
-      <table class="dtable">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Firm</th>
-            <th>Net Δ</th>
-            <th>Sr. Left</th>
-            <th>Attrition</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for h in health_scores %}
-          <tr>
-            <td class="rank">{{ forloop.counter }}</td>
-            <td class="dn">{{ h.firm }}</td>
-            <td>
-              <span class="{% if h.net >= 0 %}net-pos{% else %}net-neg{% endif %}">
-                {% if h.net > 0 %}+{% endif %}{{ h.net }}
-              </span>
-            </td>
-            <td>{% if h.senior_leavers > 0 %}<span class="sbadge sbadge-red">{{ h.senior_leavers }}</span>{% else %}<span style="color:var(--d-text3)">—</span>{% endif %}</td>
-            <td style="color:var(--d-text3); font-size:12px">{{ h.attrition_rate }}%</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    <div class="chart-wrap">
-      <canvas id="healthChart"></canvas>
-    </div>
-  </div>
+  {% if cascade_alerts %}
+    {% for a in cascade_alerts %}
+    <a href="/firms/{{ a.company_id }}/?tab=leavers" class="sig-row">
+      <div class="sig-row-accent" style="background:var(--amber)"></div>
+      <div class="sig-row-body">
+        <div class="sig-row-firm">{{ a.firm }}</div>
+        <div class="sig-row-detail">
+          <div style="font-size:13px; color:var(--d-text1); font-weight:500; margin-bottom:3px">
+            {{ a.trigger_name }}
+            <span style="color:var(--d-text3); font-weight:400; font-size:11px; margin-left:4px">{{ a.trigger_title }}</span>
+          </div>
+          <div style="font-size:11px; color:var(--d-text3); line-height:1.5">+ {{ a.follower_names }}</div>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:5px; flex-shrink:0;">
+          <span class="sbadge sbadge-amber">{{ a.count }} followed</span>
+          <span class="sig-row-meta">{{ a.trigger_date|date:"d M Y" }}</span>
+        </div>
+      </div>
+      <div class="sig-row-arrow">→</div>
+    </a>
+    {% endfor %}
+  {% else %}
+  <div class="dempty">No cascade patterns detected yet.</div>
+  {% endif %}
 </div>
-
-<!-- ── Section 5: Seniority Pyramid ─────────────────────────────────────── -->
-<div class="sig-section-label">04 — Seniority Pyramid</div>
-<div class="dcard">
-  <div class="dcard-header">
-    <div>
-      <div class="dcard-title">Headcount by Seniority — Top 15 Firms</div>
-      <div class="dcard-sub">Current snapshot · Partner/MD · Director · VP · Principal · Associate · Analyst</div>
-    </div>
-  </div>
-  <div class="chart-wrap" style="padding: 28px 28px 20px;">
-    <canvas id="pyramidChart" height="280"></canvas>
-  </div>
-</div>
-
-<!-- ── Charts ─────────────────────────────────────────────────────────────── -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script>
-(function() {
-  const GRID  = 'rgba(255,255,255,0.05)';
-  const TICK  = '#3E4C63';
-  const FONT  = { family: "'Inter', sans-serif" };
-
-  Chart.defaults.color = '#7B8CAA';
-  Chart.defaults.borderColor = GRID;
-
-  // ── Health Score Chart ────────────────────────────────────────────────────
-  const hd = {{ health_chart_json|safe }};
-  // Override colors with dark-theme neon
-  const hColors = hd.net.map(v => v < 0
-    ? 'rgba(255,59,92,0.75)'
-    : 'rgba(16,185,129,0.75)'
-  );
-  const hBorders = hd.net.map(v => v < 0 ? '#FF3B5C' : '#10B981');
-
-  const healthCtx = document.getElementById('healthChart');
-  const numBars = hd.labels.length;
-  healthCtx.height = Math.max(280, numBars * 26);
-
-  new Chart(healthCtx, {
-    type: 'bar',
-    data: {
-      labels: hd.labels,
-      datasets: [{
-        label: 'Net headcount (90d)',
-        data: hd.net,
-        backgroundColor: hColors,
-        borderColor: hBorders,
-        borderWidth: 1,
-        borderRadius: 5,
-        borderSkipped: false,
-      }]
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#0D1424',
-          borderColor: 'rgba(255,255,255,0.1)',
-          borderWidth: 1,
-          titleColor: '#E8EEFF',
-          bodyColor: '#7B8CAA',
-          padding: 10,
-          callbacks: {
-            label: ctx => ' ' + (ctx.raw >= 0 ? '+' : '') + ctx.raw + ' headcount',
-          }
-        }
-      },
-      scales: {
-        x: {
-          grid: { color: GRID },
-          ticks: { font: { ...FONT, size: 11 }, color: TICK },
-          border: { color: GRID },
-        },
-        y: {
-          grid: { display: false },
-          ticks: { font: { ...FONT, size: 11 }, color: '#94A3B8' },
-          border: { color: GRID },
-        }
-      }
-    }
-  });
-
-  // ── Seniority Pyramid Chart ───────────────────────────────────────────────
-  const pd = {{ pyramid_chart_json|safe }};
-  const pyramidColors = ['#6366F1','#8B5CF6','#A78BFA','#38BDF8','#34D399','#FBBF24'];
-  pd.datasets.forEach((ds, i) => {
-    ds.backgroundColor = pyramidColors[i] || '#7B8CAA';
-    ds.borderColor      = 'rgba(0,0,0,0.3)';
-    ds.borderWidth      = 1;
-    ds.borderRadius     = 3;
-    ds.borderSkipped    = false;
-  });
-
-  new Chart(document.getElementById('pyramidChart'), {
-    type: 'bar',
-    data: pd,
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: { font: { ...FONT, size: 11 }, padding: 20, boxWidth: 12, color: '#7B8CAA', usePointStyle: true, pointStyleWidth: 8 }
-        },
-        tooltip: {
-          backgroundColor: '#0D1424',
-          borderColor: 'rgba(255,255,255,0.1)',
-          borderWidth: 1,
-          titleColor: '#E8EEFF',
-          bodyColor: '#7B8CAA',
-          padding: 10,
-          mode: 'index',
-          callbacks: {
-            label: ctx => ' ' + ctx.dataset.label + ': ' + ctx.raw,
-          }
-        }
-      },
-      scales: {
-        x: {
-          stacked: true,
-          grid: { display: false },
-          ticks: { font: { ...FONT, size: 10 }, color: TICK, maxRotation: 35 },
-          border: { color: GRID },
-        },
-        y: {
-          stacked: true,
-          grid: { color: GRID },
-          ticks: { font: { ...FONT, size: 11 }, color: TICK },
-          border: { color: GRID },
-        }
-      }
-    }
-  });
-})();
-</script>
 {% endblock %}

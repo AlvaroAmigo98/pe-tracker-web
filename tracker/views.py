@@ -463,12 +463,10 @@ def firms(request):
 
     latest_date = PersonSnapshot.objects.aggregate(d=Max('scraped_at'))['d']
 
-    headcount_map = {}
-    if latest_date:
-        headcount_qs = PersonSnapshot.objects.filter(
-            scraped_at=latest_date
-        ).values('person__company_id').annotate(headcount=Count('id'))
-        headcount_map = {row['person__company_id']: row['headcount'] for row in headcount_qs}
+    headcount_map = {
+        row['company_id']: row['headcount']
+        for row in Person.objects.values('company_id').annotate(headcount=Count('id'))
+    }
 
     event_qs = ChangeEvent.objects.values('person__company_id').annotate(
         hires=Count('id', filter=Q(event_type='hire')),
@@ -653,133 +651,16 @@ def signals(request):
             deduped_cascades.append(a)
     cascade_alerts = deduped_cascades
 
-    # ── Feature 2: Lift-out / Spinout detector ────────────────────────────────
-    # 4+ people leave same firm within 21 days
-    liftout_signals = []
-    seen_windows = set()
-    for anchor in all_leaver_list:
-        end_window = anchor.detected_at + timedelta(days=21)
-        cluster = [
-            e for e in all_leaver_list
-            if e.person.company_id == anchor.person.company_id
-            and anchor.detected_at <= e.detected_at <= end_window
-        ]
-        if len(cluster) >= 4:
-            key = (anchor.person.company_id, anchor.detected_at)
-            if key not in seen_windows:
-                seen_windows.add(key)
-                liftout_signals.append({
-                    'firm': anchor.person.company.name,
-                    'company_id': anchor.person.company_id,
-                    'count': len(cluster),
-                    'start': cluster[0].detected_at,
-                    'end': cluster[-1].detected_at,
-                    'names': ', '.join(e.person.full_name for e in cluster[:5])
-                             + (f' +{len(cluster)-5} more' if len(cluster) > 5 else ''),
-                })
-
-    # deduplicate overlapping windows per firm, keep highest count
-    liftout_signals.sort(key=lambda x: (-x['count'], x['start']))
-    seen_liftout_firms = set()
-    deduped_liftouts = []
-    for s in liftout_signals:
-        if s['firm'] not in seen_liftout_firms:
-            seen_liftout_firms.add(s['firm'])
-            deduped_liftouts.append(s)
-    liftout_signals = deduped_liftouts[:10]
-
-    # ── Feature 4: Firm health score (rolling 90-day) ─────────────────────────
-    ninety_days_ago = today - timedelta(days=90)
-    latest_date = PersonSnapshot.objects.aggregate(d=Max('scraped_at'))['d']
-    date_90 = PersonSnapshot.objects.filter(
-        scraped_at__lte=ninety_days_ago
-    ).aggregate(d=Max('scraped_at'))['d']
-
-    current_hc = {}
-    if latest_date:
-        for row in PersonSnapshot.objects.filter(
-            scraped_at=latest_date
-        ).values('person__company__name').annotate(n=Count('id')):
-            current_hc[row['person__company__name']] = row['n']
-
-    past_hc = {}
-    if date_90:
-        for row in PersonSnapshot.objects.filter(
-            scraped_at=date_90
-        ).values('person__company__name').annotate(n=Count('id')):
-            past_hc[row['person__company__name']] = row['n']
-
-    sleavers_90 = {}
-    for row in ChangeEvent.objects.filter(
-        event_type='leaver',
-        detected_at__gte=ninety_days_ago,
-        previous_level__in=senior_levels,
-    ).values('person__company__name').annotate(n=Count('id')):
-        sleavers_90[row['person__company__name']] = row['n']
-
-    health_scores = []
-    for firm_name, curr in current_hc.items():
-        prev = past_hc.get(firm_name, curr)
-        net = curr - prev
-        sl = sleavers_90.get(firm_name, 0)
-        avg_hc = (curr + prev) / 2 or 1
-        attrition_rate = round(sl / avg_hc * 100, 1)
-        score = net - sl * 2
-        health_scores.append({
-            'firm': firm_name,
-            'current': curr,
-            'net': net,
-            'senior_leavers': sl,
-            'attrition_rate': attrition_rate,
-            'score': score,
-        })
-
-    health_scores.sort(key=lambda x: x['score'])
-
-    worst_20 = health_scores[:20]
-    health_chart_json = json.dumps({
-        'labels': [h['firm'] for h in worst_20],
-        'net': [h['net'] for h in worst_20],
-        'colors': [
-            'rgba(231,76,60,0.85)' if h['net'] < 0 else 'rgba(46,204,113,0.85)'
-            for h in worst_20
-        ],
-    })
-
-    # ── Feature 5: Seniority pyramid (top 15 firms by headcount) ──────────────
-    SENIORITY_LEVELS = ['Partner / MD', 'Director', 'VP', 'Principal', 'Associate', 'Analyst']
-    PYRAMID_COLORS   = ['#1a1a2e', '#2d4a8a', '#4a7fc1', '#7aaddb', '#a8cce8', '#d0e8f5']
-
-    top_firm_names = [f for f, _ in sorted(current_hc.items(), key=lambda x: -x[1])[:15]]
-
-    pyramid_raw = {}
-    if latest_date and top_firm_names:
-        for row in PersonSnapshot.objects.filter(
-            scraped_at=latest_date,
-            person__company__name__in=top_firm_names,
-        ).values('person__company__name', 'seniority').annotate(n=Count('id')):
-            firm = row['person__company__name']
-            pyramid_raw.setdefault(firm, {})[row['seniority']] = row['n']
-
-    pyramid_chart_json = json.dumps({
-        'labels': top_firm_names,
-        'datasets': [
-            {
-                'label': level,
-                'data': [pyramid_raw.get(f, {}).get(level, 0) for f in top_firm_names],
-                'backgroundColor': PYRAMID_COLORS[i],
-            }
-            for i, level in enumerate(SENIORITY_LEVELS)
-        ],
-    })
+    firms_count = Company.objects.count()
+    recent_events = ChangeEvent.objects.filter(
+        detected_at__gte=today - timedelta(days=30)
+    ).count()
 
     return render(request, 'tracker/signals.html', {
-        'cascade_alerts':     cascade_alerts[:10],
-        'liftout_signals':    liftout_signals,
-        'health_scores':      health_scores,
-        'health_chart_json':  health_chart_json,
-        'pyramid_chart_json': pyramid_chart_json,
-        'today':              today,
+        'cascade_alerts': cascade_alerts[:10],
+        'firms_count':    firms_count,
+        'recent_events':  recent_events,
+        'today':          today,
     })
 
 

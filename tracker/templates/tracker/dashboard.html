@@ -131,17 +131,6 @@
       </div>
     </div>
 
-    <!-- #4: Date range picker -->
-    <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
-      <input type="date" name="date_from" id="date-from" value="{{ date_from }}"
-             style="height:36px;padding:0 10px;font-size:12px;min-width:0;width:130px"
-             title="From date">
-      <span style="color:var(--text-2);font-size:12px;flex-shrink:0">–</span>
-      <input type="date" name="date_to" id="date-to" value="{{ date_to }}"
-             style="height:36px;padding:0 10px;font-size:12px;min-width:0;width:130px"
-             title="To date">
-    </div>
-
     <button type="submit" name="export" value="excel" class="btn btn-green">↓ Export Excel</button>
     <a href="/" class="btn btn-gray">Clear</a>
   </div>
@@ -253,23 +242,11 @@
 </div>
 
 <script>
-// #1: Period buttons preserve all other filters and clear date range
+// #1: Period buttons
 function setPeriod(val) {
   document.getElementById('days-input').value = val;
-  document.getElementById('date-from').value = '';
-  document.getElementById('date-to').value   = '';
   document.getElementById('dash-form').submit();
 }
-
-// Date range inputs clear the days shortcut and auto-submit
-document.getElementById('date-from').addEventListener('change', function() {
-  document.getElementById('days-input').value = '';
-  document.getElementById('dash-form').submit();
-});
-document.getElementById('date-to').addEventListener('change', function() {
-  document.getElementById('days-input').value = '';
-  document.getElementById('dash-form').submit();
-});
 
 // #2: Active filter chips
 (function renderChips() {
