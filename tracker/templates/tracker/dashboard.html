@@ -251,12 +251,11 @@
           {% if e.seniority_group == 'Senior' %}<span class="badge badge-senior">Senior</span>
           {% else %}<span class="badge badge-junior">Junior</span>{% endif %}
         </td>
-        <td>
-          {% if e.previous_title and e.new_title %}
-            <span class="subtle">{{ e.previous_title }} → {{ e.new_title }}</span>
+        <td class="subtle">
+          {% if e.previous_title and e.new_title %}{{ e.previous_title }} → {{ e.new_title }}
           {% elif e.new_title %}{{ e.new_title }}
-          {% elif e.previous_title %}<span class="subtle">Last: {{ e.previous_title }}</span>
-          {% endif %}
+          {% elif e.previous_title %}{{ e.previous_title }}
+          {% else %}—{% endif %}
         </td>
         <td>
           {% if e.region == 'EMEA' %}<span class="badge badge-emea">EMEA</span>
