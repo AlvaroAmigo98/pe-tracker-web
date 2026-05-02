@@ -287,18 +287,17 @@
   <div class="sig-section-label">Notable moves this week</div>
   <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin">
     {% for e in notable_moves %}
-    <a href="/firms/{{ e.person.company_id }}/"
-       style="flex-shrink:0;background:var(--d-surface);border:1px solid var(--d-border);border-radius:12px;padding:14px 18px;text-decoration:none;min-width:200px;max-width:240px;display:block;
-              border-top:3px solid {% if e.event_type == 'hire' %}var(--green){% elif e.event_type == 'leaver' %}var(--red){% else %}var(--amber){% endif %}">
-      <div style="font-size:13px;font-weight:600;color:var(--d-text1);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ e.person.full_name }}</div>
-      <div style="font-size:11px;color:var(--d-text2);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ e.person.company.name }}</div>
+    <div style="flex-shrink:0;background:var(--d-surface);border:1px solid var(--d-border);border-radius:12px;padding:14px 18px;min-width:200px;max-width:240px;
+                border-top:3px solid {% if e.event_type == 'hire' %}var(--green){% elif e.event_type == 'leaver' %}var(--red){% else %}var(--amber){% endif %}">
+      <a href="{% url 'person_profile' e.person.id %}" style="display:block;font-size:13px;font-weight:600;color:var(--d-text1);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-decoration:none" onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--d-text1)'">{{ e.person.full_name }}</a>
+      <a href="/firms/{{ e.person.company_id }}/" style="display:block;font-size:11px;color:var(--d-text2);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-decoration:none" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--d-text2)'">{{ e.person.company.name }}</a>
       <span class="sbadge {% if e.event_type == 'hire' %}sbadge-green{% elif e.event_type == 'leaver' %}sbadge-red{% else %}sbadge-amber{% endif %}">
         {% if e.event_type == 'hire' %}Hire{% elif e.event_type == 'leaver' %}Leaver{% else %}Promotion{% endif %}
       </span>
       <div style="font-size:11px;color:var(--d-text3);margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
         {{ e.new_title|default:e.previous_title|default:"—" }}
       </div>
-    </a>
+    </div>
     {% endfor %}
   </div>
 </div>

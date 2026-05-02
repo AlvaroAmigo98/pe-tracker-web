@@ -382,7 +382,7 @@
     </div>
     <div class="typeahead-wrap">
       <form action="{% url 'search' %}" method="get" style="display:flex;align-items:center">
-        <input type="text" name="q" id="topbar-search" value="{{ request.GET.q }}" placeholder="⌕  Search firms, people…"
+        <input type="text" name="q" id="topbar-search" value="{{ request.GET.q }}" placeholder="⌕  Search…  ⌘K"
                autocomplete="off"
                style="width:220px;border-radius:20px;font-size:12px;height:32px;padding:0 14px;min-width:0">
       </form>
@@ -501,6 +501,17 @@ document.getElementById('mobile-nav').querySelectorAll('a').forEach(a => {
     if (!e.target.closest('.typeahead-wrap')) panel.classList.remove('open');
   });
 })();
+
+// ⌘K / Ctrl+K or "/" focuses the search box
+document.addEventListener('keydown', function(e) {
+  const tag = document.activeElement.tagName;
+  const editing = tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement.isContentEditable;
+  if ((e.key === 'k' && (e.metaKey || e.ctrlKey)) || (e.key === '/' && !editing)) {
+    e.preventDefault();
+    const s = document.getElementById('topbar-search');
+    if (s) { s.focus(); s.select(); }
+  }
+});
 </script>
 </body>
 </html>

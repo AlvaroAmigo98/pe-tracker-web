@@ -708,6 +708,25 @@ def firm_detail(request, company_id):
         for p in inflow_qs
     ][:10]
 
+    # Related firms — firms that share talent flow, supplemented by recently active firms
+    related_ids = set()
+    for item in talent_outflow:
+        related_ids.add(item['to_firm_id'])
+    for item in talent_inflow:
+        related_ids.add(item['from_firm_id'])
+    related_ids.discard(company.id)
+
+    related_firms = list(Company.objects.filter(id__in=related_ids)[:8]) if related_ids else []
+
+    if len(related_firms) < 4:
+        seen = {company.id} | related_ids
+        supplement = list(
+            Company.objects.filter(
+                id__in=ChangeEvent.objects.values('person__company_id').distinct()
+            ).exclude(id__in=seen).order_by('name')[:8 - len(related_firms)]
+        )
+        related_firms = related_firms + supplement
+
     watchlist = list(request.session.get('watchlist', []))
     return render(request, 'tracker/firm_detail.html', {
         'company':              company,
@@ -726,6 +745,7 @@ def firm_detail(request, company_id):
         'region_apac':          region_counts.get('APAC', 0),
         'talent_outflow':       talent_outflow,
         'talent_inflow':        talent_inflow,
+        'related_firms':        related_firms,
     })
 
 

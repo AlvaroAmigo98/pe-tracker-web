@@ -132,7 +132,7 @@
     </div>
 
     <button type="submit" name="export" value="excel" class="btn btn-green">↓ Export Excel</button>
-    <a href="/" class="btn btn-gray">Clear</a>
+    <a href="/dashboard/" class="btn btn-gray">Clear</a>
   </div>
 </form>
 
@@ -241,10 +241,12 @@
 </div>
 
 
-// #1: Period buttons
+// #1: Period buttons — updates ?days= in URL while preserving all other active filters
 function setPeriod(val) {
-  document.getElementById('days-input').value = val;
-  document.getElementById('dash-form').submit();
+  const p = new URLSearchParams(window.location.search);
+  p.delete('export');
+  if (val) p.set('days', val); else p.delete('days');
+  window.location.search = p.toString();
 }
 
 // #2: Active filter chips
