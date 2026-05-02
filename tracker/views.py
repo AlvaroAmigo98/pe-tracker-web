@@ -777,7 +777,9 @@ def firm_detail(request, company_id):
         'is_watched':           company.id in watchlist,
         'seniority_breakdown':  seniority_breakdown,
         'function_breakdown':   function_breakdown,
-        'region_counts':        region_counts,
+        'region_emea':          region_counts.get('EMEA', 0),
+        'region_na':            region_counts.get('North America', 0),
+        'region_apac':          region_counts.get('APAC', 0),
         'talent_outflow':       talent_outflow,
         'talent_inflow':        talent_inflow,
     })
