@@ -105,8 +105,10 @@
 <body>
   <div class="login-wrap">
     <div class="login-brand">
-      <div class="login-icon">PE</div>
-      <span class="login-brand-name">PE Tracker</span>
+      <a href="/" style="display:flex;align-items:center;gap:10px;text-decoration:none">
+        <div class="login-icon">PE</div>
+        <span class="login-brand-name">PE Tracker</span>
+      </a>
     </div>
     <div class="login-card">
       <h1>Welcome back</h1>
@@ -125,7 +127,12 @@
         <button type="submit">Sign in →</button>
       </form>
     </div>
-    <div class="login-footer">PE firm intelligence platform</div>
+    <div class="login-footer">
+      <a href="/" style="color:#4a5568;text-decoration:none;font-size:13px;display:inline-flex;align-items:center;gap:5px;transition:color .15s"
+         onmouseover="this.style.color='#818cf8'" onmouseout="this.style.color='#4a5568'">
+        ← Back to home
+      </a>
+    </div>
   </div>
 </body>
 </html>
