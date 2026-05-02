@@ -280,4 +280,154 @@
   <div class="dempty">No cascade patterns detected yet.</div>
   {% endif %}
 </div>
+
+<!-- ── Notable moves this week ────────────────────────────────────────────── -->
+{% if notable_moves %}
+<div style="margin-bottom:28px">
+  <div class="sig-section-label">Notable moves this week</div>
+  <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin">
+    {% for e in notable_moves %}
+    <a href="/firms/{{ e.person.company_id }}/"
+       style="flex-shrink:0;background:var(--d-surface);border:1px solid var(--d-border);border-radius:12px;padding:14px 18px;text-decoration:none;min-width:200px;max-width:240px;display:block;
+              border-top:3px solid {% if e.event_type == 'hire' %}var(--green){% elif e.event_type == 'leaver' %}var(--red){% else %}var(--amber){% endif %}">
+      <div style="font-size:13px;font-weight:600;color:var(--d-text1);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ e.person.full_name }}</div>
+      <div style="font-size:11px;color:var(--d-text2);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ e.person.company.name }}</div>
+      <span class="sbadge {% if e.event_type == 'hire' %}sbadge-green{% elif e.event_type == 'leaver' %}sbadge-red{% else %}sbadge-amber{% endif %}">
+        {% if e.event_type == 'hire' %}Hire{% elif e.event_type == 'leaver' %}Leaver{% else %}Promotion{% endif %}
+      </span>
+      <div style="font-size:11px;color:var(--d-text3);margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+        {{ e.new_title|default:e.previous_title|default:"—" }}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- ── Hiring activity trend chart ───────────────────────────────────────── -->
+<div class="sig-section-label">Hiring activity — last 52 weeks</div>
+<div class="dcard" style="margin-bottom:28px;padding:20px 24px 16px">
+  <div style="position:relative;height:200px">
+    <canvas id="trend-chart"></canvas>
+  </div>
+</div>
+
+<!-- ── Activity heatmap ───────────────────────────────────────────────────── -->
+<div class="sig-section-label">Event activity — last 12 months</div>
+<div class="dcard" style="padding:20px 24px 20px">
+  <div id="heatmap-container" style="display:flex;gap:3px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin"></div>
+  <div style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:11px;color:var(--d-text3)">
+    <span>Less</span>
+    <div style="width:10px;height:10px;border-radius:2px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08)"></div>
+    <div style="width:10px;height:10px;border-radius:2px;background:#1a3a2a"></div>
+    <div style="width:10px;height:10px;border-radius:2px;background:rgba(16,185,129,0.5)"></div>
+    <div style="width:10px;height:10px;border-radius:2px;background:rgba(16,185,129,0.75)"></div>
+    <div style="width:10px;height:10px;border-radius:2px;background:#10B981"></div>
+    <span>More</span>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function() {
+  const raw = {{ trend_json|safe }};
+  const ctx = document.getElementById('trend-chart');
+  if (!ctx) return;
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: raw.weeks,
+      datasets: [
+        {
+          label: 'Hires',
+          data: raw.hires,
+          borderColor: '#10B981',
+          backgroundColor: 'rgba(16,185,129,0.08)',
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0.3,
+          fill: true,
+        },
+        {
+          label: 'Leavers',
+          data: raw.leavers,
+          borderColor: '#FF3B5C',
+          backgroundColor: 'rgba(255,59,92,0.08)',
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0.3,
+          fill: true,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: 'rgba(255,255,255,0.4)', font: { size: 11, family: 'inherit' }, boxWidth: 12, boxHeight: 2 } },
+        tooltip: { backgroundColor: '#0d1220', borderColor: 'rgba(255,255,255,0.08)', borderWidth: 1, titleColor: 'rgba(255,255,255,0.7)', bodyColor: 'rgba(255,255,255,0.5)', padding: 10 },
+      },
+      scales: {
+        x: { ticks: { color: 'rgba(255,255,255,0.2)', font: { size: 10 }, maxTicksLimit: 13 }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        y: { beginAtZero: true, ticks: { color: 'rgba(255,255,255,0.2)', font: { size: 10 }, precision: 0 }, grid: { color: 'rgba(255,255,255,0.05)' } },
+      },
+    },
+  });
+})();
+
+(function() {
+  const data = {{ heatmap_json|safe }};
+  const container = document.getElementById('heatmap-container');
+  if (!container) return;
+  const today = new Date();
+  const start = new Date(today);
+  start.setDate(today.getDate() - 363);
+  const startDay = start.getDay();
+  start.setDate(start.getDate() - (startDay === 0 ? 6 : startDay - 1));
+  function colorForCount(c) {
+    if (c === 0) return 'rgba(255,255,255,0.04)';
+    if (c <= 2)  return '#1a3a2a';
+    if (c <= 5)  return 'rgba(16,185,129,0.5)';
+    if (c <= 10) return 'rgba(16,185,129,0.75)';
+    return '#10B981';
+  }
+  function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+  function isoDate(d) { return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); }
+  const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const dayLabels = document.createElement('div');
+  dayLabels.style.cssText = 'display:flex;flex-direction:column;gap:2px;margin-right:4px';
+  DAYS.forEach(function(d, i) {
+    const el = document.createElement('div');
+    el.style.cssText = 'height:10px;font-size:9px;color:rgba(255,255,255,0.2);line-height:10px;min-width:20px;text-align:right';
+    el.textContent = (i % 2 === 0) ? d : '';
+    dayLabels.appendChild(el);
+  });
+  container.appendChild(dayLabels);
+  let cur = new Date(start);
+  while (cur <= today) {
+    const col = document.createElement('div');
+    col.style.cssText = 'display:flex;flex-direction:column;gap:2px';
+    for (let row = 0; row < 7; row++) {
+      const cell = document.createElement('div');
+      const iso = isoDate(cur);
+      const count = data[iso] || 0;
+      cell.style.cssText = 'width:10px;height:10px;border-radius:2px;cursor:default';
+      cell.style.background = colorForCount(count);
+      cell.title = iso + ': ' + count + ' event' + (count !== 1 ? 's' : '');
+      col.appendChild(cell);
+      cur.setDate(cur.getDate() + 1);
+      if (cur > today && row < 6) {
+        for (let r2 = row + 1; r2 < 7; r2++) {
+          const empty = document.createElement('div');
+          empty.style.cssText = 'width:10px;height:10px;border-radius:2px;background:transparent';
+          col.appendChild(empty);
+        }
+        break;
+      }
+    }
+    container.appendChild(col);
+  }
+})();
+</script>
 {% endblock %}

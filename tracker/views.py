@@ -352,65 +352,6 @@ def dashboard(request):
     request.session['last_visit'] = str(today)
 
     # Feature 1 — Weekly hire vs leaver trend (last 52 weeks)
-    trend_start = today - timedelta(weeks=52)
-    trend_events = ChangeEvent.objects.filter(
-        detected_at__gte=trend_start,
-        event_type__in=['hire', 'leaver'],
-    ).values('detected_at', 'event_type')
-
-    # Build week buckets: Monday of each ISO week
-    weeks = []
-    week_hires   = {}
-    week_leavers = {}
-    for i in range(52):
-        monday = trend_start + timedelta(weeks=i)
-        monday = monday - timedelta(days=monday.weekday())  # snap to Monday
-        iso = monday.isoformat()
-        weeks.append(iso)
-        week_hires[iso]   = 0
-        week_leavers[iso] = 0
-
-    for ev in trend_events:
-        dt = ev['detected_at']
-        if hasattr(dt, 'date'):
-            dt = dt.date()
-        monday = dt - timedelta(days=dt.weekday())
-        iso = monday.isoformat()
-        if iso in week_hires:
-            if ev['event_type'] == 'hire':
-                week_hires[iso] += 1
-            else:
-                week_leavers[iso] += 1
-
-    trend_json = json.dumps({
-        'weeks':   weeks,
-        'hires':   [week_hires[w]   for w in weeks],
-        'leavers': [week_leavers[w] for w in weeks],
-    })
-
-    # Feature 3 — Activity heatmap (last 364 days)
-    heatmap_start = today - timedelta(days=363)
-    heatmap_events = ChangeEvent.objects.filter(
-        detected_at__gte=heatmap_start,
-    ).values('detected_at').annotate(cnt=Count('id'))
-
-    heatmap_dict = {}
-    for row in heatmap_events:
-        dt = row['detected_at']
-        if hasattr(dt, 'date'):
-            dt = dt.date()
-        heatmap_dict[dt.isoformat()] = row['cnt']
-    heatmap_json = json.dumps(heatmap_dict)
-
-    # Feature 8 — Notable moves this week (Partner/MD level)
-    notable_moves = list(
-        ChangeEvent.objects.filter(
-            detected_at__gte=today - timedelta(days=7),
-        ).filter(
-            Q(previous_level='Partner / MD') | Q(new_level='Partner / MD')
-        ).select_related('person', 'person__company').order_by('-detected_at')[:5]
-    )
-
     return render(request, 'tracker/dashboard.html', {
         'latest_run':        latest_run,
         'companies':         companies,
@@ -428,9 +369,6 @@ def dashboard(request):
         'days':              days,
         'watchlist':         watchlist,
         'watchlist_activity': watchlist_activity,
-        'trend_json':        trend_json,
-        'heatmap_json':      heatmap_json,
-        'notable_moves':     notable_moves,
     })
 
 
@@ -837,11 +775,66 @@ def signals(request):
         detected_at__gte=today - timedelta(days=30)
     ).count()
 
-    # Feature 4 — Market Pulse (current calendar month)
+    # Market Pulse (current calendar month)
     month_start = today.replace(day=1)
     total_hires_month   = ChangeEvent.objects.filter(detected_at__gte=month_start, event_type='hire').count()
     total_leavers_month = ChangeEvent.objects.filter(detected_at__gte=month_start, event_type='leaver').count()
     net_headcount_month = total_hires_month - total_leavers_month
+
+    # Notable moves this week (Partner/MD level)
+    notable_moves = list(
+        ChangeEvent.objects.filter(
+            detected_at__gte=today - timedelta(days=7),
+        ).filter(
+            Q(previous_level='Partner / MD') | Q(new_level='Partner / MD')
+        ).select_related('person', 'person__company').order_by('-detected_at')[:5]
+    )
+
+    # Hire vs. leaver trend (52 weeks)
+    trend_start = today - timedelta(weeks=52)
+    trend_events = ChangeEvent.objects.filter(
+        detected_at__gte=trend_start,
+        event_type__in=['hire', 'leaver'],
+    ).values('detected_at', 'event_type')
+    weeks = []
+    week_hires   = {}
+    week_leavers = {}
+    for i in range(52):
+        monday = trend_start + timedelta(weeks=i)
+        monday = monday - timedelta(days=monday.weekday())
+        iso = monday.isoformat()
+        weeks.append(iso)
+        week_hires[iso]   = 0
+        week_leavers[iso] = 0
+    for ev in trend_events:
+        dt = ev['detected_at']
+        if hasattr(dt, 'date'):
+            dt = dt.date()
+        monday = dt - timedelta(days=dt.weekday())
+        iso = monday.isoformat()
+        if iso in week_hires:
+            if ev['event_type'] == 'hire':
+                week_hires[iso] += 1
+            else:
+                week_leavers[iso] += 1
+    trend_json = json.dumps({
+        'weeks':   weeks,
+        'hires':   [week_hires[w]   for w in weeks],
+        'leavers': [week_leavers[w] for w in weeks],
+    })
+
+    # Activity heatmap (last 364 days)
+    heatmap_start = today - timedelta(days=363)
+    heatmap_events = ChangeEvent.objects.filter(
+        detected_at__gte=heatmap_start,
+    ).values('detected_at').annotate(cnt=Count('id'))
+    heatmap_dict = {}
+    for row in heatmap_events:
+        dt = row['detected_at']
+        if hasattr(dt, 'date'):
+            dt = dt.date()
+        heatmap_dict[dt.isoformat()] = row['cnt']
+    heatmap_json = json.dumps(heatmap_dict)
 
     return render(request, 'tracker/signals.html', {
         'cascade_alerts':       cascade_alerts[:10],
@@ -851,6 +844,9 @@ def signals(request):
         'total_hires_month':    total_hires_month,
         'total_leavers_month':  total_leavers_month,
         'net_headcount_month':  net_headcount_month,
+        'notable_moves':        notable_moves,
+        'trend_json':           trend_json,
+        'heatmap_json':         heatmap_json,
     })
 
 
