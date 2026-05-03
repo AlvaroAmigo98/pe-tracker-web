@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PE Tracker — Know Every Move in Private Equity</title>
+  <title>PE Tracker — Private equity moves fast. Move faster.</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300&display=swap" rel="stylesheet">
@@ -89,8 +89,6 @@
       padding: 0 52px 72px;
       overflow: hidden;
     }
-
-    /* Photo background */
     .hero-photo {
       position: absolute; inset: 0;
       background:
@@ -101,7 +99,6 @@
       will-change: transform;
     }
     @keyframes heroZoom { from { transform: scale(1.06); } to { transform: scale(1.0); } }
-
     .hero-overlay {
       position: absolute; inset: 0;
       background:
@@ -112,7 +109,6 @@
           rgba(8,8,8,1.0)  100%),
         linear-gradient(90deg, rgba(8,8,8,0.4) 0%, transparent 60%);
     }
-
     .hero-content { position: relative; z-index: 2; max-width: 1200px; }
 
     .hero-tag {
@@ -148,7 +144,6 @@
     .h1-row:nth-child(3) .h1-inner { animation-delay: 0.41s; }
     @keyframes h1Up { to { transform: translateY(0); } }
     @keyframes up   { to { opacity: 1; transform: translateY(0); } }
-
     .h1-ghost {
       color: transparent;
       -webkit-text-stroke: 1px rgba(255,255,255,0.25);
@@ -189,17 +184,17 @@
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       min-width: 220px;
+      position: relative;
       opacity: 0;
-      animation: fcIn 0.9s var(--ease) forwards;
     }
     .fc::before {
       content: ''; position: absolute; inset: 0; border-radius: inherit;
       background: linear-gradient(135deg, rgba(255,255,255,0.04), transparent 60%);
       pointer-events: none;
     }
-    .fc:nth-child(1) { animation-delay: 1.0s; animation-name: fcIn, drift1; animation-duration: 0.9s, 7s; animation-timing-function: var(--ease), ease-in-out; animation-fill-mode: forwards, none; animation-delay: 1.0s, 2.5s; animation-iteration-count: 1, infinite; }
-    .fc:nth-child(2) { animation-delay: 1.2s; animation-name: fcIn, drift2; animation-duration: 0.9s, 9s; animation-timing-function: var(--ease), ease-in-out; animation-fill-mode: forwards, none; animation-delay: 1.2s, 3s;   animation-iteration-count: 1, infinite; }
-    .fc:nth-child(3) { animation-delay: 1.4s; animation-name: fcIn, drift1; animation-duration: 0.9s, 8s; animation-timing-function: var(--ease), ease-in-out; animation-fill-mode: forwards, none; animation-delay: 1.4s, 3.5s; animation-iteration-count: 1, infinite; }
+    .fc:nth-child(1) { animation: fcIn 0.9s 1.0s var(--ease) forwards, drift1 7s 2.5s ease-in-out infinite; }
+    .fc:nth-child(2) { animation: fcIn 0.9s 1.2s var(--ease) forwards, drift2 9s 3.0s ease-in-out infinite; }
+    .fc:nth-child(3) { animation: fcIn 0.9s 1.4s var(--ease) forwards, drift1 8s 3.5s ease-in-out infinite; }
     @keyframes fcIn   { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
     @keyframes drift1 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
     @keyframes drift2 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
@@ -244,18 +239,13 @@
     .ti-badge.p { color: var(--promo); background: rgba(167,139,250,0.1); }
 
     /* ── STATS ──────────────────────────────────────────────────────── */
-    .stats {
-      background: var(--s1); padding: 80px 52px;
-    }
+    .stats { background: var(--s1); padding: 80px 52px; }
     .stats-inner {
       max-width: 1200px; margin: 0 auto;
       display: grid; grid-template-columns: repeat(4,1fr);
       border-left: 1px solid var(--line);
     }
-    .s-block {
-      padding: 20px 48px;
-      border-right: 1px solid var(--line);
-    }
+    .s-block { padding: 20px 48px; border-right: 1px solid var(--line); }
     .s-num {
       font-size: 68px; font-weight: 900; letter-spacing: -4px;
       color: var(--t1); line-height: 1; margin-bottom: 8px;
@@ -291,13 +281,11 @@
     .bd-r{background:#ff5f57} .bd-y{background:#febc2e} .bd-g{background:#28c840}
     .b-url { flex:1; text-align:center; font-size:12px; color:var(--t3); }
     .browser-body { padding: 28px 28px 20px; }
-
     .b-kpis { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 24px; }
     .b-kpi { background: var(--s3); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; }
     .b-kpi-n { font-size: 28px; font-weight: 800; letter-spacing: -1px; line-height: 1; margin-bottom: 6px; }
     .b-kpi-n.g{color:var(--hire)} .b-kpi-n.r{color:var(--leave)} .b-kpi-n.b{color:var(--promo)} .b-kpi-n.a{color:var(--gold2)}
     .b-kpi-l { font-size: 11px; color: var(--t3); letter-spacing: 0.04em; }
-
     .b-table { width: 100%; border-collapse: collapse; }
     .b-table th {
       text-align: left; padding: 8px 12px; font-size: 10px;
@@ -317,7 +305,6 @@
 
     /* ── FEATURES ───────────────────────────────────────────────────── */
     .features { background: var(--s1); }
-
     .feat {
       max-width: 1400px; margin: 0 auto;
       display: grid; grid-template-columns: 1fr 1fr;
@@ -327,7 +314,6 @@
     .feat:last-child { border-bottom: none; }
     .feat.rev { direction: rtl; }
     .feat.rev > * { direction: ltr; }
-
     .feat-img {
       position: relative; overflow: hidden;
       min-height: 500px;
@@ -342,13 +328,11 @@
       position: absolute; inset: 0;
       background: linear-gradient(135deg, rgba(8,8,8,0.5), rgba(8,8,8,0.2));
     }
-    /* Feature image backgrounds */
     .fi-1 { background-image: url('https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=900&q=80&auto=format&fit=crop'); }
     .fi-2 { background-image: url('https://images.unsplash.com/photo-1642790551116-304f5a45e8bc?w=900&q=80&auto=format&fit=crop'); }
-    .fi-3 { background-image: url('https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=900&q=80&auto=format&fit=crop'); }
-    .fi-4 { background-image: url('https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=900&q=80&auto=format&fit=crop'); }
+    .fi-3 { background-image: url('https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=900&q=80&auto=format&fit=crop'); }
 
-    /* Floating data card on top of photo */
+    /* ── FEAT-DATA BASE ─────────────────────────────────────────────── */
     .feat-data {
       position: absolute; bottom: 40px; left: 40px; right: 40px; z-index: 2;
       background: rgba(8,8,8,0.82);
@@ -359,33 +343,88 @@
     }
     .feat-data-title { font-size: 11px; font-weight: 500; color: var(--t3); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 14px; }
 
+    /* ── FEAT-DATA FULL (feature 1 — fills entire panel) ──────────── */
+    .feat-data-full {
+      position: absolute;
+      inset: 0;
+      border-radius: 0;
+      border: none;
+      bottom: 0; top: 0; left: 0; right: 0;
+      padding: 44px 48px;
+      display: flex; flex-direction: column; justify-content: center;
+      background: rgba(8,8,8,0.88);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+    }
+    .fdf-header {
+      display: flex; align-items: baseline; gap: 12px;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+    .fdf-firm { font-size: 22px; font-weight: 800; color: var(--t1); letter-spacing: -0.5px; }
+    .fdf-meta { font-size: 12px; color: var(--t3); flex: 1; }
+    .fdf-total { font-size: 12px; color: var(--t2); white-space: nowrap; }
+    .fdf-total strong { font-weight: 700; color: var(--gold2); }
+    .fdf-section-label { font-size: 10px; font-weight: 600; color: var(--t3); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 14px; margin-top: 24px; }
+    .fdf-divider { height: 1px; background: var(--line); margin: 20px 0 4px; }
+
     /* Bars inside feat-data */
-    .fdb-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .fdb-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
     .fdb-row:last-child { margin-bottom: 0; }
-    .fdb-lbl { font-size: 11px; color: var(--t3); min-width: 72px; }
-    .fdb-track { flex: 1; background: rgba(255,255,255,0.06); border-radius: 2px; height: 6px; overflow: hidden; }
+    .fdb-lbl { font-size: 11px; color: var(--t3); min-width: 88px; }
+    .fdb-track { flex: 1; background: rgba(255,255,255,0.06); border-radius: 2px; height: 7px; overflow: hidden; }
     .fdb-fill {
       height: 100%; border-radius: 2px;
       transform-origin: left; transform: scaleX(0);
       transition: transform 1.4s var(--ease) var(--d, 0s);
     }
     .fdb-fill.on { transform: scaleX(1); }
-    .fdb-fill.gold { background: linear-gradient(90deg, var(--gold), var(--gold2)); }
-    .fdb-fill.teal { background: linear-gradient(90deg, #0891b2, #67e8f9); }
+    .fdb-fill.gold   { background: linear-gradient(90deg, var(--gold), var(--gold2)); }
+    .fdb-fill.teal   { background: linear-gradient(90deg, #0891b2, #67e8f9); }
     .fdb-fill.purple { background: linear-gradient(90deg, #7c3aed, #c4b5fd); }
-    .fdb-val { font-size: 11px; color: var(--t2); min-width: 20px; text-align: right; }
+    .fdb-fill.green  { background: linear-gradient(90deg, #059669, #34d399); }
+    .fdb-val { font-size: 11px; color: var(--t2); min-width: 24px; text-align: right; font-weight: 500; }
 
-    /* Chart bars inside feat-data */
-    .fdc-wrap { display: flex; align-items: flex-end; gap: 3px; height: 50px; }
+    /* ── MOMENTUM CHART (feature 2) ─────────────────────────────────── */
+    .mmt-kpis {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 12px; margin-bottom: 18px;
+    }
+    .mmt-kpi {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--line);
+      border-radius: 6px; padding: 10px 14px;
+    }
+    .mmt-kpi-n { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; line-height: 1; margin-bottom: 4px; }
+    .mmt-kpi-l { font-size: 10px; color: var(--t3); letter-spacing: 0.06em; text-transform: uppercase; }
+    .fdc-wrap {
+      display: flex; align-items: flex-end; gap: 3px;
+      height: 90px;
+      position: relative;
+    }
     .fdc-bar {
       flex: 1; border-radius: 2px 2px 0 0;
       transform-origin: bottom; transform: scaleY(0);
       transition: transform 0.6s var(--ease) var(--d, 0s);
     }
     .fdc-bar.on { transform: scaleY(1); }
-    .fdc-bar.hire  { background: rgba(52,211,153,0.7); }
-    .fdc-bar.leave { background: rgba(248,113,113,0.7); }
+    .fdc-bar.hire  { background: rgba(52,211,153,0.6); }
+    .fdc-bar.leave { background: rgba(248,113,113,0.6); }
     .fdc-bar.sp    { opacity: 1; }
+    .fdc-trend {
+      position: absolute; inset: 0; pointer-events: none;
+    }
+    .fdc-labels {
+      display: flex; justify-content: space-between;
+      margin-top: 8px;
+    }
+    .fdc-month { font-size: 9px; color: var(--t3); letter-spacing: 0.06em; text-transform: uppercase; }
+    .fdc-legend {
+      display: flex; gap: 16px; margin-top: 10px;
+    }
+    .fdc-leg-item { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--t3); }
+    .fdc-leg-dot { width: 8px; height: 8px; border-radius: 1px; }
 
     /* Profile timeline inside feat-data */
     .ftl { display: flex; flex-direction: column; gap: 0; }
@@ -396,20 +435,6 @@
     .ftl-date  { font-size: 10px; color: var(--t3); }
     .ftl-title { font-size: 12px; font-weight: 600; color: var(--t1); }
     .ftl-sub   { font-size: 11px; color: var(--t3); padding-bottom: 10px; }
-
-    /* Map dots in feat-data */
-    .fmap { position: relative; height: 60px; }
-    .fmap-dot {
-      position: absolute; border-radius: 50%;
-      background: var(--gold);
-      box-shadow: 0 0 0 0 rgba(201,168,76,0.4);
-      animation: mdPulse 2.5s var(--d, 0s) infinite;
-    }
-    @keyframes mdPulse {
-      0%  { box-shadow: 0 0 0 0   rgba(201,168,76,0.5); }
-      70% { box-shadow: 0 0 0 10px rgba(201,168,76,0); }
-      100%{ box-shadow: 0 0 0 0   rgba(201,168,76,0); }
-    }
 
     .feat-copy {
       padding: 72px 64px;
@@ -429,15 +454,17 @@
     }
     .feat-link:hover { gap: 16px; border-color: var(--gold); }
 
-    /* ── HOW IT WORKS ───────────────────────────────────────────────── */
-    .how {
-      background: var(--bg); padding: 120px 52px;
-    }
+    /* ── WHAT WE OFFER ──────────────────────────────────────────────── */
+    .how { background: var(--bg); padding: 120px 52px; }
     .how-inner { max-width: 1200px; margin: 0 auto; }
     .how-top { margin-bottom: 72px; }
     .how-h { font-size: clamp(42px, 6vw, 88px); font-weight: 900; letter-spacing: -3.5px; line-height: 0.95; color: var(--t1); }
     .how-h .dim { color: transparent; -webkit-text-stroke: 1px rgba(255,255,255,0.18); }
-    .how-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+    .how-grid {
+      display: grid; grid-template-columns: repeat(4,1fr);
+      gap: 1px; background: var(--line);
+      border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+    }
     .how-step {
       background: var(--s1); padding: 44px 36px;
       position: relative; overflow: hidden;
@@ -451,54 +478,52 @@
       transition: transform 0.4s var(--ease);
     }
     .how-step:hover::after { transform: scaleX(1); }
-    .hw-n {
-      font-size: 11px; font-weight: 700; color: var(--gold);
-      letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 36px;
+    .hw-stat {
+      font-size: 52px; font-weight: 900; letter-spacing: -2.5px;
+      color: var(--gold); line-height: 1;
+      margin-bottom: 20px;
     }
     .hw-title { font-size: 16px; font-weight: 700; color: var(--t1); margin-bottom: 12px; letter-spacing: -0.3px; }
     .hw-body  { font-size: 14px; color: var(--t3); line-height: 1.7; font-weight: 300; }
 
-    /* ── GLOBAL SECTION ─────────────────────────────────────────────── */
+    /* ── GLOBAL SECTION (sphere) ────────────────────────────────────── */
     .global-section {
-      position: relative; overflow: hidden; min-height: 60vh;
-      display: flex; align-items: center; justify-content: center;
-      text-align: center; padding: 120px 52px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 72vh;
+      background: var(--bg);
+      border-top: 1px solid var(--line);
+      overflow: hidden;
     }
-    .global-photo {
-      position: absolute; inset: 0;
-      background: url('https://images.unsplash.com/photo-1529335764857-3f1164d1cb24?w=1800&q=80&auto=format&fit=crop')
-        center center / cover no-repeat;
+    .global-text {
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 100px 52px;
+      position: relative; z-index: 2;
     }
-    .global-overlay {
-      position: absolute; inset: 0;
-      background: rgba(8,8,8,0.82);
-    }
-    .global-inner { position: relative; z-index: 2; }
     .global-h {
-      font-size: clamp(64px, 14vw, 180px);
-      font-weight: 900; letter-spacing: -6px; line-height: 0.88;
+      font-size: clamp(56px, 7.5vw, 112px);
+      font-weight: 900; letter-spacing: -4px; line-height: 0.9;
       color: var(--t1); margin-bottom: 24px;
     }
     .global-h .dim { color: transparent; -webkit-text-stroke: 1px rgba(255,255,255,0.2); }
     .global-sub {
-      font-size: 16px; color: var(--t3); font-weight: 300;
-      letter-spacing: 0.08em; margin-bottom: 56px; font-style: italic;
+      font-size: 16px; color: var(--t3); line-height: 1.75; font-weight: 300;
+      max-width: 360px; margin-bottom: 52px; font-style: italic;
     }
-    /* Geo flags row */
-    .geo-flags {
-      display: flex; justify-content: center; flex-wrap: wrap; gap: 24px;
-      max-width: 800px; margin: 0 auto;
+    .global-metrics { display: flex; gap: 44px; }
+    .gm-item { display: flex; flex-direction: column; }
+    .gm-n { font-size: 34px; font-weight: 900; letter-spacing: -1.5px; color: var(--gold2); line-height: 1; }
+    .gm-l { font-size: 10px; color: var(--t3); letter-spacing: 0.12em; text-transform: uppercase; margin-top: 6px; }
+
+    .global-canvas-wrap {
+      position: relative; overflow: hidden;
+      display: flex; align-items: center;
     }
-    .geo-pill {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--line2);
-      border-radius: 100px; padding: 8px 18px;
-      font-size: 13px; color: var(--t2); font-weight: 400;
-      transition: background 0.2s, border-color 0.2s, transform 0.3s var(--spring);
+    #sphereCanvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
     }
-    .geo-pill:hover { background: rgba(201,168,76,0.1); border-color: rgba(201,168,76,0.3); transform: translateY(-2px); }
-    .geo-flag-em { font-size: 16px; }
 
     /* ── CTA ─────────────────────────────────────────────────────────── */
     .cta {
@@ -518,8 +543,27 @@
       font-weight: 900; letter-spacing: -5px; line-height: 0.9;
       color: var(--t1); margin-bottom: 36px;
     }
-    .cta-h .ghost { color: transparent; -webkit-text-stroke: 1px rgba(255,255,255,0.2); }
-    .cta-sub { font-size: 16px; color: var(--t3); font-weight: 300; max-width: 380px; margin: 0 auto 52px; line-height: 1.7; font-style: italic; }
+    .cta-row { display: block; overflow: hidden; }
+    .cta-inner-txt {
+      display: block;
+      transform: translateY(105%);
+      transition: transform 1.1s var(--ease);
+    }
+    .cta-h.revealed .cta-inner-txt { transform: translateY(0); }
+    .cta-h.revealed .cta-row:nth-child(2) .cta-inner-txt { transition-delay: 0.18s; }
+    .cta-ghost { color: transparent; -webkit-text-stroke: 1px rgba(255,255,255,0.22); }
+    .cta-sub {
+      font-size: 16px; color: var(--t3); font-weight: 300;
+      max-width: 380px; margin: 0 auto 52px; line-height: 1.7; font-style: italic;
+      opacity: 0; transform: translateY(14px);
+      transition: opacity 0.8s 0.4s var(--ease), transform 0.8s 0.4s var(--ease);
+    }
+    .cta-h.revealed ~ .cta-sub { opacity: 1; transform: none; }
+    .cta-btn-wrap {
+      opacity: 0; transform: translateY(14px);
+      transition: opacity 0.8s 0.55s var(--ease), transform 0.8s 0.55s var(--ease);
+    }
+    .cta-h.revealed ~ .cta-btn-wrap { opacity: 1; transform: none; }
 
     /* ── FOOTER ──────────────────────────────────────────────────────── */
     footer {
@@ -543,9 +587,11 @@
     @media (max-width: 1100px) {
       .feat { grid-template-columns: 1fr; min-height: auto; }
       .feat.rev { direction: ltr; }
-      .feat-img { min-height: 380px; }
+      .feat-img { min-height: 420px; }
       .how-grid { grid-template-columns: repeat(2,1fr); }
       .stats-inner { grid-template-columns: repeat(2,1fr); }
+      .global-section { grid-template-columns: 1fr; }
+      .global-canvas-wrap { min-height: 400px; }
     }
     @media (max-width: 680px) {
       nav { padding: 20px 24px; }
@@ -555,12 +601,13 @@
       .hero-cards { display: none; }
       h1 { letter-spacing: -2.5px; }
       .stats { padding: 60px 24px; }
-      .showcase, .how, .geo, .cta { padding-left: 24px; padding-right: 24px; }
+      .showcase, .how, .cta { padding-left: 24px; padding-right: 24px; }
       .feat-copy { padding: 48px 28px; }
+      .feat-data-full { padding: 32px 28px; }
       .b-kpis { grid-template-columns: repeat(2,1fr); }
       .how-grid { grid-template-columns: 1fr; }
-      .global-section { padding: 80px 24px; }
-      .global-h { letter-spacing: -3px; }
+      .global-text { padding: 72px 24px 48px; }
+      .global-canvas-wrap { min-height: 320px; }
       footer { flex-direction: column; gap: 12px; text-align: center; }
     }
   </style>
@@ -572,7 +619,7 @@
   <a href="/" class="nav-logo">PE Tracker</a>
   <div class="nav-links">
     <a href="#platform">Platform</a>
-    <a href="#process">Process</a>
+    <a href="#offer">What we offer</a>
     <a href="#global">Coverage</a>
   </div>
   <a href="/login/" class="nav-cta">Sign In <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
@@ -604,18 +651,18 @@
   <div class="hero-content">
     <div class="hero-tag">
       <div class="hero-pip"></div>
-      <span>Live intelligence · Updated every Monday</span>
+      <span>The largest PE intelligence database</span>
     </div>
 
     <h1>
-      <span class="h1-row"><span class="h1-inner">Know every</span></span>
-      <span class="h1-row"><span class="h1-inner">move in</span></span>
-      <span class="h1-row"><span class="h1-inner"><span class="h1-ghost">private equity.</span></span></span>
+      <span class="h1-row"><span class="h1-inner">Private equity</span></span>
+      <span class="h1-row"><span class="h1-inner">moves fast.</span></span>
+      <span class="h1-row"><span class="h1-inner"><span class="h1-ghost">Move faster.</span></span></span>
     </h1>
 
     <div class="hero-row">
       <p class="hero-desc">
-        Track hires, promotions, and departures across 100+ top PE firms — automatically, every week.
+        Track hires, promotions, and departures across 200+ top PE firms worldwide — automatically.
       </p>
       <div class="hero-actions">
         <a href="/login/" class="btn-primary">
@@ -641,7 +688,6 @@
     <div class="ti"><span class="ti-badge h">Hire</span><span class="ti-text">Vice President · Advent International · Madrid</span></div>
     <div class="ti"><span class="ti-badge l">Leaver</span><span class="ti-text">Managing Director · PAI Partners · Paris</span></div>
     <div class="ti"><span class="ti-badge h">Hire</span><span class="ti-text">Senior Associate · Cinven · London</span></div>
-    <!-- dup for loop -->
     <div class="ti"><span class="ti-badge h">Hire</span><span class="ti-text">Managing Director · KKR · London</span></div>
     <div class="ti"><span class="ti-badge l">Leaver</span><span class="ti-text">Partner · Blackstone · New York</span></div>
     <div class="ti"><span class="ti-badge p">Promotion</span><span class="ti-text">Associate → VP · CVC Capital · Paris</span></div>
@@ -658,10 +704,22 @@
 <!-- STATS -->
 <div class="stats">
   <div class="stats-inner">
-    <div class="s-block sr"><div class="s-num" data-count="100" data-sfx="+">0</div><div class="s-lbl">Firms monitored</div></div>
-    <div class="s-block sr" style="transition-delay:0.08s"><div class="s-num" data-count="20" data-sfx="k+">0</div><div class="s-lbl">Professionals tracked</div></div>
-    <div class="s-block sr" style="transition-delay:0.16s"><div class="s-num" data-count="7" data-sfx="">0</div><div class="s-lbl">Geographies</div></div>
-    <div class="s-block sr" style="transition-delay:0.24s"><div class="s-num">52×</div><div class="s-lbl">Annual refreshes</div></div>
+    <div class="s-block sr">
+      <div class="s-num" data-count="200" data-sfx="+">0</div>
+      <div class="s-lbl">Private equity firms</div>
+    </div>
+    <div class="s-block sr" style="transition-delay:0.08s">
+      <div class="s-num" data-count="20" data-sfx="k+">0</div>
+      <div class="s-lbl">Professional profiles</div>
+    </div>
+    <div class="s-block sr" style="transition-delay:0.16s">
+      <div class="s-num" data-count="50" data-sfx="k+">0</div>
+      <div class="s-lbl">Career moves tracked</div>
+    </div>
+    <div class="s-block sr" style="transition-delay:0.24s">
+      <div class="s-num">Global</div>
+      <div class="s-lbl">Worldwide coverage</div>
+    </div>
   </div>
 </div>
 
@@ -673,7 +731,7 @@
         <div class="sec-label">Platform</div>
         <h2 class="sec-h">Intelligence,<br>at a glance.</h2>
       </div>
-      <p class="sec-sub sr" style="transition-delay:0.12s">Every event surfaced, scored, and ready to act on. Updated each Monday across all tracked firms.</p>
+      <p class="sec-sub sr" style="transition-delay:0.12s">Every event surfaced, scored, and ready to act on — across all tracked firms.</p>
     </div>
 
     <div class="browser sr-s" id="browser">
@@ -683,8 +741,8 @@
       </div>
       <div class="browser-body">
         <div class="b-kpis">
-          <div class="b-kpi"><div class="b-kpi-n g">+47</div><div class="b-kpi-l">Hires this week</div></div>
-          <div class="b-kpi"><div class="b-kpi-n r">−28</div><div class="b-kpi-l">Leavers this week</div></div>
+          <div class="b-kpi"><div class="b-kpi-n g">+47</div><div class="b-kpi-l">Hires detected</div></div>
+          <div class="b-kpi"><div class="b-kpi-n r">−28</div><div class="b-kpi-l">Departures</div></div>
           <div class="b-kpi"><div class="b-kpi-n b">+19</div><div class="b-kpi-l">Net movement</div></div>
           <div class="b-kpi"><div class="b-kpi-n a">12</div><div class="b-kpi-l">Promotions</div></div>
         </div>
@@ -706,97 +764,115 @@
 <!-- FEATURES -->
 <div class="features">
 
-  <!-- 1 -->
+  <!-- 01 / 03 — Deep profiles -->
   <div class="feat">
     <div class="feat-img sr-l">
       <div class="feat-img-bg fi-1" data-speed="0.08"></div>
       <div class="feat-img-overlay"></div>
-      <div class="feat-data">
-        <div class="feat-data-title">Seniority breakdown · KKR</div>
+      <div class="feat-data feat-data-full">
+        <div class="fdf-header">
+          <div class="fdf-firm">KKR</div>
+          <div class="fdf-meta">London · Buyout &amp; Infrastructure</div>
+          <div class="fdf-total"><strong>94</strong> professionals tracked</div>
+        </div>
+        <div class="fdf-section-label">Seniority breakdown</div>
         <div class="fdb-row"><div class="fdb-lbl">Partner / MD</div><div class="fdb-track"><div class="fdb-fill gold" style="width:42%;--d:0s"></div></div><div class="fdb-val">18</div></div>
         <div class="fdb-row"><div class="fdb-lbl">Director</div><div class="fdb-track"><div class="fdb-fill gold" style="width:28%;--d:0.1s"></div></div><div class="fdb-val">12</div></div>
-        <div class="fdb-row"><div class="fdb-lbl">VP</div><div class="fdb-track"><div class="fdb-fill teal" style="width:52%;--d:0.2s"></div></div><div class="fdb-val">22</div></div>
+        <div class="fdb-row"><div class="fdb-lbl">Vice President</div><div class="fdb-track"><div class="fdb-fill teal" style="width:52%;--d:0.2s"></div></div><div class="fdb-val">22</div></div>
         <div class="fdb-row"><div class="fdb-lbl">Principal</div><div class="fdb-track"><div class="fdb-fill purple" style="width:38%;--d:0.3s"></div></div><div class="fdb-val">16</div></div>
         <div class="fdb-row"><div class="fdb-lbl">Associate</div><div class="fdb-track"><div class="fdb-fill purple" style="width:60%;--d:0.4s"></div></div><div class="fdb-val">26</div></div>
+        <div class="fdf-divider"></div>
+        <div class="fdf-section-label">Function mix</div>
+        <div class="fdb-row"><div class="fdb-lbl">Investments</div><div class="fdb-track"><div class="fdb-fill green" style="width:65%;--d:0.5s"></div></div><div class="fdb-val">61</div></div>
+        <div class="fdb-row"><div class="fdb-lbl">Portfolio Ops</div><div class="fdb-track"><div class="fdb-fill teal" style="width:22%;--d:0.6s"></div></div><div class="fdb-val">21</div></div>
+        <div class="fdb-row"><div class="fdb-lbl">IR / Finance</div><div class="fdb-track"><div class="fdb-fill gold" style="width:13%;--d:0.7s"></div></div><div class="fdb-val">12</div></div>
       </div>
     </div>
     <div class="feat-copy sr-r">
-      <div class="feat-num">01 / 04</div>
+      <div class="feat-num">01 / 03</div>
       <h3 class="feat-h">Deep profiles for every firm you track</h3>
-      <p class="feat-p">Seniority breakdown, function mix, regional distribution — every firm has a full data profile updated weekly. Spot composition shifts before the market does.</p>
+      <p class="feat-p">Seniority breakdown, function mix, regional distribution — every firm in the database has a full composition profile. Spot structural shifts before the market notices.</p>
       <a href="/login/" class="feat-link">View firm profiles <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
     </div>
   </div>
 
-  <!-- 2 -->
+  <!-- 02 / 03 — Market momentum -->
   <div class="feat rev">
     <div class="feat-img sr-r">
       <div class="feat-img-bg fi-2" data-speed="0.06"></div>
       <div class="feat-img-overlay"></div>
       <div class="feat-data">
-        <div class="feat-data-title">Hiring activity · Last 20 weeks</div>
+        <div class="feat-data-title">Market momentum · Last 24 weeks</div>
+        <div class="mmt-kpis">
+          <div class="mmt-kpi">
+            <div class="mmt-kpi-n" style="color:var(--hire)">+19</div>
+            <div class="mmt-kpi-l">Net movement</div>
+          </div>
+          <div class="mmt-kpi">
+            <div class="mmt-kpi-n" style="color:var(--gold2)">12</div>
+            <div class="mmt-kpi-l">Peak week</div>
+          </div>
+          <div class="mmt-kpi">
+            <div class="mmt-kpi-n" style="color:var(--promo)">↑ 34%</div>
+            <div class="mmt-kpi-l">Trend (90d)</div>
+          </div>
+        </div>
         <div class="fdc-wrap">
           <div class="fdc-bar hire" style="height:35%;--d:0s"></div>
-          <div class="fdc-bar hire" style="height:50%;--d:0.04s"></div>
-          <div class="fdc-bar hire" style="height:28%;--d:0.08s"></div>
-          <div class="fdc-bar hire" style="height:62%;--d:0.12s"></div>
-          <div class="fdc-bar hire sp" style="height:92%;--d:0.16s"></div>
-          <div class="fdc-bar hire" style="height:44%;--d:0.20s"></div>
-          <div class="fdc-bar leave" style="height:30%;--d:0.24s"></div>
-          <div class="fdc-bar leave" style="height:42%;--d:0.28s"></div>
-          <div class="fdc-bar leave sp" style="height:75%;--d:0.32s"></div>
-          <div class="fdc-bar leave" style="height:22%;--d:0.36s"></div>
-          <div class="fdc-bar hire" style="height:48%;--d:0.40s"></div>
-          <div class="fdc-bar hire" style="height:58%;--d:0.44s"></div>
-          <div class="fdc-bar hire sp" style="height:95%;--d:0.48s"></div>
-          <div class="fdc-bar hire" style="height:52%;--d:0.52s"></div>
-          <div class="fdc-bar hire" style="height:38%;--d:0.56s"></div>
-          <div class="fdc-bar leave" style="height:20%;--d:0.60s"></div>
-          <div class="fdc-bar hire" style="height:56%;--d:0.64s"></div>
-          <div class="fdc-bar hire" style="height:45%;--d:0.68s"></div>
-          <div class="fdc-bar hire" style="height:66%;--d:0.72s"></div>
-          <div class="fdc-bar hire" style="height:40%;--d:0.76s"></div>
+          <div class="fdc-bar hire" style="height:50%;--d:0.03s"></div>
+          <div class="fdc-bar hire" style="height:28%;--d:0.06s"></div>
+          <div class="fdc-bar hire" style="height:62%;--d:0.09s"></div>
+          <div class="fdc-bar hire sp" style="height:92%;--d:0.12s"></div>
+          <div class="fdc-bar hire" style="height:44%;--d:0.15s"></div>
+          <div class="fdc-bar leave" style="height:30%;--d:0.18s"></div>
+          <div class="fdc-bar leave" style="height:42%;--d:0.21s"></div>
+          <div class="fdc-bar leave sp" style="height:68%;--d:0.24s"></div>
+          <div class="fdc-bar leave" style="height:22%;--d:0.27s"></div>
+          <div class="fdc-bar hire" style="height:48%;--d:0.30s"></div>
+          <div class="fdc-bar hire" style="height:58%;--d:0.33s"></div>
+          <div class="fdc-bar hire sp" style="height:95%;--d:0.36s"></div>
+          <div class="fdc-bar hire" style="height:52%;--d:0.39s"></div>
+          <div class="fdc-bar hire" style="height:38%;--d:0.42s"></div>
+          <div class="fdc-bar leave" style="height:20%;--d:0.45s"></div>
+          <div class="fdc-bar hire" style="height:56%;--d:0.48s"></div>
+          <div class="fdc-bar hire" style="height:45%;--d:0.51s"></div>
+          <div class="fdc-bar hire" style="height:72%;--d:0.54s"></div>
+          <div class="fdc-bar hire sp" style="height:88%;--d:0.57s"></div>
+          <div class="fdc-bar hire" style="height:60%;--d:0.60s"></div>
+          <div class="fdc-bar hire" style="height:40%;--d:0.63s"></div>
+          <div class="fdc-bar leave" style="height:25%;--d:0.66s"></div>
+          <div class="fdc-bar hire" style="height:65%;--d:0.69s"></div>
+          <svg class="fdc-trend" viewBox="0 0 240 90" preserveAspectRatio="none">
+            <polyline points="5,58 15,45 25,64 35,33 45,8 55,50 65,63 75,52 85,29 95,70 105,46 115,38 125,5 135,42 145,57 155,72 165,40 175,50 185,26 195,11 205,36 215,54 225,68 235,32" fill="none" stroke="rgba(201,168,76,0.45)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="fdc-labels">
+          <span class="fdc-month">Nov</span>
+          <span class="fdc-month">Dec</span>
+          <span class="fdc-month">Jan</span>
+          <span class="fdc-month">Feb</span>
+          <span class="fdc-month">Mar</span>
+          <span class="fdc-month">Apr</span>
+        </div>
+        <div class="fdc-legend">
+          <div class="fdc-leg-item"><div class="fdc-leg-dot" style="background:rgba(52,211,153,0.6)"></div>Hires</div>
+          <div class="fdc-leg-item"><div class="fdc-leg-dot" style="background:rgba(248,113,113,0.6)"></div>Departures</div>
+          <div class="fdc-leg-item"><div class="fdc-leg-dot" style="background:rgba(201,168,76,0.45);height:2px;width:16px;border-radius:1px"></div>Trend</div>
         </div>
       </div>
     </div>
     <div class="feat-copy sr-l">
-      <div class="feat-num">02 / 04</div>
+      <div class="feat-num">02 / 03</div>
       <h3 class="feat-h">See market momentum before anyone else</h3>
-      <p class="feat-p">52-week activity charts show precisely when firms spike in hiring and when they retract. Catch the pattern before the rumour reaches your inbox.</p>
+      <p class="feat-p">Activity charts show precisely when firms spike in hiring and when they pull back. Track net movement, peak activity, and directional trends — catch the pattern before the rumour reaches your inbox.</p>
       <a href="/login/" class="feat-link">View trend charts <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
     </div>
   </div>
 
-  <!-- 3 -->
+  <!-- 03 / 03 — Career timelines -->
   <div class="feat">
     <div class="feat-img sr-l">
-      <div class="feat-img-bg fi-3" data-speed="0.07"></div>
-      <div class="feat-img-overlay"></div>
-      <div class="feat-data">
-        <div class="feat-data-title">Active markets</div>
-        <div class="fmap">
-          <div class="fmap-dot" style="width:12px;height:12px;top:30%;left:22%;--d:0s"></div>
-          <div class="fmap-dot" style="width:16px;height:16px;top:20%;left:28%;--d:0.4s"></div>
-          <div class="fmap-dot" style="width:10px;height:10px;top:28%;left:34%;--d:0.8s"></div>
-          <div class="fmap-dot" style="width:14px;height:14px;top:16%;left:31%;--d:1.2s"></div>
-          <div class="fmap-dot" style="width:12px;height:12px;top:34%;left:26%;--d:1.6s"></div>
-          <div class="fmap-dot" style="width:8px;height:8px;top:22%;left:37%;--d:0.6s"></div>
-          <div class="fmap-dot" style="width:14px;height:14px;top:38%;left:40%;--d:1s"></div>
-        </div>
-      </div>
-    </div>
-    <div class="feat-copy sr-r">
-      <div class="feat-num">03 / 04</div>
-      <h3 class="feat-h">Broadest geographic coverage in market</h3>
-      <p class="feat-p">From Mayfair to Stockholm to Milan — 7 dedicated scrapers, each running every Monday. Every market has its own signal. We track all of them at once.</p>
-      <a href="#global" class="feat-link">See all markets <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
-    </div>
-  </div>
-
-  <!-- 4 -->
-  <div class="feat rev">
-    <div class="feat-img sr-r">
-      <div class="feat-img-bg fi-4" data-speed="0.05"></div>
+      <div class="feat-img-bg fi-3" data-speed="0.05"></div>
       <div class="feat-img-overlay"></div>
       <div class="feat-data">
         <div class="feat-data-title">Career timeline</div>
@@ -810,71 +886,91 @@
             <div><div class="ftl-date">Jan 2023</div><div class="ftl-title">Vice President</div><div class="ftl-sub">Blackstone · Real Estate Equity</div></div>
           </div>
           <div class="ftl-row">
+            <div class="ftl-left"><div class="ftl-dot" style="background:var(--gold)"></div><div class="ftl-line"></div></div>
+            <div><div class="ftl-date">Sep 2020</div><div class="ftl-title">Associate</div><div class="ftl-sub">Blackstone · Real Estate</div></div>
+          </div>
+          <div class="ftl-row">
             <div class="ftl-left"><div class="ftl-dot" style="background:var(--leave)"></div></div>
-            <div><div class="ftl-date">Mar 2020</div><div class="ftl-title">Senior Associate</div><div class="ftl-sub">KKR · Infrastructure</div></div>
+            <div><div class="ftl-date">Mar 2018</div><div class="ftl-title">Analyst</div><div class="ftl-sub">Goldman Sachs · M&amp;A Advisory</div></div>
           </div>
         </div>
       </div>
     </div>
-    <div class="feat-copy sr-l">
-      <div class="feat-num">04 / 04</div>
+    <div class="feat-copy sr-r">
+      <div class="feat-num">03 / 03</div>
       <h3 class="feat-h">Full career timelines for every professional</h3>
-      <p class="feat-p">Every title change, firm move, and promotion — timestamped and searchable across 20,000+ professionals. Build context, track trajectories, never lose a signal.</p>
+      <p class="feat-p">Every title change, firm move, and promotion — timestamped and searchable across 20,000+ professionals in 200+ firms. Build context, track trajectories, never lose a signal.</p>
       <a href="/login/" class="feat-link">Explore profiles <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
     </div>
   </div>
 
 </div>
 
-<!-- HOW IT WORKS -->
-<div class="how" id="process">
+<!-- WHAT WE OFFER -->
+<div class="how" id="offer">
   <div class="how-inner">
     <div class="how-top sr">
-      <h2 class="how-h">Simple<br><span class="dim">by design.</span></h2>
+      <h2 class="how-h">The largest<br><span class="dim">PE database.</span></h2>
     </div>
     <div class="how-grid">
-      <div class="how-step sr" style="transition-delay:0.06s"><div class="hw-n">Step 01</div><div class="hw-title">Automated weekly scrape</div><div class="hw-body">Every Monday, our pipeline visits 100+ PE firm team pages and captures the full current roster — names, titles, functions, and seniority levels.</div></div>
-      <div class="how-step sr" style="transition-delay:0.12s"><div class="hw-n">Step 02</div><div class="hw-title">Change detection</div><div class="hw-body">Each new snapshot is compared to last week's. New names, missing names, and title changes are classified automatically as hires, leavers, or promotions.</div></div>
-      <div class="how-step sr" style="transition-delay:0.18s"><div class="hw-n">Step 03</div><div class="hw-title">Signals surface</div><div class="hw-body">Events are tagged with seniority, function, and region. Cascade departure patterns and notable Partner-level moves are flagged immediately.</div></div>
-      <div class="how-step sr" style="transition-delay:0.24s"><div class="hw-n">Step 04</div><div class="hw-title">You stay ahead</div><div class="hw-body">Log in every Monday and review everything that changed across the market. No manual trawls. No missed signals. No guesswork.</div></div>
+      <div class="how-step sr" style="transition-delay:0.06s">
+        <div class="hw-stat">200+</div>
+        <div class="hw-title">PE firms covered</div>
+        <div class="hw-body">Buyout, growth, credit, and infrastructure managers — the most comprehensive coverage of global private equity in one platform.</div>
+      </div>
+      <div class="how-step sr" style="transition-delay:0.12s">
+        <div class="hw-stat">20k+</div>
+        <div class="hw-title">Professional profiles</div>
+        <div class="hw-body">Individual records for every partner, director, VP, and associate — every title, every firm, every move. The most complete PE talent dataset available.</div>
+      </div>
+      <div class="how-step sr" style="transition-delay:0.18s">
+        <div class="hw-stat">50k+</div>
+        <div class="hw-title">Career moves tracked</div>
+        <div class="hw-body">The deepest historical record of PE talent movement in existence. Every hire, departure, and promotion captured and classified since launch.</div>
+      </div>
+      <div class="how-step sr" style="transition-delay:0.24s">
+        <div class="hw-stat" style="font-size:38px;letter-spacing:-1.5px">Global</div>
+        <div class="hw-title">Worldwide intelligence</div>
+        <div class="hw-body">From Mayfair to Milan, Stockholm to Singapore — real-time signals, firm intelligence, and career timelines integrated in one clean interface.</div>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- GLOBAL COVERAGE -->
+<!-- GLOBAL COVERAGE (sphere) -->
 <div class="global-section" id="global">
-  <div class="global-photo"></div>
-  <div class="global-overlay"></div>
-  <div class="global-inner">
-    <h2 class="global-h sr">
+  <div class="global-text">
+    <div class="sec-label sr">Coverage</div>
+    <h2 class="global-h sr" style="transition-delay:0.08s">
       Global<br><span class="dim">coverage.</span>
     </h2>
-    <p class="global-sub sr" style="transition-delay:0.1s">7 geographies · 100+ firms · updated every Monday</p>
-    <div class="geo-flags sr" style="transition-delay:0.2s">
-      <div class="geo-pill"><span class="geo-flag-em">🇬🇧</span> United Kingdom</div>
-      <div class="geo-pill"><span class="geo-flag-em">🇫🇷</span> France</div>
-      <div class="geo-pill"><span class="geo-flag-em">🇩🇪</span> DACH</div>
-      <div class="geo-pill"><span class="geo-flag-em">🇪🇸</span> Iberia</div>
-      <div class="geo-pill"><span class="geo-flag-em">🇳🇱</span> Benelux</div>
-      <div class="geo-pill"><span class="geo-flag-em">🇸🇪</span> Nordics</div>
-      <div class="geo-pill"><span class="geo-flag-em">🇮🇹</span> Italy</div>
+    <p class="global-sub sr" style="transition-delay:0.16s">
+      The most complete PE intelligence network, spanning every major financial centre worldwide.
+    </p>
+    <div class="global-metrics sr" style="transition-delay:0.24s">
+      <div class="gm-item"><span class="gm-n">200+</span><span class="gm-l">PE Firms</span></div>
+      <div class="gm-item"><span class="gm-n">20k+</span><span class="gm-l">Profiles</span></div>
+      <div class="gm-item"><span class="gm-n">Global</span><span class="gm-l">Coverage</span></div>
     </div>
+  </div>
+  <div class="global-canvas-wrap">
+    <canvas id="sphereCanvas"></canvas>
   </div>
 </div>
 
 <!-- CTA -->
 <div class="cta">
   <div class="cta-inner">
-    <h2 class="cta-h sr">
-      Move faster<br>
-      <span class="ghost">than the market.</span>
+    <h2 class="cta-h" id="ctaH">
+      <span class="cta-row"><span class="cta-inner-txt">Move faster</span></span>
+      <span class="cta-row"><span class="cta-inner-txt"><span class="cta-ghost">than the market.</span></span></span>
     </h2>
-    <p class="cta-sub sr" style="transition-delay:0.12s">
+    <p class="cta-sub">
       Join the analysts and investors using PE Tracker to stay one step ahead of every talent signal.
     </p>
-    <div class="sr" style="transition-delay:0.22s">
-      <a href="/login/" class="btn-primary" style="font-size:14px;padding:16px 36px">
-        Access the Dashboard
+    <div class="cta-btn-wrap">
+      <a href="/login/" class="btn-primary" style="font-size:14px;padding:16px 36px;display:inline-flex">
+        Access the Database
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </a>
     </div>
@@ -884,7 +980,7 @@
 <!-- FOOTER -->
 <footer>
   <span class="f-logo">PE Tracker</span>
-  <span class="f-copy">© 2026 · Real-time personnel intelligence for private equity</span>
+  <span class="f-copy">© 2026 · The largest PE talent intelligence database</span>
   <a href="/login/" class="f-link">Sign In →</a>
 </footer>
 
@@ -902,9 +998,9 @@ let ticking = false;
 window.addEventListener('scroll', function() {
   if (!ticking) {
     requestAnimationFrame(function() {
-      const y = window.scrollY;
-      if (heroPhoto) heroPhoto.style.transform = `scale(1.06) translateY(${y * 0.15}px)`;
-      if (heroCards) heroCards.style.transform = `translateY(calc(-50% + ${y * 0.25}px))`;
+      var y = window.scrollY;
+      if (heroPhoto) heroPhoto.style.transform = 'scale(1.06) translateY(' + (y * 0.15) + 'px)';
+      if (heroCards) heroCards.style.transform = 'translateY(calc(-50% + ' + (y * 0.25) + 'px))';
       ticking = false;
     });
     ticking = true;
@@ -913,67 +1009,205 @@ window.addEventListener('scroll', function() {
 
 // ── Feature image parallax ────────────────────────────────────────
 document.querySelectorAll('[data-speed]').forEach(function(el) {
-  const speed  = parseFloat(el.dataset.speed);
-  const parent = el.closest('.feat-img');
+  var speed  = parseFloat(el.dataset.speed);
+  var parent = el.closest('.feat-img');
   if (!parent) return;
   window.addEventListener('scroll', function() {
-    const rect = parent.getBoundingClientRect();
-    const off  = (window.innerHeight / 2 - (rect.top + rect.height / 2)) * speed;
-    el.style.transform = `translateY(${off}px)`;
+    var rect = parent.getBoundingClientRect();
+    var off  = (window.innerHeight / 2 - (rect.top + rect.height / 2)) * speed;
+    el.style.transform = 'translateY(' + off + 'px)';
   }, { passive: true });
 });
 
 // ── Browser 3D tilt ───────────────────────────────────────────────
-const browser = document.getElementById('browser');
+var browser = document.getElementById('browser');
 if (browser) {
   browser.addEventListener('mousemove', function(e) {
-    const r = this.getBoundingClientRect();
-    const x = ((e.clientX - r.left) / r.width  - 0.5) * 8;
-    const y = ((e.clientY - r.top)  / r.height - 0.5) * 5;
-    this.style.transform = `perspective(1400px) rotateX(${-y}deg) rotateY(${x}deg)`;
+    var r = this.getBoundingClientRect();
+    var x = ((e.clientX - r.left) / r.width  - 0.5) * 8;
+    var y = ((e.clientY - r.top)  / r.height - 0.5) * 5;
+    this.style.transform = 'perspective(1400px) rotateX(' + (-y) + 'deg) rotateY(' + x + 'deg)';
   });
   browser.addEventListener('mouseleave', function() {
     this.style.transform = 'perspective(1400px) rotateX(0) rotateY(0)';
     this.style.transition = 'transform 0.6s var(--ease)';
-    setTimeout(function() { browser.style.transition = 'transform 0.15s linear'; }, 600);
+    var b = browser;
+    setTimeout(function() { b.style.transition = 'transform 0.15s linear'; }, 600);
   });
 }
 
 // ── Scroll reveal ─────────────────────────────────────────────────
-const revIO = new IntersectionObserver(function(entries) {
+var revIO = new IntersectionObserver(function(entries) {
   entries.forEach(function(e) {
     if (e.isIntersecting) { e.target.classList.add('on'); revIO.unobserve(e.target); }
   });
 }, { threshold: 0.1 });
 document.querySelectorAll('.sr, .sr-l, .sr-r, .sr-s').forEach(function(el) { revIO.observe(el); });
 
-// ── Bar/chart animations on scroll ───────────────────────────────
-const barIO = new IntersectionObserver(function(entries) {
+// ── Bar/chart animations ──────────────────────────────────────────
+var barIO = new IntersectionObserver(function(entries) {
   entries.forEach(function(e) {
     if (e.isIntersecting) {
       e.target.querySelectorAll('.fdb-fill, .fdc-bar').forEach(function(b) { b.classList.add('on'); });
       barIO.unobserve(e.target);
     }
   });
-}, { threshold: 0.25 });
+}, { threshold: 0.2 });
 document.querySelectorAll('.feat-img').forEach(function(el) { barIO.observe(el); });
 
 // ── Stat counters ─────────────────────────────────────────────────
-let counted = false;
+var counted = false;
 new IntersectionObserver(function(entries) {
   if (!entries[0].isIntersecting || counted) return;
   counted = true;
   document.querySelectorAll('[data-count]').forEach(function(el) {
-    const t = parseInt(el.dataset.count, 10);
-    const s = el.dataset.sfx || '';
-    let c = 0; const inc = t / 55;
-    const id = setInterval(function() {
+    var t = parseInt(el.dataset.count, 10);
+    var s = el.dataset.sfx || '';
+    var c = 0; var inc = t / 55;
+    var id = setInterval(function() {
       c = Math.min(c + inc, t);
       el.textContent = Math.round(c) + s;
       if (c >= t) clearInterval(id);
     }, 1300 / 55);
   });
 }, { threshold: 0.4 }).observe(document.querySelector('.stats'));
+
+// ── CTA headline reveal ───────────────────────────────────────────
+var ctaH = document.getElementById('ctaH');
+if (ctaH) {
+  new IntersectionObserver(function(entries) {
+    if (entries[0].isIntersecting) { ctaH.classList.add('revealed'); }
+  }, { threshold: 0.3 }).observe(ctaH);
+}
+
+// ── Sphere canvas ─────────────────────────────────────────────────
+(function() {
+  var canvas = document.getElementById('sphereCanvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+
+  // Fibonacci sphere points
+  var N = 44;
+  var pts = [];
+  var golden = (1 + Math.sqrt(5)) / 2;
+  for (var i = 0; i < N; i++) {
+    var lat = Math.asin(2 * (i + 0.5) / N - 1);
+    var lon = 2 * Math.PI * i / golden;
+    pts.push({ lat: lat, lon: lon, size: 1.8 + Math.random() * 3.8 });
+  }
+
+  var angle = 0;
+  var W = 0, H = 0;
+
+  function resize() {
+    var dpr = window.devicePixelRatio || 1;
+    var rect = canvas.parentElement.getBoundingClientRect();
+    W = rect.width;
+    H = rect.height;
+    canvas.width  = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width  = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.scale(dpr, dpr);
+  }
+
+  function render() {
+    ctx.clearRect(0, 0, W, H);
+
+    var R = Math.min(W, H) * 0.46;
+    // cx near left edge of canvas → only right hemisphere visible
+    var cx = W * 0.08;
+    var cy = H * 0.5;
+
+    // Faint sphere circle outline
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(201,168,76,0.07)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Latitude rings
+    [-60, -30, 0, 30, 60].forEach(function(deg) {
+      var latR = deg * Math.PI / 180;
+      var ry   = cy - R * Math.sin(latR);
+      var rx   = R  * Math.cos(latR);
+      ctx.beginPath();
+      ctx.ellipse(cx, ry, rx, rx * 0.06, 0, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255,255,255,0.025)';
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+    });
+
+    // Project points
+    var proj = pts.map(function(p) {
+      var cl = Math.cos(p.lat);
+      var x3 = R * cl * Math.cos(p.lon + angle);
+      var y3 = R * Math.sin(p.lat);
+      var z3 = R * cl * Math.sin(p.lon + angle);
+      return { x: cx + x3, y: cy - y3, z: z3, size: p.size };
+    });
+
+    var visible = proj.filter(function(p) { return p.z > -R * 0.08; });
+
+    // Draw connections
+    for (var i = 0; i < visible.length; i++) {
+      for (var j = i + 1; j < visible.length; j++) {
+        var dx = visible[i].x - visible[j].x;
+        var dy = visible[i].y - visible[j].y;
+        var d  = Math.sqrt(dx*dx + dy*dy);
+        if (d < R * 0.5) {
+          var zf  = Math.min(((visible[i].z + visible[j].z) / 2 / R + 1) / 2, 1);
+          var al  = ((1 - d / (R * 0.5)) * 0.22 * zf).toFixed(3);
+          ctx.beginPath();
+          ctx.moveTo(visible[i].x, visible[i].y);
+          ctx.lineTo(visible[j].x, visible[j].y);
+          ctx.strokeStyle = 'rgba(201,168,76,' + al + ')';
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Draw nodes (back → front)
+    visible.sort(function(a, b) { return a.z - b.z; }).forEach(function(p) {
+      var df = (p.z / R + 1) / 2;
+      var al = 0.12 + df * 0.88;
+      var r  = p.size * (0.35 + df * 0.9);
+
+      if (df > 0.45) {
+        var g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 5);
+        g.addColorStop(0, 'rgba(201,168,76,' + (al * 0.18).toFixed(3) + ')');
+        g.addColorStop(1, 'rgba(201,168,76,0)');
+        ctx.beginPath(); ctx.arc(p.x, p.y, r * 5, 0, Math.PI * 2);
+        ctx.fillStyle = g; ctx.fill();
+      }
+
+      ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(r, 0.5), 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(201,168,76,' + al.toFixed(3) + ')';
+      ctx.fill();
+    });
+
+    // Vignette fade at edges
+    var vg = ctx.createRadialGradient(cx, cy, R * 0.6, cx, cy, R * 1.05);
+    vg.addColorStop(0, 'rgba(8,8,8,0)');
+    vg.addColorStop(1, 'rgba(8,8,8,0.95)');
+    ctx.beginPath(); ctx.arc(cx, cy, R * 1.1, 0, Math.PI * 2);
+    ctx.fillStyle = vg; ctx.fill();
+
+    // Hard clip left edge (canvas boundary already clips, but darken the cut)
+    ctx.fillStyle = 'rgba(8,8,8,1)';
+    ctx.fillRect(0, 0, 2, H);
+
+    angle += 0.0022;
+    requestAnimationFrame(render);
+  }
+
+  resize();
+  render();
+  window.addEventListener('resize', function() {
+    resize();
+  });
+})();
 </script>
 </body>
 </html>
