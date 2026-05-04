@@ -41,7 +41,8 @@
       <a href="?sort=headcount"  class="sort-link {% if sort_by == 'headcount'  %}sort-active{% endif %}">Headcount</a>
       <a href="?sort=activity"   class="sort-link {% if sort_by == 'activity'   %}sort-active{% endif %}">Activity</a>
       <a href="?sort=ratio"      class="sort-link {% if sort_by == 'ratio'      %}sort-active{% endif %}">H/L Ratio</a>
-      <a href="?sort=name"       class="sort-link {% if sort_by == 'name'       %}sort-active{% endif %}">A–Z</a>
+      <a href="?sort=name"       class="sort-link {% if sort_by == 'name'       %}sort-active{% endif %}">A&#8211;Z</a>
+      <a href="?sort={{ sort_by }}&export=excel" class="btn-export" title="Download Excel">&#8595; Excel</a>
     </div>
   </div>
 
@@ -64,9 +65,9 @@
       {% for f in firm_stats %}
       <tr style="cursor:pointer" onclick="window.location='/firms/{{ f.company.id }}/'">
         <td class="name-cell">{{ f.company.name }}</td>
-        <td>{% if f.headcount %}<strong style="color:var(--text-1)">{{ f.headcount }}</strong>{% else %}<span class="subtle">—</span>{% endif %}</td>
-        <td>{% if f.hires %}<span style="color:var(--hire);font-weight:700">+{{ f.hires }}</span>{% else %}<span class="subtle">—</span>{% endif %}</td>
-        <td>{% if f.leavers %}<span style="color:var(--leave);font-weight:700">{{ f.leavers }}</span>{% else %}<span class="subtle">—</span>{% endif %}</td>
+        <td>{% if f.headcount %}<strong style="color:var(--text-1)">{{ f.headcount }}</strong>{% else %}<span class="subtle">&mdash;</span>{% endif %}</td>
+        <td>{% if f.hires %}<span style="color:var(--hire);font-weight:700">+{{ f.hires }}</span>{% else %}<span class="subtle">&mdash;</span>{% endif %}</td>
+        <td>{% if f.leavers %}<span style="color:var(--leave);font-weight:700">{{ f.leavers }}</span>{% else %}<span class="subtle">&mdash;</span>{% endif %}</td>
         <td>
           {% if f.ratio is not None %}
             {% if f.ratio > 1.5 %}
@@ -76,10 +77,10 @@
             {% else %}
               <span class="badge badge-leave">{{ f.ratio }}</span>
             {% endif %}
-          {% else %}<span class="subtle">—</span>{% endif %}
+          {% else %}<span class="subtle">&mdash;</span>{% endif %}
         </td>
-        <td>{% if f.promotions %}<span style="color:var(--promo);font-weight:700">{{ f.promotions }}</span>{% else %}<span class="subtle">—</span>{% endif %}</td>
-        <td>{% if f.activity %}<span class="badge badge-role">{{ f.activity }}</span>{% else %}<span class="subtle">—</span>{% endif %}</td>
+        <td>{% if f.promotions %}<span style="color:var(--promo);font-weight:700">{{ f.promotions }}</span>{% else %}<span class="subtle">&mdash;</span>{% endif %}</td>
+        <td>{% if f.activity %}<span class="badge badge-role">{{ f.activity }}</span>{% else %}<span class="subtle">&mdash;</span>{% endif %}</td>
         <td>
           <svg viewBox="0 0 72 24" width="72" height="24" xmlns="http://www.w3.org/2000/svg">
             <polyline points="{{ f.sparkline }}" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
@@ -87,20 +88,20 @@
         </td>
         <td>
           {% if f.activity %}
-          <div style="display:flex;height:6px;border-radius:3px;overflow:hidden;width:72px;gap:1px" title="Hires: {{ f.hires }} · Leavers: {{ f.leavers }} · Promotions: {{ f.promotions }}">
+          <div style="display:flex;height:6px;border-radius:3px;overflow:hidden;width:72px;gap:1px" title="Hires: {{ f.hires }} &middot; Leavers: {{ f.leavers }} &middot; Promotions: {{ f.promotions }}">
             {% if f.hires %}<div style="background:var(--hire);flex:{{ f.hires }}"></div>{% endif %}
             {% if f.leavers %}<div style="background:var(--leave);flex:{{ f.leavers }}"></div>{% endif %}
             {% if f.promotions %}<div style="background:var(--promo);flex:{{ f.promotions }}"></div>{% endif %}
           </div>
-          {% else %}<span class="subtle">—</span>{% endif %}
+          {% else %}<span class="subtle">&mdash;</span>{% endif %}
         </td>
         <td onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:8px;border:none">
-          <a href="/firms/{{ f.company.id }}/" style="color:var(--accent);font-size:12px;font-weight:600;text-decoration:none">View →</a>
+          <a href="/firms/{{ f.company.id }}/" style="color:var(--accent);font-size:12px;font-weight:600;text-decoration:none">View &rarr;</a>
           <form method="post" action="{% url 'watchlist_toggle' f.company.id %}" style="display:inline">
             {% csrf_token %}
             <input type="hidden" name="next" value="{{ request.get_full_path }}">
             <button type="submit" style="background:none;border:none;cursor:pointer;font-size:15px;color:{% if f.company.id in watchlist %}#FBBF24{% else %}var(--text-3){% endif %};padding:0;line-height:1" title="{% if f.company.id in watchlist %}Unwatch{% else %}Watch{% endif %}">
-              {% if f.company.id in watchlist %}★{% else %}☆{% endif %}
+              {% if f.company.id in watchlist %}&#9733;{% else %}&#9734;{% endif %}
             </button>
           </form>
         </td>

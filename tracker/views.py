@@ -521,6 +521,7 @@ def people(request):
 @login_required
 def firms(request):
     sort_by = request.GET.get('sort', 'leavers')
+    export  = request.GET.get('export', '')
     valid_sorts = {'leavers', 'hires', 'promotions', 'headcount', 'name', 'activity', 'ratio'}
     if sort_by not in valid_sorts:
         sort_by = 'leavers'
@@ -616,6 +617,25 @@ def firms(request):
         'leavers':    sum(f['leavers']    for f in firm_stats),
         'promotions': sum(f['promotions'] for f in firm_stats),
     }
+
+    if export == 'excel':
+        audit_logger.info('EXPORT view=firms user=%s ip=%s rows=%d',
+                          request.user.username, _client_ip(request), len(firm_stats))
+        headers = ['Firm', 'Headcount', 'Hires', 'Leavers', 'H/L Ratio', 'Promotions', 'Activity']
+        rows = [
+            [
+                f['company'].name,
+                f['headcount'] or '',
+                f['hires'] or '',
+                f['leavers'] or '',
+                f['ratio'] if f['ratio'] is not None else '',
+                f['promotions'] or '',
+                f['activity'] or '',
+            ]
+            for f in firm_stats
+        ]
+        widths = {1: 30, 2: 14, 3: 12, 4: 12, 5: 14, 6: 16, 7: 14}
+        return _make_excel_response('pe_firms_export.xlsx', headers, rows, widths)
 
     watchlist = list(request.session.get('watchlist', []))
     return render(request, 'tracker/firms.html', {
