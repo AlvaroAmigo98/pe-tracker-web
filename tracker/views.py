@@ -249,11 +249,18 @@ def _make_excel_response(filename, headers, rows, col_widths):
     return response
 
 
+def _bucket_company_ids(bucket_filter):
+    """Return a set of company IDs for the given bucket, or None if no filter."""
+    if not bucket_filter:
+        return None
+    return set(Company.objects.filter(bucket=bucket_filter).values_list('id', flat=True))
+
+
 @login_required
 def dashboard(request):
     today            = date.today()
     latest_run       = ScrapeRun.objects.order_by('-ran_at').first()
-    companies        = Company.objects.order_by('name')
+    bucket_filter    = request.GET.get('bucket', '')
     company_filter      = request.GET.getlist('company')
     region_filter       = request.GET.getlist('region')
     group_filter        = request.GET.getlist('group')
@@ -264,9 +271,21 @@ def dashboard(request):
     date_from           = request.GET.get('date_from', '')
     date_to             = request.GET.get('date_to', '')
 
+    # Bucket-scoped company list for the Company dropdown
+    if bucket_filter:
+        companies = Company.objects.filter(bucket=bucket_filter).order_by('name')
+    else:
+        companies = Company.objects.order_by('name')
+
+    bucket_company_ids = _bucket_company_ids(bucket_filter)
+
     events_qs = ChangeEvent.objects.select_related(
         'person', 'person__company'
     ).order_by('-detected_at', '-id')
+
+    # Filter events to bucket
+    if bucket_company_ids is not None:
+        events_qs = events_qs.filter(person__company_id__in=bucket_company_ids)
 
     if days and days.isdigit():
         cutoff = today - timedelta(days=int(days))
@@ -360,69 +379,14 @@ def dashboard(request):
     if watchlist and last_visit_str:
         try:
             last_visit_dt = date.fromisoformat(last_visit_str)
-            watchlist_activity = list(
-                ChangeEvent.objects.filter(
-                    person__company_id__in=watchlist,
-                    detected_at__gt=last_visit_dt,
-                ).select_related('person', 'person__company').order_by('-detected_at')[:10]
-            )
+            wl_qs = ChangeEvent.objects.filter(
+                person__company_id__in=watchlist,
+                detected_at__gt=last_visit_dt,
+            ).select_related('person', 'person__company').order_by('-detected_at')[:10]
+            watchlist_activity = list(wl_qs)
         except ValueError:
             pass
     request.session['last_visit'] = str(today)
-
-    # ── All people (latest snapshot per person) for regional People sub-tab ──
-    all_people_qs = PersonSnapshot.objects.order_by(
-        'person_id', '-scraped_at'
-    ).distinct('person_id').select_related('person', 'person__company')
-    all_people = []
-    for snap in all_people_qs:
-        snap.region = infer_region(snap.location or '')
-        snap.seniority_group = infer_seniority_group(snap.seniority or '')
-        snap.function = infer_function_web(snap.job_title or '')
-        all_people.append(snap)
-
-    # ── Firm stats for regional Firms sub-tab ─────────────────────────────────
-    headcount_map = {
-        row['company_id']: row['headcount']
-        for row in Person.objects.values('company_id').annotate(headcount=Count('id'))
-    }
-    event_qs2 = ChangeEvent.objects.values('person__company_id').annotate(
-        hires=Count('id', filter=Q(event_type='hire')),
-        leavers=Count('id', filter=Q(event_type='leaver')),
-        promotions=Count('id', filter=Q(event_type__in=['promotion', 'role_change'])),
-    )
-    event_map2 = {row['person__company_id']: row for row in event_qs2}
-    firm_stats = []
-    for company in companies:
-        s = event_map2.get(company.id, {})
-        firm_stats.append({
-            'company':    company,
-            'headcount':  headcount_map.get(company.id, 0),
-            'hires':      s.get('hires', 0),
-            'leavers':    s.get('leavers', 0),
-            'promotions': s.get('promotions', 0),
-        })
-
-    # ── Scrape matrix for Scrape Logs sub-tab ─────────────────────────────────
-    WEEK_COLS_KEYS = ['2026-04-27', '2026-05-04']
-
-    def monday_of(dt):
-        d = dt.date() if hasattr(dt, 'date') else dt
-        return d - timedelta(days=d.weekday())
-
-    recent_runs = list(ScrapeRun.objects.order_by('-ran_at')[:20])
-    run_to_week = {r.id: monday_of(r.ran_at).isoformat() for r in recent_runs if r.ran_at}
-    run_ids_recent = [r.id for r in recent_runs]
-    firm_records = ScrapeRunFirm.objects.filter(run_id__in=run_ids_recent)
-
-    scrape_matrix = {}
-    for rec in firm_records:
-        week = run_to_week.get(rec.run_id)
-        if week not in WEEK_COLS_KEYS:
-            continue
-        scrape_matrix.setdefault(rec.firm_name, {})
-        if week not in scrape_matrix[rec.firm_name]:
-            scrape_matrix[rec.firm_name][week] = 'ok' if rec.status == 'ok' else 'error'
 
     return render(request, 'tracker/dashboard.html', {
         'latest_run':         latest_run,
@@ -441,15 +405,14 @@ def dashboard(request):
         'days':               days,
         'watchlist':          watchlist,
         'watchlist_activity': watchlist_activity,
-        'all_people':         all_people,
-        'firm_stats':         firm_stats,
-        'scrape_matrix_json': json.dumps(scrape_matrix),
+        'bucket_filter':      bucket_filter,
     })
 
 
 @login_required
 def people(request):
     search           = request.GET.get('q', '')
+    bucket_filter    = request.GET.get('bucket', '')
     company_filter   = request.GET.getlist('company')
     seniority_filter = request.GET.getlist('seniority')
     group_filter     = request.GET.getlist('group')
@@ -458,7 +421,14 @@ def people(request):
     last_seen_filter = request.GET.get('last_seen', '')
     export           = request.GET.get('export', '')
 
-    companies   = Company.objects.order_by('name')
+    bucket_company_ids = _bucket_company_ids(bucket_filter)
+
+    # Company dropdown scoped to bucket
+    if bucket_company_ids is not None:
+        companies = Company.objects.filter(id__in=bucket_company_ids).order_by('name')
+    else:
+        companies = Company.objects.order_by('name')
+
     seniorities = PersonSnapshot.objects.values_list(
         'seniority', flat=True
     ).distinct().order_by('seniority')
@@ -466,6 +436,10 @@ def people(request):
     people_qs = PersonSnapshot.objects.order_by(
         'person_id', '-scraped_at'
     ).distinct('person_id').select_related('person', 'person__company')
+
+    # Filter to bucket
+    if bucket_company_ids is not None:
+        people_qs = people_qs.filter(person__company_id__in=bucket_company_ids)
 
     people = []
     for snap in people_qs:
@@ -526,6 +500,7 @@ def people(request):
         'region_filter':    region_filter,
         'function_filter':  function_filter,
         'last_seen_filter': last_seen_filter,
+        'bucket_filter':    bucket_filter,
     })
 
 
@@ -533,7 +508,7 @@ def people(request):
 def firms(request):
     sort_by       = request.GET.get('sort', 'leavers')
     export        = request.GET.get('export', '')
-    bucket_filter = request.GET.get('bucket', '')   # e.g. "UK", "Nordics", etc.
+    bucket_filter = request.GET.get('bucket', '')
     valid_sorts = {'leavers', 'hires', 'promotions', 'headcount', 'name', 'activity', 'ratio'}
     if sort_by not in valid_sorts:
         sort_by = 'leavers'
@@ -833,10 +808,14 @@ def firm_detail(request, company_id):
 @login_required
 def signals(request):
     today = date.today()
+    bucket_filter = request.GET.get('bucket', '')
+    bucket_company_ids = _bucket_company_ids(bucket_filter)
 
-    all_leaver_list = list(ChangeEvent.objects.filter(
-        event_type='leaver',
-    ).select_related('person', 'person__company').order_by('detected_at'))
+    # Base leaver queryset scoped to bucket
+    leaver_qs = ChangeEvent.objects.filter(event_type='leaver')
+    if bucket_company_ids is not None:
+        leaver_qs = leaver_qs.filter(person__company_id__in=bucket_company_ids)
+    all_leaver_list = list(leaver_qs.select_related('person', 'person__company').order_by('detected_at'))
 
     cascade_alerts = []
     seen_trigger_ids = set()
@@ -874,26 +853,30 @@ def signals(request):
             deduped_cascades.append(a)
     cascade_alerts = deduped_cascades
 
-    firms_count = Company.objects.count()
-    recent_events = ChangeEvent.objects.filter(
+    # Scope counts to bucket
+    base_events_qs = ChangeEvent.objects
+    if bucket_company_ids is not None:
+        base_events_qs = base_events_qs.filter(person__company_id__in=bucket_company_ids)
+
+    firms_count = companies_in_bucket = Company.objects.count() if not bucket_company_ids else len(bucket_company_ids)
+    recent_events = base_events_qs.filter(
         detected_at__gte=today - timedelta(days=30)
     ).count()
 
     month_start = today.replace(day=1)
-    total_hires_month   = ChangeEvent.objects.filter(detected_at__gte=month_start, event_type='hire').count()
-    total_leavers_month = ChangeEvent.objects.filter(detected_at__gte=month_start, event_type='leaver').count()
+    total_hires_month   = base_events_qs.filter(detected_at__gte=month_start, event_type='hire').count()
+    total_leavers_month = base_events_qs.filter(detected_at__gte=month_start, event_type='leaver').count()
     net_headcount_month = total_hires_month - total_leavers_month
 
-    notable_moves = list(
-        ChangeEvent.objects.filter(
-            detected_at__gte=today - timedelta(days=7),
-        ).filter(
-            Q(previous_level='Partner / MD') | Q(new_level='Partner / MD')
-        ).select_related('person', 'person__company').order_by('-detected_at')[:5]
-    )
+    notable_moves_qs = base_events_qs.filter(
+        detected_at__gte=today - timedelta(days=7),
+    ).filter(
+        Q(previous_level='Partner / MD') | Q(new_level='Partner / MD')
+    ).select_related('person', 'person__company').order_by('-detected_at')[:5]
+    notable_moves = list(notable_moves_qs)
 
     trend_start = today - timedelta(weeks=52)
-    trend_events = ChangeEvent.objects.filter(
+    trend_qs = base_events_qs.filter(
         detected_at__gte=trend_start,
         event_type__in=['hire', 'leaver'],
     ).values('detected_at', 'event_type')
@@ -907,7 +890,7 @@ def signals(request):
         weeks.append(iso)
         week_hires[iso]   = 0
         week_leavers[iso] = 0
-    for ev in trend_events:
+    for ev in trend_qs:
         dt = ev['detected_at']
         if hasattr(dt, 'date'):
             dt = dt.date()
@@ -925,11 +908,11 @@ def signals(request):
     })
 
     heatmap_start = today - timedelta(days=363)
-    heatmap_events = ChangeEvent.objects.filter(
+    heatmap_qs = base_events_qs.filter(
         detected_at__gte=heatmap_start,
     ).values('detected_at').annotate(cnt=Count('id'))
     heatmap_dict = {}
-    for row in heatmap_events:
+    for row in heatmap_qs:
         dt = row['detected_at']
         if hasattr(dt, 'date'):
             dt = dt.date()
@@ -947,6 +930,7 @@ def signals(request):
         'notable_moves':        notable_moves,
         'trend_json':           trend_json,
         'heatmap_json':         heatmap_json,
+        'bucket_filter':        bucket_filter,
     })
 
 

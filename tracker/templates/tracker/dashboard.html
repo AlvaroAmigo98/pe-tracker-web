@@ -3,9 +3,9 @@
 
 <div class="page-header">
   <div>
-    <div class="page-title">{% if bucket_filter %}{{ bucket_filter }}{% else %}All Firms{% endif %} · Dashboard</div>
+    <div class="page-title">{% if bucket_filter %}{{ bucket_filter }}{% else %}All Firms{% endif %} &middot; Dashboard</div>
     {% if latest_run %}
-    <div class="page-meta">Last scrape: {{ latest_run.ran_at|date:"d M Y, H:i" }} · {{ latest_run.total_rows|default:"0" }} employees across {{ latest_run.firms_ok }} firms</div>
+    <div class="page-meta">Last scrape: {{ latest_run.ran_at|date:"d M Y, H:i" }} &middot; {{ latest_run.total_rows|default:"0" }} employees across {{ latest_run.firms_ok }} firms</div>
     {% endif %}
   </div>
   <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">
@@ -26,7 +26,7 @@
       {% for e in watchlist_activity %}
       <a href="/firms/{{ e.person.company_id }}/?tab={% if e.event_type == 'leaver' %}leavers{% elif e.event_type == 'hire' %}hires{% else %}promotions{% endif %}"
          style="font-size:12px;color:var(--text-2);text-decoration:none;background:var(--surface2);padding:3px 10px;border-radius:6px;border:1px solid var(--border)">
-        {{ e.person.full_name }} <span style="color:{% if e.event_type == 'leaver' %}var(--leave){% elif e.event_type == 'hire' %}var(--hire){% else %}var(--promo){% endif %}">·&nbsp;{{ e.event_type }}</span>
+        {{ e.person.full_name }} <span style="color:{% if e.event_type == 'leaver' %}var(--leave){% elif e.event_type == 'hire' %}var(--hire){% else %}var(--promo){% endif %}">&middot;&nbsp;{{ e.event_type }}</span>
       </a>
       {% endfor %}
     </div>
@@ -131,15 +131,15 @@
       </div>
     </div>
 
-    <button type="submit" name="export" value="excel" class="btn btn-green">↓ Export Excel</button>
-    <a href="/dashboard/{% if bucket_filter %}?bucket={{ bucket_filter|urlencode }}{% endif %}" class="btn btn-gray">Clear</a>
+    <button type="submit" name="export" value="excel" class="btn btn-green">&darr; Export Excel</button>
+    <a href="{% url 'dashboard' %}{% if bucket_filter %}?bucket={{ bucket_filter|urlencode }}{% endif %}" class="btn btn-gray">Clear</a>
   </div>
 </form>
 
 <div id="chip-row" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;min-height:0"></div>
 
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px;flex-wrap:wrap">
-  <input type="text" id="table-search" placeholder="Quick filter by name or company…"
+  <input type="text" id="table-search" placeholder="Quick filter by name or company&hellip;"
          style="min-width:220px;max-width:320px;font-size:13px">
   <div style="display:flex;gap:4px;align-items:center;flex-shrink:0">
     <span style="font-size:11px;color:var(--text-2);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-right:2px">Show:</span>
@@ -157,20 +157,21 @@
   </div>
 
   {% if events %}
+  <div style="overflow-x:auto">
   <table id="events-table">
     <thead>
       <tr>
-        <th data-col="0">Name <span class="sort-arrow">↕</span></th>
-        <th data-col="1">Company <span class="sort-arrow">↕</span></th>
-        <th data-col="2">Function <span class="sort-arrow">↕</span></th>
-        <th data-col="3">Change <span class="sort-arrow">↕</span></th>
-        <th data-col="4">Level <span class="sort-arrow">↕</span></th>
+        <th data-col="0">Name <span class="sort-arrow">&udarr;</span></th>
+        <th data-col="1">Company <span class="sort-arrow">&udarr;</span></th>
+        <th data-col="2">Function <span class="sort-arrow">&udarr;</span></th>
+        <th data-col="3">Change <span class="sort-arrow">&udarr;</span></th>
+        <th data-col="4">Level <span class="sort-arrow">&udarr;</span></th>
         <th data-col="5">Detail</th>
-        <th data-col="6">Region <span class="sort-arrow">↕</span></th>
-        <th data-col="7">Date <span class="sort-arrow">↕</span></th>
+        <th data-col="6">Region <span class="sort-arrow">&udarr;</span></th>
+        <th data-col="7">Date <span class="sort-arrow">&darr;</span></th>
       </tr>
     </thead>
-    <tbody>
+    <tbody id="events-tbody">
       {% for e in events %}
       <tr{% if e.is_new %} class="row-new"{% endif %}>
         <td class="name-cell"><a href="/people/?q={{ e.person.full_name|urlencode }}" class="row-link">{{ e.person.full_name }}</a></td>
@@ -184,7 +185,7 @@
           {% elif e.function == 'Credit / Debt' %}<span class="badge badge-credit">Credit</span>
           {% elif e.function == 'Venture Capital' %}<span class="badge badge-vc">VC</span>
           {% elif e.function == 'Operations' %}<span class="badge badge-ops">Ops</span>
-          {% else %}<span class="subtle">—</span>{% endif %}
+          {% else %}<span class="subtle">&mdash;</span>{% endif %}
         </td>
         <td>
           {% if e.event_type == 'hire' %}<span class="badge badge-hire">Hire</span>
@@ -197,30 +198,31 @@
           {% else %}<span class="badge badge-junior">Junior</span>{% endif %}
         </td>
         <td class="subtle">
-          {% if e.previous_title and e.new_title %}{{ e.previous_title }} → {{ e.new_title }}
+          {% if e.previous_title and e.new_title %}{{ e.previous_title }} &rarr; {{ e.new_title }}
           {% elif e.new_title %}{{ e.new_title }}
           {% elif e.previous_title %}{{ e.previous_title }}
-          {% else %}—{% endif %}
+          {% else %}&mdash;{% endif %}
         </td>
         <td>
           {% if e.region == 'EMEA' %}<span class="badge badge-emea">EMEA</span>
           {% elif e.region == 'North America' %}<span class="badge badge-na">N. America</span>
           {% elif e.region == 'APAC' %}<span class="badge badge-apac">APAC</span>
-          {% else %}<span class="subtle">—</span>{% endif %}
+          {% else %}<span class="subtle">&mdash;</span>{% endif %}
         </td>
         <td class="subtle" data-ts="{{ e.detected_at|date:'Y-m-d' }}">{{ e.detected_at|date:"d M Y" }}</td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
+  </div>
   <div id="pagination-bar" style="padding:10px 20px;font-size:12px;color:var(--text-2);border-top:1px solid var(--border);display:none"></div>
   {% else %}
   <div class="empty">
     {% if company_filter or region_filter or group_filter or function_filter or change_type_filter or days or date_from or date_to %}
       No events match the active filters.<br><br>
-      <a href="/dashboard/{% if bucket_filter %}?bucket={{ bucket_filter|urlencode }}{% endif %}" style="color:var(--accent);font-size:13px;">Clear all filters</a>
+      <a href="{% url 'dashboard' %}{% if bucket_filter %}?bucket={{ bucket_filter|urlencode }}{% endif %}" style="color:var(--accent);font-size:13px;">Clear all filters</a>
     {% else %}
-      No change events yet — they will appear after the second weekly scrape runs.
+      No change events yet &mdash; they will appear after the second weekly scrape runs.
     {% endif %}
   </div>
   {% endif %}
@@ -250,7 +252,7 @@ function setPeriod(val) {
     const display = (labelMap[key] && labelMap[key][val]) ? labelMap[key][val] : val;
     const chip = document.createElement('span');
     chip.className = 'filter-chip';
-    chip.innerHTML = '<span class="chip-key">' + (keyNames[key] || key) + '</span>' + display + '<button class="chip-x" title="Remove">×</button>';
+    chip.innerHTML = '<span class="chip-key">' + (keyNames[key] || key) + '</span>' + display + '<button class="chip-x" title="Remove">&times;</button>';
     chip.querySelector('button').addEventListener('click', function() {
       const p = new URLSearchParams(window.location.search);
       const remaining = p.getAll(key).filter(v => v !== val);
@@ -270,73 +272,84 @@ function clearFilter(name, formId) {
   document.getElementById(formId).submit();
 }
 
-var allRows = [], pageSize = 50, filteredRows = [];
-(function initTable() {
-  const tbody = document.querySelector('#events-table tbody');
+// ---- Table: sort + paginate + quick-filter ----
+var allRows = [];
+var filteredRows = [];
+var pageSize = 50;
+var sortCol = 7;
+var sortAsc = false;
+
+function initTable() {
+  var tbody = document.getElementById('events-tbody');
   if (!tbody) return;
+  // Hide all rows immediately to prevent flash before pagination applies
   allRows = Array.from(tbody.rows);
+  allRows.forEach(function(r) { r.style.display = 'none'; });
   activateSortArrow(7, false);
-  document.getElementById('table-search').addEventListener('input', function() { applyFilters(); });
   setPageSize(50);
-})();
+  document.getElementById('table-search').addEventListener('input', function() { applyFilters(); });
+}
 
 function applyFilters() {
-  const q = (document.getElementById('table-search').value || '').toLowerCase().trim();
+  var q = (document.getElementById('table-search').value || '').toLowerCase().trim();
   filteredRows = allRows.filter(function(row) {
     if (!q) return true;
-    const name = row.cells[0] ? row.cells[0].textContent.toLowerCase() : '';
-    const company = row.cells[1] ? row.cells[1].textContent.toLowerCase() : '';
+    var name    = row.cells[0] ? row.cells[0].textContent.toLowerCase() : '';
+    var company = row.cells[1] ? row.cells[1].textContent.toLowerCase() : '';
     return name.includes(q) || company.includes(q);
   });
   renderPage(1);
 }
 
 function renderPage(page) {
-  const tbody = document.querySelector('#events-table tbody');
+  var tbody = document.getElementById('events-tbody');
   if (!tbody) return;
-  allRows.forEach(r => r.style.display = 'none');
-  const start = pageSize === 0 ? 0 : (page - 1) * pageSize;
-  const slice = pageSize === 0 ? filteredRows : filteredRows.slice(start, start + pageSize);
-  slice.forEach(r => r.style.display = '');
+  allRows.forEach(function(r) { r.style.display = 'none'; });
+  var start = pageSize === 0 ? 0 : (page - 1) * pageSize;
+  var slice = pageSize === 0 ? filteredRows : filteredRows.slice(start, start + pageSize);
+  slice.forEach(function(r) { r.style.display = ''; });
   updatePaginationBar(filteredRows.length, page);
   document.getElementById('result-count').textContent = filteredRows.length + ' events';
 }
 
 function updatePaginationBar(total, page) {
-  const bar = document.getElementById('pagination-bar');
+  var bar = document.getElementById('pagination-bar');
   if (!bar) return;
   if (pageSize === 0 || total <= pageSize) { bar.style.display = 'none'; return; }
-  const pages = Math.ceil(total / pageSize);
+  var pages = Math.ceil(total / pageSize);
   bar.style.display = 'block';
-  let html = 'Showing ' + Math.min((page-1)*pageSize+1, total) + '–' + Math.min(page*pageSize, total) + ' of ' + total + ' &nbsp;';
-  for (let i = 1; i <= pages; i++) {
-    html += '<button onclick="renderPage(' + i + ')" style="background:' + (i===page?'var(--accent)':'var(--surface2)') + ';border:1px solid var(--border);border-radius:4px;padding:3px 9px;font-size:12px;color:' + (i===page?'white':'var(--text-2)') + ';cursor:pointer;font-family:inherit;margin:0 2px">' + i + '</button>';
+  var html = 'Showing ' + Math.min((page-1)*pageSize+1, total) + '\u2013' + Math.min(page*pageSize, total) + ' of ' + total + ' &nbsp;';
+  for (var i = 1; i <= pages; i++) {
+    var active = i === page;
+    html += '<button onclick="renderPage(' + i + ')" style="background:' + (active ? 'var(--accent)' : 'var(--surface2)') + ';border:1px solid var(--border);border-radius:4px;padding:3px 9px;font-size:12px;color:' + (active ? 'white' : 'var(--text-2)') + ';cursor:pointer;font-family:inherit;margin:0 2px">' + i + '</button>';
   }
   bar.innerHTML = html;
 }
 
 function setPageSize(n) {
   pageSize = n;
-  document.querySelectorAll('.page-sz').forEach(function(btn) { btn.classList.toggle('sort-active', +btn.dataset.n === n); });
+  document.querySelectorAll('.page-sz').forEach(function(btn) {
+    btn.classList.toggle('sort-active', +btn.dataset.n === n);
+  });
   applyFilters();
 }
 
-var sortCol = 7, sortAsc = false;
 function activateSortArrow(col, asc) {
   document.querySelectorAll('#events-table th[data-col]').forEach(function(h) {
-    const arrow = h.querySelector('.sort-arrow');
-    if (arrow) arrow.textContent = +h.dataset.col === col ? (asc ? '↑' : '↓') : '↕';
+    var arrow = h.querySelector('.sort-arrow');
+    if (arrow) arrow.innerHTML = +h.dataset.col === col ? (asc ? '&uarr;' : '&darr;') : '&udarr;';
     h.classList.toggle('th-sorted', +h.dataset.col === col);
   });
 }
+
 document.querySelectorAll('#events-table th[data-col]').forEach(function(th) {
   th.addEventListener('click', function() {
-    const col = +th.dataset.col;
+    var col = +th.dataset.col;
     if (sortCol === col) sortAsc = !sortAsc; else { sortCol = col; sortAsc = true; }
     activateSortArrow(sortCol, sortAsc);
     allRows.sort(function(a, b) {
-      const av = (a.cells[col] ? (a.cells[col].dataset.ts || a.cells[col].textContent) : '').trim().toLowerCase();
-      const bv = (b.cells[col] ? (b.cells[col].dataset.ts || b.cells[col].textContent) : '').trim().toLowerCase();
+      var av = (a.cells[col] ? (a.cells[col].dataset.ts || a.cells[col].textContent) : '').trim().toLowerCase();
+      var bv = (b.cells[col] ? (b.cells[col].dataset.ts || b.cells[col].textContent) : '').trim().toLowerCase();
       return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
     });
     applyFilters();
@@ -344,11 +357,14 @@ document.querySelectorAll('#events-table th[data-col]').forEach(function(th) {
 });
 
 function toggleDropdown(id) {
-  document.querySelectorAll('.dropdown-panel').forEach(p => { if (p.id !== id) p.classList.remove('open'); });
+  document.querySelectorAll('.dropdown-panel').forEach(function(p) { if (p.id !== id) p.classList.remove('open'); });
   document.getElementById(id).classList.toggle('open');
 }
 document.addEventListener('click', function(e) {
-  if (!e.target.closest('.dropdown')) document.querySelectorAll('.dropdown-panel').forEach(p => p.classList.remove('open'));
+  if (!e.target.closest('.dropdown')) document.querySelectorAll('.dropdown-panel').forEach(function(p) { p.classList.remove('open'); });
 });
+
+// Run on DOMContentLoaded to prevent header-row flash
+document.addEventListener('DOMContentLoaded', initTable);
 </script>
 {% endblock %}
