@@ -3,7 +3,7 @@
 
 <div class="page-header">
   <div>
-    <div class="page-title">Dashboard</div>
+    <div class="page-title">{% if bucket_filter %}{{ bucket_filter }}{% else %}All Firms{% endif %} · Dashboard</div>
     {% if latest_run %}
     <div class="page-meta">Last scrape: {{ latest_run.ran_at|date:"d M Y, H:i" }} · {{ latest_run.total_rows|default:"0" }} employees across {{ latest_run.firms_ok }} firms</div>
     {% endif %}
@@ -54,6 +54,7 @@
 
 <form method="get" id="dash-form">
   <input type="hidden" name="days" id="days-input" value="{{ days }}">
+  {% if bucket_filter %}<input type="hidden" name="bucket" value="{{ bucket_filter }}">{% endif %}
   <div class="filter-bar">
 
     <div class="dropdown">
@@ -108,7 +109,6 @@
       </div>
       <div class="dropdown-panel" id="d-function">
         <label><input type="checkbox" name="function" value="Buyout / PE"          {% if 'Buyout / PE'          in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Buyout / PE</label>
-        <label><input type="checkbox" name="function" value="Growth Equity"        {% if 'Growth Equity'        in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Growth Equity</label>
         <label><input type="checkbox" name="function" value="Infrastructure"       {% if 'Infrastructure'       in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Infrastructure</label>
         <label><input type="checkbox" name="function" value="Real Estate"          {% if 'Real Estate'          in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Real Estate</label>
         <label><input type="checkbox" name="function" value="Credit / Debt"        {% if 'Credit / Debt'        in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Credit / Debt</label>
@@ -132,14 +132,12 @@
     </div>
 
     <button type="submit" name="export" value="excel" class="btn btn-green">↓ Export Excel</button>
-    <a href="/dashboard/" class="btn btn-gray">Clear</a>
+    <a href="/dashboard/{% if bucket_filter %}?bucket={{ bucket_filter|urlencode }}{% endif %}" class="btn btn-gray">Clear</a>
   </div>
 </form>
 
-<!-- Active filter chips -->
 <div id="chip-row" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;min-height:0"></div>
 
-<!-- Quick search + pagination -->
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px;flex-wrap:wrap">
   <input type="text" id="table-search" placeholder="Quick filter by name or company…"
          style="min-width:220px;max-width:320px;font-size:13px">
@@ -175,12 +173,8 @@
     <tbody>
       {% for e in events %}
       <tr{% if e.is_new %} class="row-new"{% endif %}>
-        <td class="name-cell">
-          <a href="/people/?q={{ e.person.full_name|urlencode }}" class="row-link">{{ e.person.full_name }}</a>
-        </td>
-        <td class="subtle">
-          <a href="/firms/{{ e.person.company_id }}/" class="row-link">{{ e.person.company.name }}</a>
-        </td>
+        <td class="name-cell"><a href="/people/?q={{ e.person.full_name|urlencode }}" class="row-link">{{ e.person.full_name }}</a></td>
+        <td class="subtle"><a href="/firms/{{ e.person.company_id }}/" class="row-link">{{ e.person.company.name }}</a></td>
         <td>
           {% if e.function == 'Buyout / PE' %}<span class="badge badge-buyout">Buyout / PE</span>
           {% elif e.function == 'Investment (General)' %}<span class="badge badge-invest">Investment</span>
@@ -220,19 +214,11 @@
     </tbody>
   </table>
   <div id="pagination-bar" style="padding:10px 20px;font-size:12px;color:var(--text-2);border-top:1px solid var(--border);display:none"></div>
-
   {% else %}
   <div class="empty">
     {% if company_filter or region_filter or group_filter or function_filter or change_type_filter or days or date_from or date_to %}
-      No events match the active filters.
-      {% if company_filter %}<br><span class="subtle">Companies: {{ company_filter|join:", " }}</span>{% endif %}
-      {% if region_filter %}<br><span class="subtle">Region: {{ region_filter|join:", " }}</span>{% endif %}
-      {% if group_filter %}<br><span class="subtle">Level: {{ group_filter|join:", " }}</span>{% endif %}
-      {% if function_filter %}<br><span class="subtle">Function: {{ function_filter|join:", " }}</span>{% endif %}
-      {% if change_type_filter %}<br><span class="subtle">Change type: {{ change_type_filter|join:", " }}</span>{% endif %}
-      {% if days %}<br><span class="subtle">Period: last {{ days }} days</span>{% endif %}
-      {% if date_from or date_to %}<br><span class="subtle">Date range: {{ date_from|default:"–" }} to {{ date_to|default:"–" }}</span>{% endif %}
-      <br><br><a href="/" style="color:var(--accent);font-size:13px;">Clear all filters</a>
+      No events match the active filters.<br><br>
+      <a href="/dashboard/{% if bucket_filter %}?bucket={{ bucket_filter|urlencode }}{% endif %}" style="color:var(--accent);font-size:13px;">Clear all filters</a>
     {% else %}
       No change events yet — they will appear after the second weekly scrape runs.
     {% endif %}
@@ -240,8 +226,9 @@
   {% endif %}
 </div>
 
+<script>
+const BUCKET = '{{ bucket_filter|escapejs }}';
 
-// #1: Period buttons — updates ?days= in URL while preserving all other active filters
 function setPeriod(val) {
   const p = new URLSearchParams(window.location.search);
   p.delete('export');
@@ -249,19 +236,15 @@ function setPeriod(val) {
   window.location.search = p.toString();
 }
 
-// #2: Active filter chips
 (function renderChips() {
   const params = new URLSearchParams(window.location.search);
   const container = document.getElementById('chip-row');
-  const skip = new Set(['export']);
+  const skip = new Set(['export', 'bucket']);
   const labelMap = {
     change_type: { hire: 'Hire', leaver: 'Leaver', role_change: 'Promo / Role Change' },
     days: { '7': '7 days', '30': '30 days', '90': '90 days' },
   };
-  const keyNames = {
-    company: 'Company', region: 'Region', group: 'Level', function: 'Function',
-    change_type: 'Change', days: 'Period', date_from: 'From', date_to: 'To',
-  };
+  const keyNames = { company: 'Company', region: 'Region', group: 'Level', function: 'Function', change_type: 'Change', days: 'Period', date_from: 'From', date_to: 'To' };
   for (const [key, val] of params.entries()) {
     if (skip.has(key) || !val) continue;
     const display = (labelMap[key] && labelMap[key][val]) ? labelMap[key][val] : val;
@@ -271,15 +254,13 @@ function setPeriod(val) {
     chip.querySelector('button').addEventListener('click', function() {
       const p = new URLSearchParams(window.location.search);
       const remaining = p.getAll(key).filter(v => v !== val);
-      p.delete(key);
-      remaining.forEach(v => p.append(key, v));
+      p.delete(key); remaining.forEach(v => p.append(key, v));
       window.location.search = p.toString();
     });
     container.appendChild(chip);
   }
 })();
 
-// #3: Select all / clear filter helpers
 function selectAll(name, formId) {
   document.querySelectorAll('#' + formId + ' input[name="' + name + '"]').forEach(cb => cb.checked = true);
   document.getElementById(formId).submit();
@@ -289,23 +270,13 @@ function clearFilter(name, formId) {
   document.getElementById(formId).submit();
 }
 
-// #1/#4 + #5: Quick text search (client-side row filter)
-var allRows = [];
-var pageSize = 50;
-var filteredRows = [];
-
+var allRows = [], pageSize = 50, filteredRows = [];
 (function initTable() {
   const tbody = document.querySelector('#events-table tbody');
   if (!tbody) return;
   allRows = Array.from(tbody.rows);
-
-  // Default sort: date descending (already rendered that way, just activate arrow)
   activateSortArrow(7, false);
-
-  document.getElementById('table-search').addEventListener('input', function() {
-    applyFilters();
-  });
-
+  document.getElementById('table-search').addEventListener('input', function() { applyFilters(); });
   setPageSize(50);
 })();
 
@@ -313,7 +284,7 @@ function applyFilters() {
   const q = (document.getElementById('table-search').value || '').toLowerCase().trim();
   filteredRows = allRows.filter(function(row) {
     if (!q) return true;
-    const name    = row.cells[0] ? row.cells[0].textContent.toLowerCase() : '';
+    const name = row.cells[0] ? row.cells[0].textContent.toLowerCase() : '';
     const company = row.cells[1] ? row.cells[1].textContent.toLowerCase() : '';
     return name.includes(q) || company.includes(q);
   });
@@ -346,15 +317,11 @@ function updatePaginationBar(total, page) {
 
 function setPageSize(n) {
   pageSize = n;
-  document.querySelectorAll('.page-sz').forEach(function(btn) {
-    btn.classList.toggle('sort-active', +btn.dataset.n === n);
-  });
+  document.querySelectorAll('.page-sz').forEach(function(btn) { btn.classList.toggle('sort-active', +btn.dataset.n === n); });
   applyFilters();
 }
 
-// #4: Sortable columns
 var sortCol = 7, sortAsc = false;
-
 function activateSortArrow(col, asc) {
   document.querySelectorAll('#events-table th[data-col]').forEach(function(h) {
     const arrow = h.querySelector('.sort-arrow');
@@ -362,12 +329,10 @@ function activateSortArrow(col, asc) {
     h.classList.toggle('th-sorted', +h.dataset.col === col);
   });
 }
-
 document.querySelectorAll('#events-table th[data-col]').forEach(function(th) {
   th.addEventListener('click', function() {
     const col = +th.dataset.col;
-    if (sortCol === col) sortAsc = !sortAsc;
-    else { sortCol = col; sortAsc = true; }
+    if (sortCol === col) sortAsc = !sortAsc; else { sortCol = col; sortAsc = true; }
     activateSortArrow(sortCol, sortAsc);
     allRows.sort(function(a, b) {
       const av = (a.cells[col] ? (a.cells[col].dataset.ts || a.cells[col].textContent) : '').trim().toLowerCase();
@@ -378,17 +343,12 @@ document.querySelectorAll('#events-table th[data-col]').forEach(function(th) {
   });
 });
 
-// Dropdown toggle
 function toggleDropdown(id) {
-  document.querySelectorAll('.dropdown-panel').forEach(p => {
-    if (p.id !== id) p.classList.remove('open');
-  });
+  document.querySelectorAll('.dropdown-panel').forEach(p => { if (p.id !== id) p.classList.remove('open'); });
   document.getElementById(id).classList.toggle('open');
 }
 document.addEventListener('click', function(e) {
-  if (!e.target.closest('.dropdown')) {
-    document.querySelectorAll('.dropdown-panel').forEach(p => p.classList.remove('open'));
-  }
+  if (!e.target.closest('.dropdown')) document.querySelectorAll('.dropdown-panel').forEach(p => p.classList.remove('open'));
 });
 </script>
 {% endblock %}
