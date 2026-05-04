@@ -3,6 +3,7 @@ from django.db import models
 
 class Company(models.Model):
     name       = models.TextField(unique=True)
+    bucket     = models.CharField(max_length=50, blank=True, null=True)
     created_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
