@@ -207,9 +207,7 @@ def infer_function_web(title: str) -> str:
 
 
 def _get_latest_snapshots_qs(company=None):
-    """Return latest snapshot per person using DISTINCT ON (PostgreSQL).
-    Reduces DB load from loading all historical rows to only the latest per person.
-    """
+    """Return latest snapshot per person using DISTINCT ON (PostgreSQL)."""
     qs = PersonSnapshot.objects.order_by('person_id', '-scraped_at').distinct('person_id')
     if company:
         qs = PersonSnapshot.objects.filter(
@@ -344,7 +342,7 @@ def dashboard(request):
         widths = {1:28,2:24,3:22,4:18,5:32,6:32,7:16,8:16,9:16,10:18,11:16}
         return _make_excel_response('historical_changes.xlsx', headers, rows, widths)
 
-    # Watchlist activity since last visit (Feature 10)
+    # Watchlist activity since last visit
     watchlist = list(request.session.get('watchlist', []))
     last_visit_str = request.session.get('last_visit')
     watchlist_activity = []
@@ -361,24 +359,80 @@ def dashboard(request):
             pass
     request.session['last_visit'] = str(today)
 
-    # Feature 1 — Weekly hire vs leaver trend (last 52 weeks)
+    # ── All people (latest snapshot per person) for regional People sub-tab ──
+    all_people_qs = PersonSnapshot.objects.order_by(
+        'person_id', '-scraped_at'
+    ).distinct('person_id').select_related('person', 'person__company')
+    all_people = []
+    for snap in all_people_qs:
+        snap.region = infer_region(snap.location or '')
+        snap.seniority_group = infer_seniority_group(snap.seniority or '')
+        snap.function = infer_function_web(snap.job_title or '')
+        all_people.append(snap)
+
+    # ── Firm stats for regional Firms sub-tab ─────────────────────────────────
+    headcount_map = {
+        row['company_id']: row['headcount']
+        for row in Person.objects.values('company_id').annotate(headcount=Count('id'))
+    }
+    event_qs2 = ChangeEvent.objects.values('person__company_id').annotate(
+        hires=Count('id', filter=Q(event_type='hire')),
+        leavers=Count('id', filter=Q(event_type='leaver')),
+        promotions=Count('id', filter=Q(event_type__in=['promotion', 'role_change'])),
+    )
+    event_map2 = {row['person__company_id']: row for row in event_qs2}
+    firm_stats = []
+    for company in companies:
+        s = event_map2.get(company.id, {})
+        firm_stats.append({
+            'company':    company,
+            'headcount':  headcount_map.get(company.id, 0),
+            'hires':      s.get('hires', 0),
+            'leavers':    s.get('leavers', 0),
+            'promotions': s.get('promotions', 0),
+        })
+
+    # ── Scrape matrix for Scrape Logs sub-tab ─────────────────────────────────
+    WEEK_COLS_KEYS = ['2026-04-27', '2026-05-04']
+
+    def monday_of(dt):
+        d = dt.date() if hasattr(dt, 'date') else dt
+        return d - timedelta(days=d.weekday())
+
+    recent_runs = list(ScrapeRun.objects.order_by('-ran_at')[:20])
+    run_to_week = {r.id: monday_of(r.ran_at).isoformat() for r in recent_runs if r.ran_at}
+    run_ids_recent = [r.id for r in recent_runs]
+    firm_records = ScrapeRunFirm.objects.filter(run_id__in=run_ids_recent)
+
+    scrape_matrix = {}
+    for rec in firm_records:
+        week = run_to_week.get(rec.run_id)
+        if week not in WEEK_COLS_KEYS:
+            continue
+        scrape_matrix.setdefault(rec.firm_name, {})
+        if week not in scrape_matrix[rec.firm_name]:
+            scrape_matrix[rec.firm_name][week] = 'ok' if rec.status == 'ok' else 'error'
+
     return render(request, 'tracker/dashboard.html', {
-        'latest_run':        latest_run,
-        'companies':         companies,
-        'company_filter':    company_filter,
-        'region_filter':     region_filter,
-        'group_filter':      group_filter,
-        'function_filter':     function_filter,
-        'change_type_filter':  change_type_filter,
-        'date_from':           date_from,
-        'date_to':             date_to,
-        'events':              events,
-        'hires':             hires,
-        'leavers':           leavers,
-        'promotions':        promotions,
-        'days':              days,
-        'watchlist':         watchlist,
+        'latest_run':         latest_run,
+        'companies':          companies,
+        'company_filter':     company_filter,
+        'region_filter':      region_filter,
+        'group_filter':       group_filter,
+        'function_filter':    function_filter,
+        'change_type_filter': change_type_filter,
+        'date_from':          date_from,
+        'date_to':            date_to,
+        'events':             events,
+        'hires':              hires,
+        'leavers':            leavers,
+        'promotions':         promotions,
+        'days':               days,
+        'watchlist':          watchlist,
         'watchlist_activity': watchlist_activity,
+        'all_people':         all_people,
+        'firm_stats':         firm_stats,
+        'scrape_matrix_json': json.dumps(scrape_matrix),
     })
 
 
@@ -398,8 +452,6 @@ def people(request):
         'seniority', flat=True
     ).distinct().order_by('seniority')
 
-    # DISTINCT ON (person_id) — returns only the latest snapshot per person.
-    # Replaces the old full-table scan + Python dedup loop.
     people_qs = PersonSnapshot.objects.order_by(
         'person_id', '-scraped_at'
     ).distinct('person_id').select_related('person', 'person__company')
@@ -487,11 +539,7 @@ def firms(request):
     )
     event_map = {row['person__company_id']: row for row in event_qs}
 
-    # Feature 2 — Sparklines: monthly activity per firm, last 6 months
     today_firms = date.today()
-    six_months_ago = today_firms.replace(day=1) - timedelta(days=1)
-    six_months_ago = (six_months_ago.replace(day=1) - timedelta(days=1)).replace(day=1)
-    # Build the last 6 month-start dates
     month_starts = []
     m = today_firms.replace(day=1)
     for _ in range(6):
@@ -508,7 +556,6 @@ def firms(request):
         .values('person__company_id', 'month')
         .annotate(cnt=Count('id'))
     )
-    # Build {company_id: {month_iso: count}}
     spark_data_raw = {}
     for row in sparkline_raw:
         cid = row['person__company_id']
@@ -518,7 +565,6 @@ def firms(request):
         mo_iso = mo.isoformat()
         spark_data_raw.setdefault(cid, {})[mo_iso] = row['cnt']
 
-    # Compute max across all firms for normalisation
     all_spark_vals = []
     for cid, mo_map in spark_data_raw.items():
         for ms in month_starts:
@@ -534,7 +580,6 @@ def firms(request):
         promotions = stats.get('promotions', 0)
         ratio = round(hires / leavers, 1) if leavers > 0 else None
 
-        # Build SVG sparkline point string
         mo_map = spark_data_raw.get(company.id, {})
         vals = [mo_map.get(ms.isoformat(), 0) for ms in month_starts]
         if global_max > 0:
@@ -589,7 +634,6 @@ def firm_detail(request, company_id):
     search  = request.GET.get('q', '')
     export  = request.GET.get('export', '')
 
-    # Latest snapshot per person for this firm
     team_qs = PersonSnapshot.objects.filter(
         person__company=company
     ).order_by('person_id', '-scraped_at').distinct('person_id').select_related('person')
@@ -605,7 +649,6 @@ def firm_detail(request, company_id):
 
     team.sort(key=lambda p: p.person.full_name)
 
-    # All change events for this firm
     events_qs = ChangeEvent.objects.filter(
         person__company=company
     ).select_related('person').order_by('-detected_at', '-id')
@@ -621,7 +664,6 @@ def firm_detail(request, company_id):
     leavers    = [e for e in events if e.event_type == 'leaver']
     promotions = [e for e in events if e.event_type in ('promotion', 'role_change')]
 
-    # Apply search to the active tab
     if search:
         def name_match(name, t1='', t2=''):
             q = search.lower()
@@ -639,7 +681,6 @@ def firm_detail(request, company_id):
             promotions = [e for e in promotions if
                 name_match(e.person.full_name, e.new_title or '', e.previous_title or '')]
 
-    # Excel exports
     if export == 'team':
         headers = ['Name', 'Title', 'Seniority', 'Group', 'Function', 'Region', 'Location', 'Last Seen']
         rows = [
@@ -659,7 +700,6 @@ def firm_detail(request, company_id):
         ]
         return _make_excel_response(f'{company.name}_{tab}.xlsx', headers, rows, {i: 22 for i in range(1, 10)})
 
-    # Feature 6 — Seniority breakdown
     SENIORITY_ORDER = ['Partner / MD', 'Director', 'VP', 'Principal', 'Associate', 'Analyst', 'Other']
     seniority_counts = {}
     function_counts  = {}
@@ -682,7 +722,6 @@ def firm_detail(request, company_id):
             'count': cnt,
             'pct':   round(cnt * 100 / total_team),
         })
-    # Add any unexpected levels
     for level, cnt in seniority_counts.items():
         if level not in SENIORITY_ORDER:
             seniority_breakdown.append({'level': level, 'count': cnt, 'pct': round(cnt * 100 / total_team)})
@@ -692,7 +731,6 @@ def firm_detail(request, company_id):
         key=lambda x: -x['count']
     )
 
-    # Feature 9 — Talent flow
     leaver_names = set(e.person.full_name for e in leavers)
     hire_names   = set(e.person.full_name for e in hires)
 
@@ -712,7 +750,6 @@ def firm_detail(request, company_id):
         for p in inflow_qs
     ][:10]
 
-    # Related firms — firms that share talent flow, supplemented by recently active firms
     related_ids = set()
     for item in talent_outflow:
         related_ids.add(item['to_firm_id'])
@@ -756,10 +793,7 @@ def firm_detail(request, company_id):
 @login_required
 def signals(request):
     today = date.today()
-    senior_levels = ['Partner / MD', 'Director', 'VP']
 
-    # ── Feature 1: Cascade departure alerts ───────────────────────────────────
-    # Senior (Partner/MD or Director) leaves → 2+ more people leave same firm within 8 weeks
     all_leaver_list = list(ChangeEvent.objects.filter(
         event_type='leaver',
     ).select_related('person', 'person__company').order_by('detected_at'))
@@ -805,13 +839,11 @@ def signals(request):
         detected_at__gte=today - timedelta(days=30)
     ).count()
 
-    # Market Pulse (current calendar month)
     month_start = today.replace(day=1)
     total_hires_month   = ChangeEvent.objects.filter(detected_at__gte=month_start, event_type='hire').count()
     total_leavers_month = ChangeEvent.objects.filter(detected_at__gte=month_start, event_type='leaver').count()
     net_headcount_month = total_hires_month - total_leavers_month
 
-    # Notable moves this week (Partner/MD level)
     notable_moves = list(
         ChangeEvent.objects.filter(
             detected_at__gte=today - timedelta(days=7),
@@ -820,7 +852,6 @@ def signals(request):
         ).select_related('person', 'person__company').order_by('-detected_at')[:5]
     )
 
-    # Hire vs. leaver trend (52 weeks)
     trend_start = today - timedelta(weeks=52)
     trend_events = ChangeEvent.objects.filter(
         detected_at__gte=trend_start,
@@ -853,7 +884,6 @@ def signals(request):
         'leavers': [week_leavers[w] for w in weeks],
     })
 
-    # Activity heatmap (last 364 days)
     heatmap_start = today - timedelta(days=363)
     heatmap_events = ChangeEvent.objects.filter(
         detected_at__gte=heatmap_start,
@@ -1029,10 +1059,6 @@ def scrape_logs(request):
     return render(request, 'tracker/scrape_logs.html', {'runs': runs})
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Profile
-# ─────────────────────────────────────────────────────────────────────────────
-
 @login_required
 def profile(request):
     user = request.user
@@ -1079,10 +1105,6 @@ def profile(request):
         'recent_logins': recent_logins,
     })
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# User admin (superuser only)
-# ─────────────────────────────────────────────────────────────────────────────
 
 @_superuser_required
 def user_admin(request):
