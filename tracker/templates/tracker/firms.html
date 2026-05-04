@@ -8,6 +8,24 @@
   </div>
 </div>
 
+<!-- Bucket filter strip -->
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
+  <a href="?sort={{ sort_by }}"
+     style="padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;text-decoration:none;border:1px solid var(--border);
+            background:{% if not bucket_filter %}var(--accent){% else %}var(--surface){% endif %};
+            color:{% if not bucket_filter %}#fff{% else %}var(--text-2){% endif %}">
+    All
+  </a>
+  {% for b in bucket_order %}
+  <a href="?sort={{ sort_by }}&bucket={{ b|urlencode }}"
+     style="padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;text-decoration:none;border:1px solid var(--border);
+            background:{% if bucket_filter == b %}var(--accent){% else %}var(--surface){% endif %};
+            color:{% if bucket_filter == b %}#fff{% else %}var(--text-2){% endif %}">
+    {{ b }}
+  </a>
+  {% endfor %}
+</div>
+
 <div class="stats-row" style="grid-template-columns:repeat(4,1fr)">
   <div class="stat-card">
     <div class="stat-indicator" style="background:var(--text-2)"></div>
@@ -33,16 +51,16 @@
 
 <div class="card">
   <div class="card-header">
-    <span class="card-title">{{ firm_stats|length }} firms</span>
+    <span class="card-title">{{ firm_stats|length }} firms{% if bucket_filter %} &middot; {{ bucket_filter }}{% endif %}</span>
     <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">
-      <a href="?sort=leavers"    class="sort-link {% if sort_by == 'leavers'    %}sort-active{% endif %}">Leavers</a>
-      <a href="?sort=hires"      class="sort-link {% if sort_by == 'hires'      %}sort-active{% endif %}">Hires</a>
-      <a href="?sort=promotions" class="sort-link {% if sort_by == 'promotions' %}sort-active{% endif %}">Promotions</a>
-      <a href="?sort=headcount"  class="sort-link {% if sort_by == 'headcount'  %}sort-active{% endif %}">Headcount</a>
-      <a href="?sort=activity"   class="sort-link {% if sort_by == 'activity'   %}sort-active{% endif %}">Activity</a>
-      <a href="?sort=ratio"      class="sort-link {% if sort_by == 'ratio'      %}sort-active{% endif %}">H/L Ratio</a>
-      <a href="?sort=name"       class="sort-link {% if sort_by == 'name'       %}sort-active{% endif %}">A&#8211;Z</a>
-      <a href="?sort={{ sort_by }}&export=excel" class="btn-export" title="Download Excel">&#8595; Excel</a>
+      <a href="?sort=leavers{% if bucket_filter %}&bucket={{ bucket_filter|urlencode }}{% endif %}"    class="sort-link {% if sort_by == 'leavers'    %}sort-active{% endif %}">Leavers</a>
+      <a href="?sort=hires{% if bucket_filter %}&bucket={{ bucket_filter|urlencode }}{% endif %}"      class="sort-link {% if sort_by == 'hires'      %}sort-active{% endif %}">Hires</a>
+      <a href="?sort=promotions{% if bucket_filter %}&bucket={{ bucket_filter|urlencode }}{% endif %}" class="sort-link {% if sort_by == 'promotions' %}sort-active{% endif %}">Promotions</a>
+      <a href="?sort=headcount{% if bucket_filter %}&bucket={{ bucket_filter|urlencode }}{% endif %}"  class="sort-link {% if sort_by == 'headcount'  %}sort-active{% endif %}">Headcount</a>
+      <a href="?sort=activity{% if bucket_filter %}&bucket={{ bucket_filter|urlencode }}{% endif %}"   class="sort-link {% if sort_by == 'activity'   %}sort-active{% endif %}">Activity</a>
+      <a href="?sort=ratio{% if bucket_filter %}&bucket={{ bucket_filter|urlencode }}{% endif %}"      class="sort-link {% if sort_by == 'ratio'      %}sort-active{% endif %}">H/L Ratio</a>
+      <a href="?sort=name{% if bucket_filter %}&bucket={{ bucket_filter|urlencode }}{% endif %}"       class="sort-link {% if sort_by == 'name'       %}sort-active{% endif %}">A&#8211;Z</a>
+      <a href="?sort={{ sort_by }}{% if bucket_filter %}&bucket={{ bucket_filter|urlencode }}{% endif %}&export=excel" class="btn-export" title="Download Excel">&#8595; Excel</a>
     </div>
   </div>
 
@@ -50,6 +68,7 @@
     <thead>
       <tr>
         <th>Firm</th>
+        <th>Bucket</th>
         <th>Headcount</th>
         <th>Hires</th>
         <th>Leavers</th>
@@ -65,6 +84,7 @@
       {% for f in firm_stats %}
       <tr style="cursor:pointer" onclick="window.location='/firms/{{ f.company.id }}/'">
         <td class="name-cell">{{ f.company.name }}</td>
+        <td><span style="font-size:11px;padding:2px 8px;border-radius:20px;background:var(--surface-2);color:var(--text-2);white-space:nowrap">{{ f.bucket|default:"—" }}</span></td>
         <td>{% if f.headcount %}<strong style="color:var(--text-1)">{{ f.headcount }}</strong>{% else %}<span class="subtle">&mdash;</span>{% endif %}</td>
         <td>{% if f.hires %}<span style="color:var(--hire);font-weight:700">+{{ f.hires }}</span>{% else %}<span class="subtle">&mdash;</span>{% endif %}</td>
         <td>{% if f.leavers %}<span style="color:var(--leave);font-weight:700">{{ f.leavers }}</span>{% else %}<span class="subtle">&mdash;</span>{% endif %}</td>
@@ -107,7 +127,7 @@
         </td>
       </tr>
       {% empty %}
-      <tr><td colspan="10"><div class="empty">No firms found.</div></td></tr>
+      <tr><td colspan="11"><div class="empty">No firms found.</div></td></tr>
       {% endfor %}
     </tbody>
   </table>

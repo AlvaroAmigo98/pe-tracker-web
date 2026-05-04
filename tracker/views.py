@@ -122,6 +122,17 @@ LOCATION_REGIONS = {
     "india": "APAC", "south korea": "APAC", "taiwan": "APAC",
 }
 
+BUCKET_ORDER = [
+    'Pan-European / Global',
+    'UK',
+    'Benelux',
+    'Nordics',
+    'DACH',
+    'France',
+    'Iberia',
+    'Italy',
+]
+
 
 def infer_region(location: str) -> str:
     if not location or location == "N/A":
@@ -520,8 +531,9 @@ def people(request):
 
 @login_required
 def firms(request):
-    sort_by = request.GET.get('sort', 'leavers')
-    export  = request.GET.get('export', '')
+    sort_by       = request.GET.get('sort', 'leavers')
+    export        = request.GET.get('export', '')
+    bucket_filter = request.GET.get('bucket', '')   # e.g. "UK", "Nordics", etc.
     valid_sorts = {'leavers', 'hires', 'promotions', 'headcount', 'name', 'activity', 'ratio'}
     if sort_by not in valid_sorts:
         sort_by = 'leavers'
@@ -595,6 +607,7 @@ def firms(request):
 
         firm_stats.append({
             'company':    company,
+            'bucket':     company.bucket or '',
             'headcount':  headcount_map.get(company.id, 0),
             'hires':      hires,
             'leavers':    leavers,
@@ -603,6 +616,10 @@ def firms(request):
             'ratio':      ratio,
             'sparkline':  sparkline_points,
         })
+
+    # Apply bucket filter
+    if bucket_filter:
+        firm_stats = [f for f in firm_stats if f['bucket'] == bucket_filter]
 
     if sort_by == 'name':
         firm_stats.sort(key=lambda x: x['company'].name)
@@ -621,10 +638,11 @@ def firms(request):
     if export == 'excel':
         audit_logger.info('EXPORT view=firms user=%s ip=%s rows=%d',
                           request.user.username, _client_ip(request), len(firm_stats))
-        headers = ['Firm', 'Headcount', 'Hires', 'Leavers', 'H/L Ratio', 'Promotions', 'Activity']
+        headers = ['Firm', 'Bucket', 'Headcount', 'Hires', 'Leavers', 'H/L Ratio', 'Promotions', 'Activity']
         rows = [
             [
                 f['company'].name,
+                f['bucket'] or '',
                 f['headcount'] or '',
                 f['hires'] or '',
                 f['leavers'] or '',
@@ -634,16 +652,18 @@ def firms(request):
             ]
             for f in firm_stats
         ]
-        widths = {1: 30, 2: 14, 3: 12, 4: 12, 5: 14, 6: 16, 7: 14}
+        widths = {1: 30, 2: 22, 3: 14, 4: 12, 5: 12, 6: 14, 7: 16, 8: 14}
         return _make_excel_response('pe_firms_export.xlsx', headers, rows, widths)
 
     watchlist = list(request.session.get('watchlist', []))
     return render(request, 'tracker/firms.html', {
-        'firm_stats':  firm_stats,
-        'sort_by':     sort_by,
-        'totals':      totals,
-        'latest_date': latest_date,
-        'watchlist':   watchlist,
+        'firm_stats':    firm_stats,
+        'sort_by':       sort_by,
+        'totals':        totals,
+        'latest_date':   latest_date,
+        'watchlist':     watchlist,
+        'bucket_filter': bucket_filter,
+        'bucket_order':  BUCKET_ORDER,
     })
 
 
