@@ -1,1 +1,384 @@
-CONTENT_DASH
+{% extends 'tracker/base.html' %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <div class="page-title">Dashboard</div>
+    {% if latest_run %}
+    <div class="page-meta">Last scrape: {{ latest_run.ran_at|date:"d M Y, H:i" }} · {{ latest_run.total_rows|default:"0" }} employees across {{ latest_run.firms_ok }} firms</div>
+    {% endif %}
+  </div>
+  <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">
+    <span style="font-size:11px;color:var(--text-2);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-right:4px">Period:</span>
+    <a href="#" onclick="setPeriod('7');return false"  class="sort-link {% if days == '7'  %}sort-active{% endif %}">7d</a>
+    <a href="#" onclick="setPeriod('30');return false" class="sort-link {% if days == '30' %}sort-active{% endif %}">30d</a>
+    <a href="#" onclick="setPeriod('90');return false" class="sort-link {% if days == '90' %}sort-active{% endif %}">90d</a>
+    <a href="#" onclick="setPeriod('');return false"   class="sort-link {% if not days and not date_from and not date_to %}sort-active{% endif %}">All time</a>
+  </div>
+</div>
+
+{% if watchlist_activity %}
+<div style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);border-radius:var(--r);padding:14px 20px;margin-bottom:20px;display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">
+  <span style="font-size:18px;flex-shrink:0">★</span>
+  <div>
+    <div style="font-size:13px;color:#A5B4FC;font-weight:600;margin-bottom:6px">{{ watchlist_activity|length }} new event{{ watchlist_activity|length|pluralize }} at watched firms since your last visit</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+      {% for e in watchlist_activity %}
+      <a href="/firms/{{ e.person.company_id }}/?tab={% if e.event_type == 'leaver' %}leavers{% elif e.event_type == 'hire' %}hires{% else %}promotions{% endif %}"
+         style="font-size:12px;color:var(--text-2);text-decoration:none;background:var(--surface2);padding:3px 10px;border-radius:6px;border:1px solid var(--border)">
+        {{ e.person.full_name }} <span style="color:{% if e.event_type == 'leaver' %}var(--leave){% elif e.event_type == 'hire' %}var(--hire){% else %}var(--promo){% endif %}">·&nbsp;{{ e.event_type }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-indicator" style="background:var(--hire)"></div>
+    <div class="stat-num" style="color:var(--hire)">{{ hires|length }}</div>
+    <div class="stat-label">New hires</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-indicator" style="background:var(--leave)"></div>
+    <div class="stat-num" style="color:var(--leave)">{{ leavers|length }}</div>
+    <div class="stat-label">Leavers</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-indicator" style="background:var(--promo)"></div>
+    <div class="stat-num" style="color:var(--promo)">{{ promotions|length }}</div>
+    <div class="stat-label">Promotions &amp; role changes</div>
+  </div>
+</div>
+
+<form method="get" id="dash-form">
+  <input type="hidden" name="days" id="days-input" value="{{ days }}">
+  <div class="filter-bar">
+
+    <div class="dropdown">
+      <div class="dropdown-btn" onclick="toggleDropdown('d-company')">
+        Companies {% if company_filter %}<span class="count">{{ company_filter|length }}</span>{% endif %}
+        <span class="chevron">▾</span>
+      </div>
+      <div class="dropdown-panel" id="d-company">
+        <div class="dropdown-actions">
+          <button type="button" class="dropdown-action-btn" onclick="selectAll('company','dash-form')">Select all</button>
+          <button type="button" class="dropdown-action-btn" onclick="clearFilter('company','dash-form')">Clear</button>
+        </div>
+        {% for c in companies %}
+        <label>
+          <input type="checkbox" name="company" value="{{ c.name }}"
+            {% if c.name in company_filter %}checked{% endif %}
+            onchange="document.getElementById('dash-form').submit()">
+          {{ c.name }}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="dropdown">
+      <div class="dropdown-btn" onclick="toggleDropdown('d-group')">
+        Level {% if group_filter %}<span class="count">{{ group_filter|length }}</span>{% endif %}
+        <span class="chevron">▾</span>
+      </div>
+      <div class="dropdown-panel" id="d-group">
+        <label><input type="checkbox" name="group" value="Senior" {% if 'Senior' in group_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Senior</label>
+        <label><input type="checkbox" name="group" value="Junior" {% if 'Junior' in group_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Junior</label>
+      </div>
+    </div>
+
+    <div class="dropdown">
+      <div class="dropdown-btn" onclick="toggleDropdown('d-region')">
+        Region {% if region_filter %}<span class="count">{{ region_filter|length }}</span>{% endif %}
+        <span class="chevron">▾</span>
+      </div>
+      <div class="dropdown-panel" id="d-region">
+        <label><input type="checkbox" name="region" value="EMEA"         {% if 'EMEA'         in region_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> EMEA</label>
+        <label><input type="checkbox" name="region" value="North America" {% if 'North America' in region_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> North America</label>
+        <label><input type="checkbox" name="region" value="APAC"         {% if 'APAC'         in region_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> APAC</label>
+        <label><input type="checkbox" name="region" value="Unknown"      {% if 'Unknown'      in region_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Unknown</label>
+      </div>
+    </div>
+
+    <div class="dropdown">
+      <div class="dropdown-btn" onclick="toggleDropdown('d-function')">
+        Function {% if function_filter %}<span class="count">{{ function_filter|length }}</span>{% endif %}
+        <span class="chevron">▾</span>
+      </div>
+      <div class="dropdown-panel" id="d-function">
+        <label><input type="checkbox" name="function" value="Buyout / PE"          {% if 'Buyout / PE'          in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Buyout / PE</label>
+        <label><input type="checkbox" name="function" value="Growth Equity"        {% if 'Growth Equity'        in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Growth Equity</label>
+        <label><input type="checkbox" name="function" value="Infrastructure"       {% if 'Infrastructure'       in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Infrastructure</label>
+        <label><input type="checkbox" name="function" value="Real Estate"          {% if 'Real Estate'          in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Real Estate</label>
+        <label><input type="checkbox" name="function" value="Credit / Debt"        {% if 'Credit / Debt'        in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Credit / Debt</label>
+        <label><input type="checkbox" name="function" value="Venture Capital"      {% if 'Venture Capital'      in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Venture Capital</label>
+        <label><input type="checkbox" name="function" value="Investment (General)" {% if 'Investment (General)' in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Investment (General)</label>
+        <label><input type="checkbox" name="function" value="Advisory"             {% if 'Advisory'             in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Advisory</label>
+        <label><input type="checkbox" name="function" value="Operations"           {% if 'Operations'           in function_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Operations</label>
+      </div>
+    </div>
+
+    <div class="dropdown">
+      <div class="dropdown-btn" onclick="toggleDropdown('d-change')">
+        Change Type {% if change_type_filter %}<span class="count">{{ change_type_filter|length }}</span>{% endif %}
+        <span class="chevron">▾</span>
+      </div>
+      <div class="dropdown-panel" id="d-change">
+        <label><input type="checkbox" name="change_type" value="hire"        {% if 'hire'        in change_type_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Hire</label>
+        <label><input type="checkbox" name="change_type" value="leaver"      {% if 'leaver'      in change_type_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Leaver</label>
+        <label><input type="checkbox" name="change_type" value="role_change" {% if 'role_change' in change_type_filter %}checked{% endif %} onchange="document.getElementById('dash-form').submit()"> Promotion / Role Change</label>
+      </div>
+    </div>
+
+    <button type="submit" name="export" value="excel" class="btn btn-green">↓ Export Excel</button>
+    <a href="/dashboard/" class="btn btn-gray">Clear</a>
+  </div>
+</form>
+
+<!-- Active filter chips -->
+<div id="chip-row" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;min-height:0"></div>
+
+<!-- Quick search + pagination -->
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px;flex-wrap:wrap">
+  <input type="text" id="table-search" placeholder="Quick filter by name or company…"
+         style="min-width:220px;max-width:320px;font-size:13px">
+  <div style="display:flex;gap:4px;align-items:center;flex-shrink:0">
+    <span style="font-size:11px;color:var(--text-2);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-right:2px">Show:</span>
+    <button type="button" onclick="setPageSize(25)"  class="sort-link page-sz" data-n="25">25</button>
+    <button type="button" onclick="setPageSize(50)"  class="sort-link page-sz" data-n="50">50</button>
+    <button type="button" onclick="setPageSize(100)" class="sort-link page-sz" data-n="100">100</button>
+    <button type="button" onclick="setPageSize(0)"   class="sort-link page-sz" data-n="0">All</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">All change events</span>
+    <span class="subtle" id="result-count">{{ events|length }} events</span>
+  </div>
+
+  {% if events %}
+  <table id="events-table">
+    <thead>
+      <tr>
+        <th data-col="0">Name <span class="sort-arrow">↕</span></th>
+        <th data-col="1">Company <span class="sort-arrow">↕</span></th>
+        <th data-col="2">Function <span class="sort-arrow">↕</span></th>
+        <th data-col="3">Change <span class="sort-arrow">↕</span></th>
+        <th data-col="4">Level <span class="sort-arrow">↕</span></th>
+        <th data-col="5">Detail</th>
+        <th data-col="6">Region <span class="sort-arrow">↕</span></th>
+        <th data-col="7">Date <span class="sort-arrow">↕</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for e in events %}
+      <tr{% if e.is_new %} class="row-new"{% endif %}>
+        <td class="name-cell">
+          <a href="/people/?q={{ e.person.full_name|urlencode }}" class="row-link">{{ e.person.full_name }}</a>
+        </td>
+        <td class="subtle">
+          <a href="/firms/{{ e.person.company_id }}/" class="row-link">{{ e.person.company.name }}</a>
+        </td>
+        <td>
+          {% if e.function == 'Buyout / PE' %}<span class="badge badge-buyout">Buyout / PE</span>
+          {% elif e.function == 'Investment (General)' %}<span class="badge badge-invest">Investment</span>
+          {% elif e.function == 'Advisory' %}<span class="badge badge-advisory">Advisory</span>
+          {% elif e.function == 'Infrastructure' %}<span class="badge badge-infra">Infra</span>
+          {% elif e.function == 'Real Estate' %}<span class="badge badge-re">Real Estate</span>
+          {% elif e.function == 'Credit / Debt' %}<span class="badge badge-credit">Credit</span>
+          {% elif e.function == 'Venture Capital' %}<span class="badge badge-vc">VC</span>
+          {% elif e.function == 'Operations' %}<span class="badge badge-ops">Ops</span>
+          {% else %}<span class="subtle">—</span>{% endif %}
+        </td>
+        <td>
+          {% if e.event_type == 'hire' %}<span class="badge badge-hire">Hire</span>
+          {% elif e.event_type == 'leaver' %}<span class="badge badge-leave">Leaver</span>
+          {% elif e.event_type == 'promotion' %}<span class="badge badge-promo">Promotion</span>
+          {% else %}<span class="badge badge-role">Role change</span>{% endif %}
+        </td>
+        <td>
+          {% if e.seniority_group == 'Senior' %}<span class="badge badge-senior">Senior</span>
+          {% else %}<span class="badge badge-junior">Junior</span>{% endif %}
+        </td>
+        <td class="subtle">
+          {% if e.previous_title and e.new_title %}{{ e.previous_title }} → {{ e.new_title }}
+          {% elif e.new_title %}{{ e.new_title }}
+          {% elif e.previous_title %}{{ e.previous_title }}
+          {% else %}—{% endif %}
+        </td>
+        <td>
+          {% if e.region == 'EMEA' %}<span class="badge badge-emea">EMEA</span>
+          {% elif e.region == 'North America' %}<span class="badge badge-na">N. America</span>
+          {% elif e.region == 'APAC' %}<span class="badge badge-apac">APAC</span>
+          {% else %}<span class="subtle">—</span>{% endif %}
+        </td>
+        <td class="subtle" data-ts="{{ e.detected_at|date:'Y-m-d' }}">{{ e.detected_at|date:"d M Y" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div id="pagination-bar" style="padding:10px 20px;font-size:12px;color:var(--text-2);border-top:1px solid var(--border);display:none"></div>
+
+  {% else %}
+  <div class="empty">
+    {% if company_filter or region_filter or group_filter or function_filter or change_type_filter or days or date_from or date_to %}
+      No events match the active filters.
+      {% if company_filter %}<br><span class="subtle">Companies: {{ company_filter|join:", " }}</span>{% endif %}
+      {% if region_filter %}<br><span class="subtle">Region: {{ region_filter|join:", " }}</span>{% endif %}
+      {% if group_filter %}<br><span class="subtle">Level: {{ group_filter|join:", " }}</span>{% endif %}
+      {% if function_filter %}<br><span class="subtle">Function: {{ function_filter|join:", " }}</span>{% endif %}
+      {% if change_type_filter %}<br><span class="subtle">Change type: {{ change_type_filter|join:", " }}</span>{% endif %}
+      {% if days %}<br><span class="subtle">Period: last {{ days }} days</span>{% endif %}
+      {% if date_from or date_to %}<br><span class="subtle">Date range: {{ date_from|default:"–" }} to {{ date_to|default:"–" }}</span>{% endif %}
+      <br><br><a href="/" style="color:var(--accent);font-size:13px;">Clear all filters</a>
+    {% else %}
+      No change events yet — they will appear after the second weekly scrape runs.
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<script>
+function setPeriod(val) {
+  const p = new URLSearchParams(window.location.search);
+  p.delete('export');
+  if (val) p.set('days', val); else p.delete('days');
+  window.location.search = p.toString();
+}
+
+(function renderChips() {
+  const params = new URLSearchParams(window.location.search);
+  const container = document.getElementById('chip-row');
+  const skip = new Set(['export']);
+  const labelMap = {
+    change_type: { hire: 'Hire', leaver: 'Leaver', role_change: 'Promo / Role Change' },
+    days: { '7': '7 days', '30': '30 days', '90': '90 days' },
+  };
+  const keyNames = {
+    company: 'Company', region: 'Region', group: 'Level', function: 'Function',
+    change_type: 'Change', days: 'Period', date_from: 'From', date_to: 'To',
+  };
+  for (const [key, val] of params.entries()) {
+    if (skip.has(key) || !val) continue;
+    const display = (labelMap[key] && labelMap[key][val]) ? labelMap[key][val] : val;
+    const chip = document.createElement('span');
+    chip.className = 'filter-chip';
+    chip.innerHTML = '<span class="chip-key">' + (keyNames[key] || key) + '</span>' + display + '<button class="chip-x" title="Remove">×</button>';
+    chip.querySelector('button').addEventListener('click', function() {
+      const p = new URLSearchParams(window.location.search);
+      const remaining = p.getAll(key).filter(v => v !== val);
+      p.delete(key);
+      remaining.forEach(v => p.append(key, v));
+      window.location.search = p.toString();
+    });
+    container.appendChild(chip);
+  }
+})();
+
+function selectAll(name, formId) {
+  document.querySelectorAll('#' + formId + ' input[name="' + name + '"]').forEach(cb => cb.checked = true);
+  document.getElementById(formId).submit();
+}
+function clearFilter(name, formId) {
+  document.querySelectorAll('#' + formId + ' input[name="' + name + '"]').forEach(cb => cb.checked = false);
+  document.getElementById(formId).submit();
+}
+
+var allRows = [];
+var pageSize = 50;
+var filteredRows = [];
+
+(function initTable() {
+  const tbody = document.querySelector('#events-table tbody');
+  if (!tbody) return;
+  allRows = Array.from(tbody.rows);
+  activateSortArrow(7, false);
+  document.getElementById('table-search').addEventListener('input', function() {
+    applyFilters();
+  });
+  setPageSize(50);
+})();
+
+function applyFilters() {
+  const q = (document.getElementById('table-search').value || '').toLowerCase().trim();
+  filteredRows = allRows.filter(function(row) {
+    if (!q) return true;
+    const name    = row.cells[0] ? row.cells[0].textContent.toLowerCase() : '';
+    const company = row.cells[1] ? row.cells[1].textContent.toLowerCase() : '';
+    return name.includes(q) || company.includes(q);
+  });
+  renderPage(1);
+}
+
+function renderPage(page) {
+  const tbody = document.querySelector('#events-table tbody');
+  if (!tbody) return;
+  allRows.forEach(r => r.style.display = 'none');
+  const start = pageSize === 0 ? 0 : (page - 1) * pageSize;
+  const slice = pageSize === 0 ? filteredRows : filteredRows.slice(start, start + pageSize);
+  slice.forEach(r => r.style.display = '');
+  updatePaginationBar(filteredRows.length, page);
+  document.getElementById('result-count').textContent = filteredRows.length + ' events';
+}
+
+function updatePaginationBar(total, page) {
+  const bar = document.getElementById('pagination-bar');
+  if (!bar) return;
+  if (pageSize === 0 || total <= pageSize) { bar.style.display = 'none'; return; }
+  const pages = Math.ceil(total / pageSize);
+  bar.style.display = 'block';
+  let html = 'Showing ' + Math.min((page-1)*pageSize+1, total) + '–' + Math.min(page*pageSize, total) + ' of ' + total + ' &nbsp;';
+  for (let i = 1; i <= pages; i++) {
+    html += '<button onclick="renderPage(' + i + ')" style="background:' + (i===page?'var(--accent)':'var(--surface2)') + ';border:1px solid var(--border);border-radius:4px;padding:3px 9px;font-size:12px;color:' + (i===page?'white':'var(--text-2)') + ';cursor:pointer;font-family:inherit;margin:0 2px">' + i + '</button>';
+  }
+  bar.innerHTML = html;
+}
+
+function setPageSize(n) {
+  pageSize = n;
+  document.querySelectorAll('.page-sz').forEach(function(btn) {
+    btn.classList.toggle('sort-active', +btn.dataset.n === n);
+  });
+  applyFilters();
+}
+
+var sortCol = 7, sortAsc = false;
+
+function activateSortArrow(col, asc) {
+  document.querySelectorAll('#events-table th[data-col]').forEach(function(h) {
+    const arrow = h.querySelector('.sort-arrow');
+    if (arrow) arrow.textContent = +h.dataset.col === col ? (asc ? '↑' : '↓') : '↕';
+    h.classList.toggle('th-sorted', +h.dataset.col === col);
+  });
+}
+
+document.querySelectorAll('#events-table th[data-col]').forEach(function(th) {
+  th.addEventListener('click', function() {
+    const col = +th.dataset.col;
+    if (sortCol === col) sortAsc = !sortAsc;
+    else { sortCol = col; sortAsc = true; }
+    activateSortArrow(sortCol, sortAsc);
+    allRows.sort(function(a, b) {
+      const av = (a.cells[col] ? (a.cells[col].dataset.ts || a.cells[col].textContent) : '').trim().toLowerCase();
+      const bv = (b.cells[col] ? (b.cells[col].dataset.ts || b.cells[col].textContent) : '').trim().toLowerCase();
+      return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+    });
+    applyFilters();
+  });
+});
+
+function toggleDropdown(id) {
+  document.querySelectorAll('.dropdown-panel').forEach(p => {
+    if (p.id !== id) p.classList.remove('open');
+  });
+  document.getElementById(id).classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.dropdown')) {
+    document.querySelectorAll('.dropdown-panel').forEach(p => p.classList.remove('open'));
+  }
+});
+</script>
+{% endblock %}
