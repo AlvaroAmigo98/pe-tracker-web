@@ -1,0 +1,99 @@
+{% extends "tracker/base.html" %}
+{% block content %}
+<style>
+  .confirm-wrap {
+    max-width: 560px; margin: 72px auto; padding: 0 24px;
+  }
+  .confirm-card {
+    background: var(--surface);
+    border: 1px solid rgba(244,63,94,.3);
+    border-radius: var(--r);
+    padding: 36px 32px;
+  }
+  .confirm-icon { font-size: 28px; margin-bottom: 12px; }
+  .confirm-title { font-size: 18px; font-weight: 800; color: var(--leave-text); margin-bottom: 8px; }
+  .confirm-desc  { font-size: 14px; color: var(--text-2); margin-bottom: 20px; line-height: 1.6; }
+  .confirm-details {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--r-sm); padding: 16px 20px; margin-bottom: 24px;
+  }
+  .confirm-details li {
+    font-size: 13px; color: var(--text-2); line-height: 1.8; list-style: none;
+    padding-left: 0;
+  }
+  .confirm-details li::before { content: "— "; color: var(--leave-text); }
+  .confirm-warning {
+    font-size: 12px; color: var(--leave-text);
+    margin-bottom: 24px; font-weight: 600;
+  }
+  .confirm-actions { display: flex; gap: 12px; align-items: center; }
+  .btn-danger {
+    padding: 10px 24px; border-radius: 8px; font-size: 13px; font-weight: 700;
+    background: var(--leave); color: #fff; border: none; cursor: pointer;
+    font-family: inherit;
+  }
+  .btn-danger:hover { background: #e11d48; }
+  .btn-cancel {
+    padding: 10px 20px; border-radius: 8px; font-size: 13px;
+    color: var(--text-2); text-decoration: none; border: 1px solid var(--border2);
+    background: none; cursor: pointer; font-family: inherit;
+  }
+  .btn-cancel:hover { color: var(--text-1); border-color: var(--text-2); }
+</style>
+
+<div class="confirm-wrap">
+  <div class="confirm-card">
+    <div class="confirm-icon">⚠</div>
+
+    {% if mode == 'run' %}
+    <div class="confirm-title">Delete Run Data</div>
+    <div class="confirm-desc">
+      You are about to delete all scraped data for
+      <strong>{{ run_date }}</strong>
+      ({{ firm_count }} firm{{ firm_count|pluralize }}).
+    </div>
+    <div class="confirm-details">
+      <ul>
+        <li>{{ snapshot_count }} person_snapshot row{{ snapshot_count|pluralize }} deleted</li>
+        <li>{{ event_count }} change_event row{{ event_count|pluralize }} deleted</li>
+        <li>Scrape run record deleted</li>
+      </ul>
+    </div>
+    <div class="confirm-warning">This cannot be undone.</div>
+    <div class="confirm-actions">
+      <form method="post" action="{% url 'delete_run' run.id %}" style="margin:0">
+        {% csrf_token %}
+        <input type="hidden" name="confirmed" value="1">
+        <button type="submit" class="btn-danger">Delete {{ run_date }} Data</button>
+      </form>
+      <a href="{% url 'scrape_logs' %}" class="btn-cancel">Cancel</a>
+    </div>
+
+    {% else %}
+    <div class="confirm-title">Delete Firm Data</div>
+    <div class="confirm-desc">
+      You are about to delete all snapshots for
+      <strong>{{ firm_name }}</strong> on <strong>{{ run_date }}</strong>.
+    </div>
+    <div class="confirm-details">
+      <ul>
+        <li>{{ snapshot_count }} person_snapshot row{{ snapshot_count|pluralize }} deleted</li>
+        <li>{{ event_count }} change_event row{{ event_count|pluralize }} deleted</li>
+        <li>Scrape run firm record deleted</li>
+      </ul>
+    </div>
+    <div class="confirm-warning">This cannot be undone.</div>
+    <div class="confirm-actions">
+      <form method="post" action="{% url 'delete_firm_snapshot' run.id %}" style="margin:0">
+        {% csrf_token %}
+        <input type="hidden" name="firm_name" value="{{ firm_name }}">
+        <input type="hidden" name="confirmed" value="1">
+        <button type="submit" class="btn-danger">Delete {{ firm_name }}</button>
+      </form>
+      <a href="{% url 'scrape_logs' %}" class="btn-cancel">Cancel</a>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

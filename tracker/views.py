@@ -5,7 +5,7 @@ from django.http import HttpResponse, JsonResponse
 from django.db.models import Count, Max, Q
 from django.db.models.functions import TruncMonth
 from django.core.cache import cache
-from .models import Company, Person, PersonSnapshot, ChangeEvent, ScrapeRun, ScrapeRunFirm, AuditLog
+from .models import Company, Person, PersonSnapshot, ChangeEvent, ScrapeRun, ScrapeRunFirm, AuditLog, ScrapeStaging
 
 import json
 import logging
@@ -1063,6 +1063,190 @@ def person_profile(request, person_id):
         'snapshots':    snapshots,
         'events':       events,
         'current_snap': current_snap,
+    })
+
+
+def _infer_seniority(title: str) -> str:
+    if not title:
+        return 'Other'
+    t = title.lower()
+    if any(x in t for x in [
+        'managing director', 'managing partner', 'co-founder', 'founding partner',
+        'chief executive', 'chairman', 'co-ceo',
+    ]):
+        return 'Partner / MD'
+    if 'partner' in t and not any(x in t for x in ['operating partner', 'advisory']):
+        return 'Partner / MD'
+    if 'director' in t and 'associate director' not in t:
+        return 'Director'
+    if 'vice president' in t or ' vp ' in t or t.startswith('vp ') or t.endswith(' vp'):
+        return 'VP'
+    if 'principal' in t:
+        return 'Principal'
+    if 'associate' in t:
+        return 'Associate'
+    if 'analyst' in t:
+        return 'Analyst'
+    return 'Other'
+
+
+@_superuser_required
+def data_review(request):
+    flagged_rows = ScrapeStaging.objects.filter(
+        status='flagged'
+    ).order_by('firm_name', 'run_date', 'batch_id')
+
+    batches = {}
+    for row in flagged_rows:
+        bid = row.batch_id
+        if bid not in batches:
+            batches[bid] = {
+                'batch_id': bid,
+                'firm_name': row.firm_name,
+                'run_date': row.run_date,
+                'flag_reasons': set(),
+                'rows': [],
+            }
+        if row.flag_reason:
+            batches[bid]['flag_reasons'].add(row.flag_reason)
+        batches[bid]['rows'].append(row)
+
+    batch_list = []
+    for bid, batch in batches.items():
+        batch['count'] = len(batch['rows'])
+        batch['sample_names'] = [r.person_name for r in batch['rows'][:5] if r.person_name]
+        batch['flag_reason_str'] = '; '.join(sorted(batch['flag_reasons']))
+        batch_list.append(batch)
+
+    batch_list.sort(key=lambda x: (x['run_date'], x['firm_name']), reverse=True)
+
+    return render(request, 'tracker/data_review.html', {
+        'batches':       batch_list,
+        'total_flagged': sum(b['count'] for b in batch_list),
+    })
+
+
+@_superuser_required
+def batch_approve(request, batch_id):
+    if request.method != 'POST':
+        return redirect('data_review')
+
+    rows = list(ScrapeStaging.objects.filter(batch_id=batch_id, status='flagged'))
+    if not rows:
+        return redirect('data_review')
+
+    firm_name = rows[0].firm_name
+    run_date  = rows[0].run_date
+
+    company, _ = Company.objects.get_or_create(name=firm_name)
+
+    promoted = 0
+    for row in rows:
+        if not row.person_name:
+            continue
+        person = Person.objects.filter(company=company, full_name=row.person_name).first()
+        if not person:
+            person = Person.objects.create(
+                company=company,
+                full_name=row.person_name,
+                first_seen_at=run_date,
+            )
+        if not PersonSnapshot.objects.filter(person=person, scraped_at=run_date).exists():
+            PersonSnapshot.objects.create(
+                person=person,
+                job_title=row.job_title,
+                seniority=_infer_seniority(row.job_title or ''),
+                team=row.team,
+                location=row.location,
+                scraped_at=run_date,
+            )
+            promoted += 1
+
+    ScrapeStaging.objects.filter(batch_id=batch_id).update(status='promoted')
+    audit_logger.info('BATCH_APPROVE batch_id=%s firm=%s user=%s promoted=%d',
+                      batch_id, firm_name, request.user.username, promoted)
+    return redirect('data_review')
+
+
+@_superuser_required
+def batch_reject(request, batch_id):
+    if request.method != 'POST':
+        return redirect('data_review')
+
+    ScrapeStaging.objects.filter(batch_id=batch_id, status='flagged').update(status='rejected')
+    audit_logger.info('BATCH_REJECT batch_id=%s user=%s', batch_id, request.user.username)
+    return redirect('data_review')
+
+
+@_superuser_required
+def delete_run(request, run_id):
+    run      = get_object_or_404(ScrapeRun, id=run_id)
+    run_date = run.ran_at.date()
+
+    firm_names = list(ScrapeRunFirm.objects.filter(run_id=run_id).values_list('firm_name', flat=True))
+
+    if request.method == 'POST' and request.POST.get('confirmed'):
+        PersonSnapshot.objects.filter(
+            person__company__name__in=firm_names, scraped_at=run_date
+        ).delete()
+        ChangeEvent.objects.filter(
+            person__company__name__in=firm_names, detected_at=run_date
+        ).delete()
+        ScrapeRunFirm.objects.filter(run_id=run_id).delete()
+        run.delete()
+        audit_logger.info('DELETE_RUN run_id=%d run_date=%s firms=%d user=%s',
+                          run_id, run_date, len(firm_names), request.user.username)
+        return redirect('scrape_logs')
+
+    snapshot_count = PersonSnapshot.objects.filter(
+        person__company__name__in=firm_names, scraped_at=run_date
+    ).count()
+    event_count = ChangeEvent.objects.filter(
+        person__company__name__in=firm_names, detected_at=run_date
+    ).count()
+
+    return render(request, 'tracker/delete_confirm.html', {
+        'run':            run,
+        'run_date':       run_date,
+        'firm_count':     len(firm_names),
+        'snapshot_count': snapshot_count,
+        'event_count':    event_count,
+        'mode':           'run',
+    })
+
+
+@_superuser_required
+def delete_firm_snapshot(request, run_id):
+    run      = get_object_or_404(ScrapeRun, id=run_id)
+    run_date = run.ran_at.date()
+    firm_name = request.GET.get('firm') or request.POST.get('firm_name', '')
+
+    if request.method == 'POST' and request.POST.get('confirmed'):
+        PersonSnapshot.objects.filter(
+            person__company__name=firm_name, scraped_at=run_date
+        ).delete()
+        ChangeEvent.objects.filter(
+            person__company__name=firm_name, detected_at=run_date
+        ).delete()
+        ScrapeRunFirm.objects.filter(run_id=run_id, firm_name=firm_name).delete()
+        audit_logger.info('DELETE_FIRM run_id=%d firm=%s run_date=%s user=%s',
+                          run_id, firm_name, run_date, request.user.username)
+        return redirect('scrape_logs')
+
+    snapshot_count = PersonSnapshot.objects.filter(
+        person__company__name=firm_name, scraped_at=run_date
+    ).count()
+    event_count = ChangeEvent.objects.filter(
+        person__company__name=firm_name, detected_at=run_date
+    ).count()
+
+    return render(request, 'tracker/delete_confirm.html', {
+        'run':            run,
+        'run_date':       run_date,
+        'firm_name':      firm_name,
+        'snapshot_count': snapshot_count,
+        'event_count':    event_count,
+        'mode':           'firm',
     })
 
 

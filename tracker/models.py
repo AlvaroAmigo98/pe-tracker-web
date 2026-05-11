@@ -86,3 +86,45 @@ class AuditLog(models.Model):
     class Meta:
         managed  = False
         db_table = 'audit_log'
+
+
+class ScrapeStaging(models.Model):
+    batch_id    = models.TextField()
+    firm_name   = models.TextField()
+    run_date    = models.DateField()
+    person_name = models.TextField(blank=True, null=True)
+    job_title   = models.TextField(blank=True, null=True)
+    team        = models.TextField(blank=True, null=True)
+    location    = models.TextField(blank=True, null=True)
+    raw_html    = models.TextField(blank=True, null=True)
+    status      = models.TextField(default='pending')  # pending | promoted | rejected | flagged
+    flag_reason = models.TextField(blank=True, null=True)
+    created_at  = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        managed  = False
+        db_table = 'scrape_staging'
+
+    def __str__(self):
+        return f'{self.firm_name} / {self.person_name} [{self.status}]'
+
+
+class ScrapeHealth(models.Model):
+    company         = models.ForeignKey(Company, models.SET_NULL, blank=True, null=True)
+    firm_name       = models.TextField()
+    week_commencing = models.DateField()
+    row_count       = models.IntegerField(default=0)
+    prev_row_count  = models.IntegerField(blank=True, null=True)
+    status          = models.TextField()  # ok | warning | broken | skipped
+    error_msg       = models.TextField(blank=True, null=True)
+    retry_count     = models.IntegerField(default=0)
+    raw_html_sample = models.TextField(blank=True, null=True)
+    created_at      = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        managed  = False
+        db_table = 'scrape_health'
+        unique_together = [('firm_name', 'week_commencing')]
+
+    def __str__(self):
+        return f'{self.firm_name} w/c {self.week_commencing} [{self.status}]'

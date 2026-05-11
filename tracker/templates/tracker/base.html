@@ -449,6 +449,10 @@
           {% if request.user.is_superuser %}
           <a href="{% url 'user_admin' %}" style="display:block;padding:10px 16px;font-size:13px;
              color:var(--text-1);text-decoration:none;border-bottom:1px solid var(--border)">User Management</a>
+          <a href="{% url 'scrape_logs' %}" style="display:block;padding:10px 16px;font-size:13px;
+             color:var(--text-1);text-decoration:none;border-bottom:1px solid var(--border)">Scrape Logs</a>
+          <a href="{% url 'data_review' %}" style="display:block;padding:10px 16px;font-size:13px;
+             color:var(--leave-text);text-decoration:none;border-bottom:1px solid var(--border)">Data Review</a>
           {% endif %}
           <form method="post" action="{% url 'logout' %}" style="margin:0">
             {% csrf_token %}
@@ -477,7 +481,7 @@
       <a href="{% url 'dashboard' %}?bucket=Iberia"   class="bucket-tab {% if active_bucket == 'Iberia' %}active{% endif %}">Iberia</a>
       <a href="{% url 'dashboard' %}?bucket=Italy"    class="bucket-tab {% if active_bucket == 'Italy' %}active{% endif %}">Italy</a>
       {% if request.user.is_superuser %}
-      <a href="{% url 'user_admin' %}" class="bucket-tab users-tab {% if active_view == 'user_admin' or active_view == 'scrape_logs' %}active{% endif %}">Users</a>
+      <a href="{% url 'user_admin' %}" class="bucket-tab users-tab {% if active_view == 'user_admin' or active_view == 'scrape_logs' or active_view == 'data_review' %}active{% endif %}">Users</a>
       {% endif %}
     </div>
   </div>

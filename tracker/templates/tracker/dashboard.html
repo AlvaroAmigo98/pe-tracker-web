@@ -231,6 +231,7 @@
 <script>
 const BUCKET = '{{ bucket_filter|escapejs }}';
 
+// #1: Period buttons — updates ?days= in URL while preserving all other active filters
 function setPeriod(val) {
   const p = new URLSearchParams(window.location.search);
   p.delete('export');

@@ -29,7 +29,8 @@
   .pill-ok     { background: var(--hire-bg);  color: var(--hire-text);  }
   .pill-fail   { background: var(--leave-bg); color: var(--leave-text); }
   .pill-rows   { background: rgba(99,102,241,.12); color: #a5b4fc; }
-  .run-toggle  { margin-left: auto; font-size: 12px; color: var(--text-2); }
+  .run-toggle  { font-size: 12px; color: var(--text-2); }
+  .run-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
   .run-status-dot {
     width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
   }
@@ -75,6 +76,18 @@
   }
   .logs-search input:focus { border-color: var(--accent); }
   .empty-state { text-align: center; padding: 60px 0; color: var(--text-2); font-size: 14px; }
+  .btn-delete-run {
+    padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 700;
+    background: var(--leave-bg); color: var(--leave-text); border: 1px solid rgba(244,63,94,.3);
+    text-decoration: none; white-space: nowrap; display: inline-block;
+  }
+  .btn-delete-run:hover { background: rgba(244,63,94,.25); color: var(--leave-text); }
+  .btn-delete-firm {
+    padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700;
+    background: var(--leave-bg); color: var(--leave-text); border: 1px solid rgba(244,63,94,.3);
+    text-decoration: none; white-space: nowrap;
+  }
+  .btn-delete-firm:hover { background: rgba(244,63,94,.25); }
 </style>
 
 <div class="logs-wrap">
@@ -103,7 +116,10 @@
               <span class="stat-pill pill-fail">{{ nfail }} failed</span>
             {% endif %}
           </div>
-          <span class="run-toggle" id="toggle-{{ run.id }}">▼ expand</span>
+          <div class="run-actions" onclick="event.stopPropagation()">
+            <a href="{% url 'delete_run' run.id %}" class="btn-delete-run">Delete Run</a>
+            <span class="run-toggle" id="toggle-{{ run.id }}">▼ expand</span>
+          </div>
         </div>
 
         <div class="firm-table-wrap" id="firms-{{ run.id }}">
@@ -115,6 +131,7 @@
                   <th>Rows</th>
                   <th>Status</th>
                   <th>Error</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -137,6 +154,10 @@
                     {% if f.error_msg %}
                       <span class="error-msg">{{ f.error_msg|truncatechars:120 }}</span>
                     {% else %}—{% endif %}
+                  </td>
+                  <td>
+                    <a href="{% url 'delete_firm_snapshot' run.id %}?firm={{ f.firm_name|urlencode }}"
+                       class="btn-delete-firm">Delete</a>
                   </td>
                 </tr>
                 {% endfor %}

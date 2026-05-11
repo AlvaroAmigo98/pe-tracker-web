@@ -1,0 +1,117 @@
+{% extends "tracker/base.html" %}
+{% block content %}
+<style>
+  .review-wrap  { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+  .review-header { margin-bottom: 28px; }
+  .review-header h1 { font-size: 22px; font-weight: 800; color: var(--text-1); letter-spacing: -.4px; }
+  .review-header p  { font-size: 13px; color: var(--text-2); margin-top: 6px; }
+
+  .batch-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .batch-header {
+    display: flex; align-items: center; gap: 16px;
+    padding: 16px 20px; flex-wrap: wrap;
+  }
+  .batch-firm   { font-size: 14px; font-weight: 700; color: var(--text-1); min-width: 180px; }
+  .batch-meta   { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; flex: 1; }
+  .batch-date   { font-size: 12px; color: var(--text-2); }
+  .batch-count  {
+    font-size: 11px; font-weight: 700; padding: 3px 10px;
+    border-radius: 20px; background: var(--promo-bg); color: var(--promo-text);
+  }
+  .batch-reason {
+    font-size: 11px; padding: 3px 10px;
+    border-radius: 20px; background: var(--leave-bg); color: var(--leave-text);
+  }
+  .batch-actions { display: flex; gap: 8px; margin-left: auto; }
+  .btn-approve {
+    padding: 7px 18px; border-radius: 6px; font-size: 12px; font-weight: 700;
+    background: var(--hire-bg); color: var(--hire-text); border: 1px solid var(--hire);
+    cursor: pointer; font-family: inherit;
+  }
+  .btn-approve:hover { background: rgba(16,185,129,.25); }
+  .btn-reject {
+    padding: 7px 18px; border-radius: 6px; font-size: 12px; font-weight: 700;
+    background: var(--leave-bg); color: var(--leave-text); border: 1px solid var(--leave);
+    cursor: pointer; font-family: inherit;
+  }
+  .btn-reject:hover  { background: rgba(244,63,94,.25); }
+
+  .batch-samples {
+    padding: 8px 20px 14px;
+    border-top: 1px solid var(--border);
+  }
+  .batch-samples-label { font-size: 11px; color: var(--text-2); margin-bottom: 6px; }
+  .sample-name {
+    font-size: 12px; color: var(--text-1); display: inline-block;
+    margin-right: 14px; margin-bottom: 4px;
+  }
+  .sample-more { font-size: 12px; color: var(--text-2); }
+
+  .empty-state { text-align: center; padding: 72px 0; color: var(--text-2); font-size: 14px; }
+  .empty-icon  { font-size: 36px; margin-bottom: 12px; }
+</style>
+
+<div class="review-wrap">
+  <div class="review-header">
+    <h1>Data Review</h1>
+    <p>
+      Flagged scrape batches that failed validation — review before allowing into production.
+      {% if batches %}
+        <strong>{{ batches|length }} batch{{ batches|length|pluralize:"es" }}</strong>,
+        {{ total_flagged }} row{{ total_flagged|pluralize }} pending.
+      {% endif %}
+    </p>
+  </div>
+
+  {% if not batches %}
+  <div class="empty-state">
+    <div class="empty-icon">✓</div>
+    No flagged batches. All scrape data passed validation.
+  </div>
+  {% else %}
+  {% for batch in batches %}
+  <div class="batch-card">
+    <div class="batch-header">
+      <div class="batch-firm">{{ batch.firm_name }}</div>
+      <div class="batch-meta">
+        <span class="batch-date">{{ batch.run_date }}</span>
+        <span class="batch-count">{{ batch.count }} row{{ batch.count|pluralize }}</span>
+        {% if batch.flag_reason_str %}
+        <span class="batch-reason">{{ batch.flag_reason_str }}</span>
+        {% endif %}
+      </div>
+      <div class="batch-actions">
+        <form method="post" action="{% url 'batch_approve' batch.batch_id %}" style="margin:0"
+              onsubmit="return confirm('Promote {{ batch.count }} row{{ batch.count|pluralize }} for {{ batch.firm_name }} to production?\n\nThis will write to person_snapshot.')">
+          {% csrf_token %}
+          <button type="submit" class="btn-approve">Approve</button>
+        </form>
+        <form method="post" action="{% url 'batch_reject' batch.batch_id %}" style="margin:0"
+              onsubmit="return confirm('Reject this batch? The data will not be added to production.')">
+          {% csrf_token %}
+          <button type="submit" class="btn-reject">Reject</button>
+        </form>
+      </div>
+    </div>
+    {% if batch.sample_names %}
+    <div class="batch-samples">
+      <div class="batch-samples-label">Sample names</div>
+      {% for name in batch.sample_names %}
+        <span class="sample-name">{{ name }}</span>
+      {% endfor %}
+      {% if batch.count > 5 %}
+        <span class="sample-more">+{{ batch.count|add:"-5" }} more</span>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+  {% endif %}
+</div>
+{% endblock %}
