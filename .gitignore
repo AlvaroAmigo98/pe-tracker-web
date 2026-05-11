@@ -2,4 +2,24 @@
 .venv/
 __pycache__/
 *.pyc
+*.pyo
 db.sqlite3
+
+# Raw data and one-time migration scripts — never commit
+*.xlsx
+~$*.xlsx
+import_*.py
+
+# Claude / AI agent context files
+.claude/
+*.md.context
+*_CONTEXT.md
+*_RESTRUCTURE_CONTEXT.md
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db

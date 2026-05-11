@@ -76,10 +76,6 @@ def landing(request):
     return render(request, 'tracker/landing.html')
 
 
-def landing_v2(request):
-    return render(request, 'tracker/landing_v2.html')
-
-
 SENIORITY_GROUP = {
     "Partner / MD": "Senior",
     "Director":     "Senior",
