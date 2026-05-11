@@ -1388,13 +1388,65 @@ def scrape_logs(request):
         cells = [firm_week_data[firm].get(w) for w in all_weeks]
         latest_cell = firm_week_data[firm].get(latest_week) if latest_week else None
         is_broken = latest_cell is None or latest_cell.status not in ('ok',)
-        matrix.append({'firm': firm, 'cells': cells, 'is_broken': is_broken})
+        matrix.append({
+            'firm': firm, 'cells': cells, 'is_broken': is_broken,
+            'collapse': False, 'spike': False,
+            'collapse_reasons': [], 'spike_reasons': [],
+        })
 
-    n_ok     = sum(1 for r in matrix if not r['is_broken'])
-    n_broken = sum(1 for r in matrix if r['is_broken'])
+    # --- Headcount anomaly flags ---
+    # Check 1: row_count change >50% drop or >2x increase vs previous week
+    if len(all_weeks) >= 2:
+        prev_week_val = all_weeks[1]
+        for row in matrix:
+            cur_cell  = firm_week_data[row['firm']].get(latest_week)
+            prev_cell = firm_week_data[row['firm']].get(prev_week_val)
+            cur_count  = (cur_cell.row_count  or 0) if cur_cell  else 0
+            prev_count = (prev_cell.row_count or 0) if prev_cell else 0
+            if prev_count > 0:
+                if cur_count < prev_count * 0.5:
+                    drop_pct = round((prev_count - cur_count) / prev_count * 100)
+                    row['collapse'] = True
+                    row['collapse_reasons'].append(f'headcount −{drop_pct}% ({prev_count}→{cur_count})')
+                elif cur_count > prev_count * 2.0:
+                    rise_pct = round((cur_count - prev_count) / prev_count * 100)
+                    row['spike'] = True
+                    row['spike_reasons'].append(f'headcount +{rise_pct}% ({prev_count}→{cur_count})')
+
+    # Check 2: 10+ hires or leavers in the week of the latest run
+    if latest_week:
+        churn_qs = (
+            ChangeEvent.objects
+            .filter(
+                detected_at__gt=latest_week - timedelta(days=7),
+                detected_at__lte=latest_week,
+            )
+            .values('person__company__name')
+            .annotate(
+                hires_n=Count('id', filter=Q(event_type='hire')),
+                leavers_n=Count('id', filter=Q(event_type='leaver')),
+            )
+        )
+        churn_by_firm = {r['person__company__name']: r for r in churn_qs}
+        for row in matrix:
+            churn = churn_by_firm.get(row['firm'], {})
+            h = churn.get('hires_n', 0) or 0
+            l = churn.get('leavers_n', 0) or 0
+            if h >= 10:
+                row['spike'] = True
+                row['spike_reasons'].append(f'{h} hires in one week')
+            if l >= 10:
+                row['collapse'] = True
+                row['collapse_reasons'].append(f'{l} leavers in one week')
+
+    n_ok      = sum(1 for r in matrix if not r['is_broken'])
+    n_broken  = sum(1 for r in matrix if r['is_broken'])
+    n_flagged = sum(1 for r in matrix if r['collapse'] or r['spike'])
 
     if status_filter == 'broken':
         matrix = [r for r in matrix if r['is_broken']]
+    elif status_filter == 'flagged':
+        matrix = [r for r in matrix if r['collapse'] or r['spike']]
 
     latest_health_week = ScrapeHealth.objects.aggregate(w=Max('week_commencing'))['w']
     health_digest = None
@@ -1408,14 +1460,20 @@ def scrape_logs(request):
         health_digest = {'week': latest_health_week, **agg}
 
     if export == 'excel':
-        headers = ['Firm', 'Week', 'Row Count', 'Status', 'Error']
+        flag_map = {r['firm']: r for r in matrix} if status_filter == 'flagged' else {r['firm']: r for r in matrix}
+        headers = ['Firm', 'Week', 'Row Count', 'Status', 'Error', 'Anomaly']
         rows = []
-        for firm in all_firms:
+        for row in matrix:
+            firm = row['firm']
             for w in all_weeks:
                 cell = firm_week_data[firm].get(w)
                 if cell:
-                    rows.append([firm, str(w), cell.row_count or 0, cell.status, cell.error_msg or ''])
-        widths = {1: 30, 2: 14, 3: 12, 4: 16, 5: 40}
+                    reasons = row['collapse_reasons'] + row['spike_reasons']
+                    rows.append([
+                        firm, str(w), cell.row_count or 0, cell.status,
+                        cell.error_msg or '', '; '.join(reasons) if reasons else '',
+                    ])
+        widths = {1: 30, 2: 14, 3: 12, 4: 16, 5: 40, 6: 50}
         return _make_excel_response('scrape_logs.xlsx', headers, rows, widths)
 
     return render(request, 'tracker/scrape_logs.html', {
@@ -1426,6 +1484,7 @@ def scrape_logs(request):
         'bucket_filter': bucket_filter,
         'n_ok':          n_ok,
         'n_broken':      n_broken,
+        'n_flagged':     n_flagged,
         'n_total':       len(all_firms),
     })
 
