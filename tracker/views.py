@@ -1321,14 +1321,47 @@ def delete_firm_snapshot(request, run_id):
 
 @_superuser_required
 def scrape_logs(request):
-    runs = list(ScrapeRun.objects.order_by('-ran_at')[:52])
+    status_filter = request.GET.get('status', '')
+
+    # Fetch enough recent runs to cover ~10 weeks (8 regional files per week)
+    runs = list(ScrapeRun.objects.order_by('-ran_at')[:80])
+
+    if not runs:
+        return render(request, 'tracker/scrape_logs.html', {
+            'weeks': [], 'matrix': [], 'health_digest': None,
+            'status_filter': status_filter, 'n_ok': 0, 'n_broken': 0, 'n_total': 0,
+        })
+
     run_ids = [r.id for r in runs]
-    firms = ScrapeRunFirm.objects.filter(run_id__in=run_ids).order_by('firm_name')
-    firms_by_run = {}
-    for f in firms:
-        firms_by_run.setdefault(f.run_id, []).append(f)
-    for r in runs:
-        r.firm_details = firms_by_run.get(r.id, [])
+    firms_qs = list(
+        ScrapeRunFirm.objects.filter(run_id__in=run_ids)
+        .select_related('run')
+        .order_by('run__ran_at')
+    )
+
+    # Build: firm_name -> week_date -> ScrapeRunFirm (newest run wins per firm per week)
+    firm_week_data = {}
+    for f in firms_qs:
+        week = f.run.ran_at.date()
+        firm_week_data.setdefault(f.firm_name, {})[week] = f
+
+    # Last 10 unique weeks, newest first
+    all_weeks = sorted({f.run.ran_at.date() for f in firms_qs}, reverse=True)[:10]
+    latest_week = all_weeks[0] if all_weeks else None
+
+    all_firms = sorted(firm_week_data.keys())
+    matrix = []
+    for firm in all_firms:
+        cells = [firm_week_data[firm].get(w) for w in all_weeks]
+        latest_cell = firm_week_data[firm].get(latest_week) if latest_week else None
+        is_broken = latest_cell is None or latest_cell.status not in ('ok',)
+        matrix.append({'firm': firm, 'cells': cells, 'is_broken': is_broken})
+
+    n_ok     = sum(1 for r in matrix if not r['is_broken'])
+    n_broken = sum(1 for r in matrix if r['is_broken'])
+
+    if status_filter == 'broken':
+        matrix = [r for r in matrix if r['is_broken']]
 
     latest_health_week = ScrapeHealth.objects.aggregate(w=Max('week_commencing'))['w']
     health_digest = None
@@ -1342,8 +1375,13 @@ def scrape_logs(request):
         health_digest = {'week': latest_health_week, **agg}
 
     return render(request, 'tracker/scrape_logs.html', {
-        'runs':          runs,
+        'weeks':         all_weeks,
+        'matrix':        matrix,
         'health_digest': health_digest,
+        'status_filter': status_filter,
+        'n_ok':          n_ok,
+        'n_broken':      n_broken,
+        'n_total':       len(all_firms),
     })
 
 

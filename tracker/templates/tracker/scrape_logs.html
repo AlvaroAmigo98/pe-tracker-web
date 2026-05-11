@@ -1,232 +1,182 @@
 {% extends "tracker/base.html" %}
 {% block content %}
 <style>
-  .logs-wrap { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
-  .logs-header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 28px; }
-  .logs-header h1 { font-size: 22px; font-weight: 800; color: var(--text-1); letter-spacing: -.4px; }
-  .logs-header p  { font-size: 13px; color: var(--text-2); }
+  /* ── Summary bar ──────────────────────────────────────────────────── */
+  .logs-bar {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .logs-title { font-size: 22px; font-weight: 800; color: var(--text-1); letter-spacing: -.4px; margin-right: 6px; }
+  .logs-stat  { font-size: 13px; color: var(--text-2); }
+  .sum-pill {
+    font-size: 12px; font-weight: 700; padding: 5px 14px;
+    border-radius: 20px; text-decoration: none; transition: opacity .15s;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .sum-pill:hover { opacity: .8; }
+  .sum-ok     { background: var(--hire-bg);  color: var(--hire-text);  }
+  .sum-broken { background: var(--leave-bg); color: var(--leave-text); }
+  .sum-active { outline: 2px solid currentColor; outline-offset: 2px; }
 
-  /* Run cards */
-  .run-card {
-    background: var(--surface);
+  /* ── Health strip ─────────────────────────────────────────────────── */
+  .health-strip {
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r-sm); padding: 10px 16px; margin-bottom: 20px;
+    font-size: 12px;
+  }
+  .hs-label { color: var(--text-2); font-weight: 600; }
+  .hs-week  { color: var(--text-2); }
+  .hs-pill  { font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 20px; }
+  .hs-ok      { background: var(--hire-bg);  color: var(--hire-text); }
+  .hs-warning { background: var(--promo-bg); color: var(--promo-text); }
+  .hs-broken  { background: var(--leave-bg); color: var(--leave-text); }
+  .hs-skipped { background: rgba(255,255,255,.06); color: var(--text-2); }
+
+  /* ── Matrix table ─────────────────────────────────────────────────── */
+  .matrix-outer {
     border: 1px solid var(--border);
     border-radius: var(--r);
-    margin-bottom: 12px;
     overflow: hidden;
   }
-  .run-header {
-    display: flex; align-items: center; gap: 16px;
-    padding: 16px 20px; cursor: pointer;
-    user-select: none;
+  .matrix-scroll {
+    max-height: calc(100vh - 310px);
+    min-height: 280px;
+    overflow: auto;
   }
-  .run-header:hover { background: rgba(255,255,255,.03); }
-  .run-date  { font-size: 14px; font-weight: 700; color: var(--text-1); min-width: 200px; }
-  .run-stats { display: flex; gap: 12px; flex: 1; }
-  .stat-pill {
-    font-size: 11px; font-weight: 700; padding: 3px 10px;
-    border-radius: 20px; letter-spacing: .03em;
-  }
-  .pill-ok     { background: var(--hire-bg);  color: var(--hire-text);  }
-  .pill-fail   { background: var(--leave-bg); color: var(--leave-text); }
-  .pill-rows   { background: rgba(99,102,241,.12); color: #a5b4fc; }
-  .run-toggle  { font-size: 12px; color: var(--text-2); }
-  .run-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-  .run-status-dot {
-    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
-  }
-  .dot-ok    { background: var(--hire); }
-  .dot-warn  { background: var(--promo); }
-  .dot-fail  { background: var(--leave); }
+  .matrix-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+  .matrix-scroll::-webkit-scrollbar-track { background: transparent; }
+  .matrix-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 6px; }
 
-  /* Firm table */
-  .firm-table-wrap {
-    border-top: 1px solid var(--border);
-    padding: 0 20px 16px;
-    display: none;
+  .matrix-table {
+    border-collapse: collapse;
+    min-width: 100%;
   }
-  .firm-table-wrap.open { display: block; }
-  .firm-table {
-    width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 12px;
-  }
-  .firm-table th {
-    text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: .07em; color: var(--text-2); padding: 6px 10px;
-    border-bottom: 1px solid var(--border);
-  }
-  .firm-table td { padding: 7px 10px; border-bottom: 1px solid rgba(255,255,255,.04); }
-  .firm-table tr:last-child td { border-bottom: none; }
-  .firm-table tr:hover td { background: rgba(255,255,255,.02); }
-  .status-badge {
-    font-size: 10px; font-weight: 700; padding: 2px 8px;
-    border-radius: 20px; letter-spacing: .04em; display: inline-block;
-  }
-  .s-ok         { background: var(--hire-bg);  color: var(--hire-text);  }
-  .s-empty      { background: var(--leave-bg); color: var(--leave-text); }
-  .s-error      { background: var(--leave-bg); color: var(--leave-text); }
-  .s-below      { background: var(--promo-bg); color: var(--promo-text); }
-  .error-msg    { font-size: 11px; color: var(--leave-text); max-width: 380px; word-break: break-word; }
-  .no-data      { color: var(--text-2); font-size: 13px; padding: 16px 0; }
 
-  /* Search box */
-  .logs-search { margin-bottom: 20px; }
-  .logs-search input {
-    width: 280px; border-radius: 8px; font-size: 13px; height: 34px;
-    padding: 0 14px; background: var(--surface2); border: 1px solid var(--border2);
-    color: var(--text-1); outline: none;
+  /* Header row */
+  .matrix-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--surface);
+    border-bottom: 2px solid var(--border);
+    padding: 9px 8px;
+    font-size: 10px; font-weight: 700;
+    color: var(--text-2);
+    text-transform: uppercase; letter-spacing: .06em;
+    white-space: nowrap;
+    text-align: center;
+    min-width: 72px;
   }
-  .logs-search input:focus { border-color: var(--accent); }
+  .matrix-table thead th.th-firm {
+    text-align: left;
+    position: sticky;
+    top: 0; left: 0;
+    z-index: 10;
+    background: var(--surface);
+    padding: 9px 18px;
+    min-width: 210px;
+    border-right: 1px solid var(--border);
+  }
+
+  /* Data rows */
+  .matrix-table tbody tr:hover .td-firm { background: var(--surface2) !important; }
+  .matrix-table tbody td {
+    padding: 0;
+    border-bottom: 1px solid rgba(255,255,255,.03);
+  }
+  .matrix-table tbody tr:last-child td { border-bottom: none; }
+
+  .td-firm {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--surface);
+    padding: 7px 18px;
+    font-size: 13px; font-weight: 600;
+    color: var(--text-1);
+    white-space: nowrap;
+    border-right: 1px solid var(--border);
+  }
+  .td-firm.firm-broken { color: var(--leave-text); }
+
+  /* Cells */
+  .cell {
+    display: flex; align-items: center; justify-content: center;
+    padding: 7px 6px; min-width: 72px;
+    font-size: 12px; font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .cell-ok     { background: rgba(16,185,129,.10); color: #6EE7B7; }
+  .cell-warn   { background: rgba(245,158,11,.10); color: #FCD34D; }
+  .cell-broken { background: rgba(244,63,94,.10);  color: #FDA4AF; }
+  .cell-empty  { color: var(--text-3); font-weight: 400; font-size: 13px; }
+
   .empty-state { text-align: center; padding: 60px 0; color: var(--text-2); font-size: 14px; }
-  .btn-delete-run {
-    padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 700;
-    background: var(--leave-bg); color: var(--leave-text); border: 1px solid rgba(244,63,94,.3);
-    text-decoration: none; white-space: nowrap; display: inline-block;
-  }
-  .btn-delete-run:hover { background: rgba(244,63,94,.25); color: var(--leave-text); }
-  .btn-delete-firm {
-    padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700;
-    background: var(--leave-bg); color: var(--leave-text); border: 1px solid rgba(244,63,94,.3);
-    text-decoration: none; white-space: nowrap;
-  }
-  .btn-delete-firm:hover { background: rgba(244,63,94,.25); }
-
-  .health-digest {
-    display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--r); padding: 14px 20px; margin-bottom: 20px;
-  }
-  .health-digest-label { font-size: 12px; color: var(--text-2); font-weight: 600; margin-right: 4px; }
-  .hd-week { font-size: 12px; color: var(--text-2); }
-  .hd-pill {
-    font-size: 11px; font-weight: 700; padding: 3px 12px;
-    border-radius: 20px; letter-spacing: .03em;
-  }
-  .hd-ok      { background: var(--hire-bg);  color: var(--hire-text); }
-  .hd-warning { background: var(--promo-bg); color: var(--promo-text); }
-  .hd-broken  { background: var(--leave-bg); color: var(--leave-text); }
-  .hd-skipped { background: rgba(255,255,255,.06); color: var(--text-2); }
 </style>
 
-<div class="logs-wrap">
-  <div class="logs-header">
-    <h1>Scrape Logs</h1>
-    <p>Monitor weekly scrape runs — click a row to expand per-firm results</p>
-  </div>
-
-  {% if health_digest %}
-  <div class="health-digest">
-    <span class="health-digest-label">Health digest</span>
-    <span class="hd-week">w/c {{ health_digest.week }}</span>
-    {% if health_digest.ok %}<span class="hd-pill hd-ok">{{ health_digest.ok }} ok</span>{% endif %}
-    {% if health_digest.warning %}<span class="hd-pill hd-warning">{{ health_digest.warning }} warning</span>{% endif %}
-    {% if health_digest.broken %}<span class="hd-pill hd-broken">{{ health_digest.broken }} broken</span>{% endif %}
-    {% if health_digest.skipped %}<span class="hd-pill hd-skipped">{{ health_digest.skipped }} skipped</span>{% endif %}
-  </div>
-  {% endif %}
-
-  {% if not runs %}
-    <div class="empty-state">No scrape runs recorded yet. Logs will appear here after the next weekly run.</div>
-  {% else %}
-    <div class="logs-search">
-      <input type="text" id="firm-search" placeholder="Filter firms…" autocomplete="off">
-    </div>
-
-    {% for run in runs %}
-      {% with nfail=run.firms_failed|default:0 nok=run.firms_ok|default:0 %}
-      <div class="run-card" data-run-id="{{ run.id }}">
-        <div class="run-header" onclick="toggleRun({{ run.id }})">
-          <div class="run-status-dot {% if nfail > 0 %}dot-fail{% else %}dot-ok{% endif %}"></div>
-          <div class="run-date">{{ run.ran_at|date:"D, d M Y  H:i" }} UTC</div>
-          <div class="run-stats">
-            <span class="stat-pill pill-rows">{{ run.total_rows|default:0 }} rows</span>
-            <span class="stat-pill pill-ok">{{ nok }} ok</span>
-            {% if nfail > 0 %}
-              <span class="stat-pill pill-fail">{{ nfail }} failed</span>
-            {% endif %}
-          </div>
-          <div class="run-actions" onclick="event.stopPropagation()">
-            <a href="{% url 'delete_run' run.id %}" class="btn-delete-run">Delete Run</a>
-            <span class="run-toggle" id="toggle-{{ run.id }}">▼ expand</span>
-          </div>
-        </div>
-
-        <div class="firm-table-wrap" id="firms-{{ run.id }}">
-          {% if run.firm_details %}
-            <table class="firm-table">
-              <thead>
-                <tr>
-                  <th>Firm</th>
-                  <th>Rows</th>
-                  <th>Status</th>
-                  <th>Error</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for f in run.firm_details %}
-                <tr class="firm-row" data-firm="{{ f.firm_name|lower }}">
-                  <td>{{ f.firm_name }}</td>
-                  <td>{{ f.row_count }}</td>
-                  <td>
-                    {% if f.status == 'ok' %}
-                      <span class="status-badge s-ok">OK</span>
-                    {% elif f.status == 'empty' %}
-                      <span class="status-badge s-empty">EMPTY</span>
-                    {% elif f.status == 'below_threshold' %}
-                      <span class="status-badge s-below">LOW</span>
-                    {% else %}
-                      <span class="status-badge s-error">ERROR</span>
-                    {% endif %}
-                  </td>
-                  <td>
-                    {% if f.error_msg %}
-                      <span class="error-msg">{{ f.error_msg|truncatechars:120 }}</span>
-                    {% else %}—{% endif %}
-                  </td>
-                  <td>
-                    <a href="{% url 'delete_firm_snapshot' run.id %}?firm={{ f.firm_name|urlencode }}"
-                       class="btn-delete-firm">Delete</a>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          {% else %}
-            <p class="no-data">No per-firm detail for this run (recorded before this feature was added).</p>
-          {% endif %}
-        </div>
-      </div>
-      {% endwith %}
-    {% endfor %}
-  {% endif %}
+<!-- Summary bar -->
+<div class="logs-bar">
+  <span class="logs-title">Scrape Logs</span>
+  <span class="logs-stat">{{ n_total }} firms tracked</span>
+  <a href="?status=" class="sum-pill sum-ok {% if not status_filter %}sum-active{% endif %}">
+    {{ n_ok }} ok
+  </a>
+  <a href="?status=broken" class="sum-pill sum-broken {% if status_filter == 'broken' %}sum-active{% endif %}">
+    {{ n_broken }} broken
+  </a>
 </div>
 
-<script>
-  function toggleRun(id) {
-    const wrap   = document.getElementById('firms-' + id);
-    const toggle = document.getElementById('toggle-' + id);
-    const open   = wrap.classList.toggle('open');
-    toggle.textContent = open ? '▲ collapse' : '▼ expand';
-  }
+{% if health_digest %}
+<div class="health-strip">
+  <span class="hs-label">Health digest</span>
+  <span class="hs-week">w/c {{ health_digest.week }}</span>
+  {% if health_digest.ok %}<span class="hs-pill hs-ok">{{ health_digest.ok }} ok</span>{% endif %}
+  {% if health_digest.warning %}<span class="hs-pill hs-warning">{{ health_digest.warning }} warning</span>{% endif %}
+  {% if health_digest.broken %}<span class="hs-pill hs-broken">{{ health_digest.broken }} broken</span>{% endif %}
+  {% if health_digest.skipped %}<span class="hs-pill hs-skipped">{{ health_digest.skipped }} skipped</span>{% endif %}
+</div>
+{% endif %}
 
-  document.getElementById('firm-search')?.addEventListener('input', function () {
-    const q = this.value.toLowerCase().trim();
-    document.querySelectorAll('.run-card').forEach(card => {
-      if (!q) {
-        card.querySelectorAll('.firm-row').forEach(r => r.style.display = '');
-        return;
-      }
-      // Auto-expand card when filtering
-      const wrap = card.querySelector('.firm-table-wrap');
-      if (q && wrap && !wrap.classList.contains('open')) {
-        wrap.classList.add('open');
-        const id = card.dataset.runId;
-        const toggle = document.getElementById('toggle-' + id);
-        if (toggle) toggle.textContent = '▲ collapse';
-      }
-      card.querySelectorAll('.firm-row').forEach(r => {
-        r.style.display = r.dataset.firm.includes(q) ? '' : 'none';
-      });
-    });
-  });
-</script>
+{% if not matrix %}
+  <div class="empty-state">No scrape run data yet. Logs will appear after the first weekly run.</div>
+{% else %}
+<div class="matrix-outer">
+  <div class="matrix-scroll">
+    <table class="matrix-table">
+      <thead>
+        <tr>
+          <th class="th-firm">Firm</th>
+          {% for week in weeks %}
+          <th>{{ week|date:"d M" }}<br><span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3)">{{ week|date:"Y" }}</span></th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in matrix %}
+        <tr>
+          <td><div class="td-firm {% if row.is_broken %}firm-broken{% endif %}">{{ row.firm }}</div></td>
+          {% for cell in row.cells %}
+          <td>
+            {% if cell %}
+              {% if cell.status == 'ok' %}
+                <div class="cell cell-ok">{{ cell.row_count }}</div>
+              {% elif cell.status == 'below_threshold' %}
+                <div class="cell cell-warn">{{ cell.row_count }} ↓</div>
+              {% else %}
+                <div class="cell cell-broken">{% if cell.row_count and cell.row_count > 0 %}{{ cell.row_count }}{% else %}err{% endif %}</div>
+              {% endif %}
+            {% else %}
+              <div class="cell cell-empty">—</div>
+            {% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
 {% endblock %}
