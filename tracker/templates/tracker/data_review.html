@@ -55,6 +55,25 @@
 
   .empty-state { text-align: center; padding: 72px 0; color: var(--text-2); font-size: 14px; }
   .empty-icon  { font-size: 36px; margin-bottom: 12px; }
+
+  .btn-edit {
+    padding: 7px 18px; border-radius: 6px; font-size: 12px; font-weight: 700;
+    background: rgba(99,102,241,.12); color: #a5b4fc; border: 1px solid rgba(99,102,241,.3);
+    text-decoration: none; white-space: nowrap; display: inline-block;
+  }
+  .btn-edit:hover { background: rgba(99,102,241,.25); color: #a5b4fc; }
+
+  .stale-banner {
+    background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.3);
+    border-radius: var(--r); padding: 14px 20px; margin-bottom: 20px;
+  }
+  .stale-title { font-size: 13px; font-weight: 700; color: var(--promo-text); margin-bottom: 10px; }
+  .stale-firm-tag {
+    display: inline-block; margin: 3px 6px 3px 0;
+    font-size: 12px; color: var(--text-1);
+    background: rgba(245,158,11,.1); border-radius: 4px; padding: 2px 8px;
+  }
+  .stale-date { font-size: 11px; color: var(--text-2); margin-left: 6px; }
 </style>
 
 <div class="review-wrap">
@@ -68,6 +87,17 @@
       {% endif %}
     </p>
   </div>
+
+  {% if stale_firms %}
+  <div class="stale-banner">
+    <div class="stale-title">⚠ Stale firms — no scrape data in the last 14 days</div>
+    <div>
+      {% for f in stale_firms %}
+        <span class="stale-firm-tag">{{ f.firm_name }}<span class="stale-date">last: {{ f.latest_week }}</span></span>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
 
   {% if not batches %}
   <div class="empty-state">
@@ -87,6 +117,7 @@
         {% endif %}
       </div>
       <div class="batch-actions">
+        <a href="{% url 'batch_edit' batch.batch_id %}" class="btn-edit">Edit</a>
         <form method="post" action="{% url 'batch_approve' batch.batch_id %}" style="margin:0"
               onsubmit="return confirm('Promote {{ batch.count }} row{{ batch.count|pluralize }} for {{ batch.firm_name }} to production?\n\nThis will write to person_snapshot.')">
           {% csrf_token %}

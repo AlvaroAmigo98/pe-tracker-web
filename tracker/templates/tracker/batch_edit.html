@@ -1,0 +1,107 @@
+{% extends "tracker/base.html" %}
+{% block content %}
+<style>
+  .edit-wrap   { max-width: 960px; margin: 0 auto; padding: 32px 24px; }
+  .edit-header { margin-bottom: 24px; }
+  .edit-header h1 { font-size: 22px; font-weight: 800; color: var(--text-1); letter-spacing: -.4px; }
+  .edit-meta  { font-size: 13px; color: var(--text-2); margin-top: 6px; display: flex; gap: 16px; flex-wrap: wrap; }
+  .edit-flag  { font-size: 11px; padding: 3px 10px; border-radius: 20px;
+                background: var(--leave-bg); color: var(--leave-text); }
+
+  .edit-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 24px; }
+  .edit-table th {
+    text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .07em; color: var(--text-2); padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .edit-table td { padding: 6px 12px; border-bottom: 1px solid rgba(255,255,255,.04); vertical-align: middle; }
+  .edit-table tr:last-child td { border-bottom: none; }
+  .edit-table tr:hover td { background: rgba(255,255,255,.02); }
+
+  .edit-input {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 6px; color: var(--text-1); font-family: inherit;
+    font-size: 13px; padding: 5px 10px; outline: none;
+  }
+  .edit-input:focus { border-color: var(--accent); }
+
+  .row-num { color: var(--text-2); font-size: 12px; text-align: right; width: 36px; }
+
+  .edit-actions { display: flex; gap: 10px; }
+  .btn-save {
+    padding: 9px 22px; border-radius: 6px; font-size: 13px; font-weight: 700;
+    background: rgba(99,102,241,.15); color: #a5b4fc; border: 1px solid rgba(99,102,241,.3);
+    cursor: pointer; font-family: inherit;
+  }
+  .btn-save:hover { background: rgba(99,102,241,.3); }
+  .btn-approve-edit {
+    padding: 9px 22px; border-radius: 6px; font-size: 13px; font-weight: 700;
+    background: var(--hire-bg); color: var(--hire-text); border: 1px solid var(--hire);
+    cursor: pointer; font-family: inherit;
+  }
+  .btn-approve-edit:hover { background: rgba(16,185,129,.25); }
+  .btn-back {
+    padding: 9px 22px; border-radius: 6px; font-size: 13px; font-weight: 700;
+    background: transparent; color: var(--text-2); border: 1px solid var(--border);
+    text-decoration: none; display: inline-block;
+  }
+  .btn-back:hover { color: var(--text-1); border-color: var(--border2); }
+
+  .edit-hint { font-size: 12px; color: var(--text-2); margin-bottom: 20px; }
+</style>
+
+<div class="edit-wrap">
+  <div class="edit-header">
+    <h1>Edit Batch — {{ firm_name }}</h1>
+    <div class="edit-meta">
+      <span>Run date: <strong>{{ run_date }}</strong></span>
+      <span>{{ rows|length }} row{{ rows|length|pluralize }}</span>
+      {% if flag_reason %}<span class="edit-flag">{{ flag_reason }}</span>{% endif %}
+    </div>
+  </div>
+
+  <p class="edit-hint">Edit names or titles below, then save or approve directly.</p>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <table class="edit-table">
+      <thead>
+        <tr>
+          <th class="row-num">#</th>
+          <th style="width:42%">Name</th>
+          <th style="width:42%">Title</th>
+          <th>Location</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td class="row-num">{{ forloop.counter }}</td>
+          <td>
+            <input class="edit-input" type="text"
+                   name="name_{{ row.id }}"
+                   value="{{ row.person_name|default:'' }}">
+          </td>
+          <td>
+            <input class="edit-input" type="text"
+                   name="title_{{ row.id }}"
+                   value="{{ row.job_title|default:'' }}">
+          </td>
+          <td style="color:var(--text-2); font-size:12px;">{{ row.location|default:"—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="edit-actions">
+      <a href="{% url 'data_review' %}" class="btn-back">Cancel</a>
+      <button type="submit" name="action" value="save" class="btn-save">Save changes</button>
+      <button type="submit" name="action" value="approve" class="btn-approve-edit"
+              onclick="return confirm('Save edits and promote {{ rows|length }} row{{ rows|length|pluralize }} for {{ firm_name }} to production?')">
+        Save &amp; Approve
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

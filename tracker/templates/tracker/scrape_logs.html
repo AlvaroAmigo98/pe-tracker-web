@@ -88,6 +88,22 @@
     text-decoration: none; white-space: nowrap;
   }
   .btn-delete-firm:hover { background: rgba(244,63,94,.25); }
+
+  .health-digest {
+    display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 14px 20px; margin-bottom: 20px;
+  }
+  .health-digest-label { font-size: 12px; color: var(--text-2); font-weight: 600; margin-right: 4px; }
+  .hd-week { font-size: 12px; color: var(--text-2); }
+  .hd-pill {
+    font-size: 11px; font-weight: 700; padding: 3px 12px;
+    border-radius: 20px; letter-spacing: .03em;
+  }
+  .hd-ok      { background: var(--hire-bg);  color: var(--hire-text); }
+  .hd-warning { background: var(--promo-bg); color: var(--promo-text); }
+  .hd-broken  { background: var(--leave-bg); color: var(--leave-text); }
+  .hd-skipped { background: rgba(255,255,255,.06); color: var(--text-2); }
 </style>
 
 <div class="logs-wrap">
@@ -95,6 +111,17 @@
     <h1>Scrape Logs</h1>
     <p>Monitor weekly scrape runs — click a row to expand per-firm results</p>
   </div>
+
+  {% if health_digest %}
+  <div class="health-digest">
+    <span class="health-digest-label">Health digest</span>
+    <span class="hd-week">w/c {{ health_digest.week }}</span>
+    {% if health_digest.ok %}<span class="hd-pill hd-ok">{{ health_digest.ok }} ok</span>{% endif %}
+    {% if health_digest.warning %}<span class="hd-pill hd-warning">{{ health_digest.warning }} warning</span>{% endif %}
+    {% if health_digest.broken %}<span class="hd-pill hd-broken">{{ health_digest.broken }} broken</span>{% endif %}
+    {% if health_digest.skipped %}<span class="hd-pill hd-skipped">{{ health_digest.skipped }} skipped</span>{% endif %}
+  </div>
+  {% endif %}
 
   {% if not runs %}
     <div class="empty-state">No scrape runs recorded yet. Logs will appear here after the next weekly run.</div>

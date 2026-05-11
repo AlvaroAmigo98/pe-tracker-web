@@ -5,7 +5,7 @@ from django.http import HttpResponse, JsonResponse
 from django.db.models import Count, Max, Q
 from django.db.models.functions import TruncMonth
 from django.core.cache import cache
-from .models import Company, Person, PersonSnapshot, ChangeEvent, ScrapeRun, ScrapeRunFirm, AuditLog, ScrapeStaging
+from .models import Company, Person, PersonSnapshot, ChangeEvent, ScrapeRun, ScrapeRunFirm, AuditLog, ScrapeStaging, ScrapeHealth
 
 import json
 import logging
@@ -1120,9 +1120,18 @@ def data_review(request):
 
     batch_list.sort(key=lambda x: (x['run_date'], x['firm_name']), reverse=True)
 
+    stale_cutoff = date.today() - timedelta(days=14)
+    stale_firms = list(
+        ScrapeHealth.objects.values('firm_name')
+        .annotate(latest_week=Max('week_commencing'))
+        .filter(latest_week__lt=stale_cutoff)
+        .order_by('firm_name')
+    )
+
     return render(request, 'tracker/data_review.html', {
         'batches':       batch_list,
         'total_flagged': sum(b['count'] for b in batch_list),
+        'stale_firms':   stale_firms,
     })
 
 
@@ -1176,6 +1185,66 @@ def batch_reject(request, batch_id):
     ScrapeStaging.objects.filter(batch_id=batch_id, status='flagged').update(status='rejected')
     audit_logger.info('BATCH_REJECT batch_id=%s user=%s', batch_id, request.user.username)
     return redirect('data_review')
+
+
+@_superuser_required
+def batch_edit(request, batch_id):
+    rows = list(ScrapeStaging.objects.filter(batch_id=batch_id, status='flagged').order_by('id'))
+    if not rows:
+        return redirect('data_review')
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        for row in rows:
+            new_name  = request.POST.get(f'name_{row.id}',  '').strip()
+            new_title = request.POST.get(f'title_{row.id}', '').strip()
+            changed = False
+            if new_name and new_name != row.person_name:
+                row.person_name = new_name
+                changed = True
+            if new_title != (row.job_title or ''):
+                row.job_title = new_title or None
+                changed = True
+            if changed:
+                row.save(update_fields=['person_name', 'job_title'])
+
+        if action == 'approve':
+            firm_name = rows[0].firm_name
+            run_date  = rows[0].run_date
+            company, _ = Company.objects.get_or_create(name=firm_name)
+            promoted = 0
+            for row in rows:
+                if not row.person_name:
+                    continue
+                person = Person.objects.filter(company=company, full_name=row.person_name).first()
+                if not person:
+                    person = Person.objects.create(
+                        company=company, full_name=row.person_name, first_seen_at=run_date,
+                    )
+                if not PersonSnapshot.objects.filter(person=person, scraped_at=run_date).exists():
+                    PersonSnapshot.objects.create(
+                        person=person,
+                        job_title=row.job_title,
+                        seniority=_infer_seniority(row.job_title or ''),
+                        team=row.team,
+                        location=row.location,
+                        scraped_at=run_date,
+                    )
+                    promoted += 1
+            ScrapeStaging.objects.filter(batch_id=batch_id).update(status='promoted')
+            audit_logger.info('BATCH_EDIT_APPROVE batch_id=%s firm=%s user=%s promoted=%d',
+                              batch_id, firm_name, request.user.username, promoted)
+            return redirect('data_review')
+
+        return redirect('batch_edit', batch_id=batch_id)
+
+    return render(request, 'tracker/batch_edit.html', {
+        'batch_id':    batch_id,
+        'firm_name':   rows[0].firm_name,
+        'run_date':    rows[0].run_date,
+        'flag_reason': rows[0].flag_reason,
+        'rows':        rows,
+    })
 
 
 @_superuser_required
@@ -1260,7 +1329,22 @@ def scrape_logs(request):
         firms_by_run.setdefault(f.run_id, []).append(f)
     for r in runs:
         r.firm_details = firms_by_run.get(r.id, [])
-    return render(request, 'tracker/scrape_logs.html', {'runs': runs})
+
+    latest_health_week = ScrapeHealth.objects.aggregate(w=Max('week_commencing'))['w']
+    health_digest = None
+    if latest_health_week:
+        agg = ScrapeHealth.objects.filter(week_commencing=latest_health_week).aggregate(
+            ok=Count('id', filter=Q(status='ok')),
+            warning=Count('id', filter=Q(status='warning')),
+            broken=Count('id', filter=Q(status='broken')),
+            skipped=Count('id', filter=Q(status='skipped')),
+        )
+        health_digest = {'week': latest_health_week, **agg}
+
+    return render(request, 'tracker/scrape_logs.html', {
+        'runs':          runs,
+        'health_digest': health_digest,
+    })
 
 
 @login_required

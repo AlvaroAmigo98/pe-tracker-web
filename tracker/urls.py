@@ -17,6 +17,7 @@ urlpatterns = [
     path('data-review/', views.data_review, name='data_review'),
     path('data-review/batch/<str:batch_id>/approve/', views.batch_approve, name='batch_approve'),
     path('data-review/batch/<str:batch_id>/reject/', views.batch_reject, name='batch_reject'),
+    path('data-review/batch/<str:batch_id>/edit/', views.batch_edit, name='batch_edit'),
     path('profile/',    views.profile,     name='profile'),
     path('users/',      views.user_admin,  name='user_admin'),
     path('watchlist/toggle/<int:company_id>/', views.watchlist_toggle, name='watchlist_toggle'),
