@@ -488,7 +488,7 @@
     </div>
   </div>
 
-  <!-- ── Row 3: Sub-tabs (Dashboard / People / Firms / Signals) ────────── -->
+  <!-- ── Row 3: Sub-tabs (Dashboard / People / Firms / Market Pulse) ────────── -->
   {% if active_view in 'dashboard,people,firms,signals,firm_detail' %}
   <div class="sub-nav">
     <div class="sub-nav-inner">
@@ -496,12 +496,12 @@
         <a href="{% url 'dashboard' %}?bucket={{ active_bucket|urlencode }}" class="sub-tab {% if active_view == 'dashboard' %}active{% endif %}">Dashboard</a>
         <a href="{% url 'people' %}?bucket={{ active_bucket|urlencode }}"    class="sub-tab {% if active_view == 'people' %}active{% endif %}">People</a>
         <a href="{% url 'firms' %}?bucket={{ active_bucket|urlencode }}"     class="sub-tab {% if active_view == 'firms' or active_view == 'firm_detail' %}active{% endif %}">Firms</a>
-        <a href="{% url 'signals' %}?bucket={{ active_bucket|urlencode }}"   class="sub-tab {% if active_view == 'signals' %}active{% endif %}">Signals</a>
+        <a href="{% url 'signals' %}?bucket={{ active_bucket|urlencode }}"   class="sub-tab {% if active_view == 'signals' %}active{% endif %}">Market Pulse</a>
       {% else %}
         <a href="{% url 'dashboard' %}" class="sub-tab {% if active_view == 'dashboard' %}active{% endif %}">Dashboard</a>
         <a href="{% url 'people' %}"    class="sub-tab {% if active_view == 'people' %}active{% endif %}">People</a>
         <a href="{% url 'firms' %}"     class="sub-tab {% if active_view == 'firms' or active_view == 'firm_detail' %}active{% endif %}">Firms</a>
-        <a href="{% url 'signals' %}"   class="sub-tab {% if active_view == 'signals' %}active{% endif %}">Signals</a>
+        <a href="{% url 'signals' %}"   class="sub-tab {% if active_view == 'signals' %}active{% endif %}">Market Pulse</a>
       {% endif %}
     </div>
   </div>
@@ -514,7 +514,7 @@
     <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a>
     <a href="{% url 'people' %}"    class="{% if request.resolver_match.url_name == 'people' %}active{% endif %}">People</a>
     <a href="{% url 'firms' %}"     class="{% if request.resolver_match.url_name == 'firms' or request.resolver_match.url_name == 'firm_detail' %}active{% endif %}">Firms</a>
-    <a href="{% url 'signals' %}"   class="{% if request.resolver_match.url_name == 'signals' %}active{% endif %}">Signals</a>
+    <a href="{% url 'signals' %}"   class="{% if request.resolver_match.url_name == 'signals' %}active{% endif %}">Market Pulse</a>
     {% if request.user.is_superuser %}
     <a href="{% url 'scrape_logs' %}"  class="{% if request.resolver_match.url_name == 'scrape_logs' %}active{% endif %}">Scrape Logs</a>
     <a href="{% url 'data_review' %}"  class="{% if request.resolver_match.url_name == 'data_review' %}active{% endif %}">Data Review</a>

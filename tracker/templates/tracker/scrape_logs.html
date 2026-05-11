@@ -37,16 +37,8 @@
   .matrix-outer {
     border: 1px solid var(--border);
     border-radius: var(--r);
-    overflow: hidden;
+    overflow: clip;
   }
-  .matrix-scroll {
-    max-height: calc(100vh - 310px);
-    min-height: 280px;
-    overflow: auto;
-  }
-  .matrix-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
-  .matrix-scroll::-webkit-scrollbar-track { background: transparent; }
-  .matrix-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 6px; }
 
   .matrix-table {
     border-collapse: collapse;
@@ -56,7 +48,7 @@
   /* Header row */
   .matrix-table thead th {
     position: sticky;
-    top: 0;
+    top: 134px;
     z-index: 5;
     background: var(--surface);
     border-bottom: 2px solid var(--border);
@@ -71,7 +63,7 @@
   .matrix-table thead th.th-firm {
     text-align: left;
     position: sticky;
-    top: 0; left: 0;
+    top: 134px; left: 0;
     z-index: 10;
     background: var(--surface);
     padding: 9px 18px;
@@ -142,8 +134,7 @@
   <div class="empty-state">No scrape run data yet. Logs will appear after the first weekly run.</div>
 {% else %}
 <div class="matrix-outer">
-  <div class="matrix-scroll">
-    <table class="matrix-table">
+  <table class="matrix-table">
       <thead>
         <tr>
           <th class="th-firm">Firm</th>
@@ -175,7 +166,6 @@
         {% endfor %}
       </tbody>
     </table>
-  </div>
 </div>
 {% endif %}
 

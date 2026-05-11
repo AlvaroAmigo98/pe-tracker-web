@@ -83,7 +83,14 @@
     <tbody>
       {% for f in firm_stats %}
       <tr style="cursor:pointer" onclick="window.location='/firms/{{ f.company.id }}/'">
-        <td class="name-cell">{{ f.company.name }}</td>
+        <td class="name-cell">
+          {% if f.scrape_status %}
+            <span style="display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;vertical-align:middle;flex-shrink:0;
+                         background:{% if f.scrape_status == 'ok' %}var(--hire){% elif f.scrape_status == 'warning' %}var(--promo){% else %}var(--leave){% endif %}"
+                  title="Scrape: {{ f.scrape_status }}"></span>
+          {% endif %}
+          {{ f.company.name }}
+        </td>
         <td><span style="font-size:11px;padding:2px 8px;border-radius:20px;background:var(--surface-2);color:var(--text-2);white-space:nowrap">{{ f.bucket|default:"—" }}</span></td>
         <td>{% if f.headcount %}<strong style="color:var(--text-1)">{{ f.headcount }}</strong>{% else %}<span class="subtle">&mdash;</span>{% endif %}</td>
         <td>{% if f.hires %}<span style="color:var(--hire);font-weight:700">+{{ f.hires }}</span>{% else %}<span class="subtle">&mdash;</span>{% endif %}</td>

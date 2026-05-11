@@ -511,6 +511,17 @@ def firms(request):
 
     latest_date = PersonSnapshot.objects.aggregate(d=Max('scraped_at'))['d']
 
+    # Scrape health per firm (latest week)
+    health_by_firm = {}
+    latest_health_week = ScrapeHealth.objects.aggregate(w=Max('week_commencing'))['w']
+    if latest_health_week:
+        health_by_firm = {
+            h['firm_name']: h['status']
+            for h in ScrapeHealth.objects.filter(
+                week_commencing=latest_health_week
+            ).values('firm_name', 'status')
+        }
+
     headcount_map = {
         row['company_id']: row['headcount']
         for row in Person.objects.values('company_id').annotate(headcount=Count('id'))
@@ -577,15 +588,16 @@ def firms(request):
             sparkline_points = '0,12 14.4,12 28.8,12 43.2,12 57.6,12 72,12'
 
         firm_stats.append({
-            'company':    company,
-            'bucket':     company.bucket or '',
-            'headcount':  headcount_map.get(company.id, 0),
-            'hires':      hires,
-            'leavers':    leavers,
-            'promotions': promotions,
-            'activity':   hires + leavers + promotions,
-            'ratio':      ratio,
-            'sparkline':  sparkline_points,
+            'company':       company,
+            'bucket':        company.bucket or '',
+            'headcount':     headcount_map.get(company.id, 0),
+            'hires':         hires,
+            'leavers':       leavers,
+            'promotions':    promotions,
+            'activity':      hires + leavers + promotions,
+            'ratio':         ratio,
+            'sparkline':     sparkline_points,
+            'scrape_status': health_by_firm.get(company.name, ''),
         })
 
     # Apply bucket filter
