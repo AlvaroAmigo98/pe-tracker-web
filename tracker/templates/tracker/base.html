@@ -481,6 +481,7 @@
       <a href="{% url 'dashboard' %}?bucket=Italy"    class="bucket-tab {% if active_bucket == 'Italy' %}active{% endif %}">Italy</a>
       {% if request.user.is_superuser %}
       <div class="bucket-nav-right">
+        <a href="{% url 'user_admin' %}"  class="bucket-tab {% if active_view == 'user_admin' %}active{% endif %}">Users</a>
         <a href="{% url 'scrape_logs' %}" class="bucket-tab {% if active_view == 'scrape_logs' %}active{% endif %}">Scrape Logs</a>
         <a href="{% url 'data_review' %}" class="bucket-tab {% if active_view == 'data_review' or active_view == 'batch_edit' or active_view == 'batch_approve' or active_view == 'batch_reject' %}active{% endif %}">Data Review</a>
       </div>
@@ -488,8 +489,8 @@
     </div>
   </div>
 
-  <!-- ── Row 3: Sub-tabs (Dashboard / People / Firms / Market Pulse) ────────── -->
-  {% if active_view in 'dashboard,people,firms,signals,firm_detail' %}
+  <!-- ── Row 3: Sub-tabs (Dashboard / People / Firms / Market Pulse / Scrape Logs) ── -->
+  {% if active_view in 'dashboard,people,firms,signals,firm_detail,scrape_logs' %}
   <div class="sub-nav">
     <div class="sub-nav-inner">
       {% if active_bucket %}
@@ -497,11 +498,17 @@
         <a href="{% url 'people' %}?bucket={{ active_bucket|urlencode }}"    class="sub-tab {% if active_view == 'people' %}active{% endif %}">People</a>
         <a href="{% url 'firms' %}?bucket={{ active_bucket|urlencode }}"     class="sub-tab {% if active_view == 'firms' or active_view == 'firm_detail' %}active{% endif %}">Firms</a>
         <a href="{% url 'signals' %}?bucket={{ active_bucket|urlencode }}"   class="sub-tab {% if active_view == 'signals' %}active{% endif %}">Market Pulse</a>
+        {% if request.user.is_superuser %}
+        <a href="{% url 'scrape_logs' %}?bucket={{ active_bucket|urlencode }}" class="sub-tab {% if active_view == 'scrape_logs' %}active{% endif %}">Scrape Logs</a>
+        {% endif %}
       {% else %}
         <a href="{% url 'dashboard' %}" class="sub-tab {% if active_view == 'dashboard' %}active{% endif %}">Dashboard</a>
         <a href="{% url 'people' %}"    class="sub-tab {% if active_view == 'people' %}active{% endif %}">People</a>
         <a href="{% url 'firms' %}"     class="sub-tab {% if active_view == 'firms' or active_view == 'firm_detail' %}active{% endif %}">Firms</a>
         <a href="{% url 'signals' %}"   class="sub-tab {% if active_view == 'signals' %}active{% endif %}">Market Pulse</a>
+        {% if request.user.is_superuser %}
+        <a href="{% url 'scrape_logs' %}" class="sub-tab {% if active_view == 'scrape_logs' %}active{% endif %}">Scrape Logs</a>
+        {% endif %}
       {% endif %}
     </div>
   </div>

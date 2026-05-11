@@ -27,17 +27,20 @@
         {% endif %}
       </td>
       <td>
-        {% if e.function == 'Buyout / PE' %}<span class="badge badge-promo">Buyout / PE</span>
-        {% elif e.function == 'Investment (General)' %}<span class="badge badge-hire">Investment</span>
-        {% elif e.function == 'Advisory' %}<span class="badge badge-hire">Advisory</span>
-        {% elif e.function == 'Infrastructure' %}<span class="badge badge-role">Infrastructure</span>
-        {% elif e.function == 'Operations' %}<span class="badge" style="background:#f1efe8;color:#5f5e5a">Operations</span>
+        {% if e.function == 'Buyout / PE' %}<span class="badge badge-buyout">Buyout / PE</span>
+        {% elif e.function == 'Investment (General)' %}<span class="badge badge-invest">Investment</span>
+        {% elif e.function == 'Advisory' %}<span class="badge badge-advisory">Advisory</span>
+        {% elif e.function == 'Infrastructure' %}<span class="badge badge-infra">Infrastructure</span>
+        {% elif e.function == 'Real Estate' %}<span class="badge badge-re">Real Estate</span>
+        {% elif e.function == 'Credit / Debt' %}<span class="badge badge-credit">Credit / Debt</span>
+        {% elif e.function == 'Venture Capital' %}<span class="badge badge-vc">Venture Capital</span>
+        {% elif e.function == 'Operations' %}<span class="badge badge-ops">Operations</span>
         {% else %}<span class="subtle">{{ e.function }}</span>{% endif %}
       </td>
       <td>
-        {% if e.region == 'EMEA' %}<span class="badge" style="background:#e1f5ee;color:#0f6e56">EMEA</span>
-        {% elif e.region == 'North America' %}<span class="badge" style="background:#e6f1fb;color:#185fa5">N. America</span>
-        {% elif e.region == 'APAC' %}<span class="badge" style="background:#faeeda;color:#854f0b">APAC</span>
+        {% if e.region == 'EMEA' %}<span class="badge badge-emea">EMEA</span>
+        {% elif e.region == 'North America' %}<span class="badge badge-na">N. America</span>
+        {% elif e.region == 'APAC' %}<span class="badge badge-apac">APAC</span>
         {% else %}<span class="subtle">—</span>{% endif %}
       </td>
       <td class="subtle">{{ e.detected_at|date:"d M Y" }}</td>

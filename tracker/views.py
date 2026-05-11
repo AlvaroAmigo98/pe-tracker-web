@@ -1334,6 +1334,7 @@ def delete_firm_snapshot(request, run_id):
 @_superuser_required
 def scrape_logs(request):
     status_filter = request.GET.get('status', '')
+    bucket_filter = request.GET.get('bucket', '')
 
     # Fetch enough recent runs to cover ~10 weeks (8 regional files per week)
     runs = list(ScrapeRun.objects.order_by('-ran_at')[:80])
@@ -1341,7 +1342,8 @@ def scrape_logs(request):
     if not runs:
         return render(request, 'tracker/scrape_logs.html', {
             'weeks': [], 'matrix': [], 'health_digest': None,
-            'status_filter': status_filter, 'n_ok': 0, 'n_broken': 0, 'n_total': 0,
+            'status_filter': status_filter, 'bucket_filter': bucket_filter,
+            'n_ok': 0, 'n_broken': 0, 'n_total': 0,
         })
 
     run_ids = [r.id for r in runs]
@@ -1362,6 +1364,14 @@ def scrape_logs(request):
     latest_week = all_weeks[0] if all_weeks else None
 
     all_firms = sorted(firm_week_data.keys())
+
+    # Filter by bucket if requested — cross-reference Company names
+    if bucket_filter:
+        bucket_names = set(
+            Company.objects.filter(bucket=bucket_filter).values_list('name', flat=True)
+        )
+        all_firms = [f for f in all_firms if f in bucket_names]
+
     matrix = []
     for firm in all_firms:
         cells = [firm_week_data[firm].get(w) for w in all_weeks]
@@ -1391,6 +1401,7 @@ def scrape_logs(request):
         'matrix':        matrix,
         'health_digest': health_digest,
         'status_filter': status_filter,
+        'bucket_filter': bucket_filter,
         'n_ok':          n_ok,
         'n_broken':      n_broken,
         'n_total':       len(all_firms),

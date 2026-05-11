@@ -5,7 +5,7 @@
   <div>
     <div class="page-title">{% if bucket_filter %}{{ bucket_filter }}{% else %}All Firms{% endif %} &middot; Dashboard</div>
     {% if latest_run %}
-    <div class="page-meta">Last scrape: {{ latest_run.ran_at|date:"d M Y, H:i" }} &middot; {{ latest_run.total_rows|default:"0" }} employees across {{ latest_run.firms_ok }} firms</div>
+    <div class="page-meta">Last scrape: {{ latest_run.ran_at|date:"d M Y, H:i" }} &middot; {{ latest_run.total_rows|default:"0" }} employees</div>
     {% endif %}
   </div>
   <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">

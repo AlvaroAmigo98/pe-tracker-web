@@ -109,12 +109,12 @@
 
 <!-- Summary bar -->
 <div class="logs-bar">
-  <span class="logs-title">Scrape Logs</span>
+  <span class="logs-title">Scrape Logs{% if bucket_filter %} &middot; {{ bucket_filter }}{% endif %}</span>
   <span class="logs-stat">{{ n_total }} firms tracked</span>
-  <a href="?status=" class="sum-pill sum-ok {% if not status_filter %}sum-active{% endif %}">
+  <a href="?{% if bucket_filter %}bucket={{ bucket_filter|urlencode }}&{% endif %}status=" class="sum-pill sum-ok {% if not status_filter %}sum-active{% endif %}">
     {{ n_ok }} ok
   </a>
-  <a href="?status=broken" class="sum-pill sum-broken {% if status_filter == 'broken' %}sum-active{% endif %}">
+  <a href="?{% if bucket_filter %}bucket={{ bucket_filter|urlencode }}&{% endif %}status=broken" class="sum-pill sum-broken {% if status_filter == 'broken' %}sum-active{% endif %}">
     {{ n_broken }} broken
   </a>
 </div>
