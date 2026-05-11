@@ -131,7 +131,6 @@
       </div>
     </div>
 
-    <button type="submit" name="export" value="excel" class="btn btn-green">&darr; Export Excel</button>
     <a href="{% url 'dashboard' %}{% if bucket_filter %}?bucket={{ bucket_filter|urlencode }}{% endif %}" class="btn btn-gray">Clear</a>
   </div>
 </form>
@@ -153,7 +152,10 @@
 <div class="card">
   <div class="card-header">
     <span class="card-title">All change events</span>
-    <span class="subtle" id="result-count">{{ events|length }} events</span>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span class="subtle" id="result-count">{{ events|length }} events</span>
+      <a href="?{{ request.GET.urlencode }}&export=excel" class="btn-export" title="Download Excel">&#8595; Excel</a>
+    </div>
   </div>
 
   {% if events %}

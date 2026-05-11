@@ -117,6 +117,7 @@
   <a href="?{% if bucket_filter %}bucket={{ bucket_filter|urlencode }}&{% endif %}status=broken" class="sum-pill sum-broken {% if status_filter == 'broken' %}sum-active{% endif %}">
     {{ n_broken }} broken
   </a>
+  <a href="?{% if bucket_filter %}bucket={{ bucket_filter|urlencode }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}export=excel" class="btn-export" title="Download Excel">&#8595; Excel</a>
 </div>
 
 {% if health_digest %}

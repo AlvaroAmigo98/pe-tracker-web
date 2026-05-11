@@ -81,17 +81,36 @@
     </select>
 
     <button type="submit" class="btn">Search</button>
-    <a href="/people/" class="btn btn-gray">Clear</a>
-    <a href="?{{ request.GET.urlencode }}&export=excel" class="btn btn-green">↓ Excel</a>
+    <a href="/people/{% if bucket_filter %}?bucket={{ bucket_filter|urlencode }}{% endif %}" class="btn btn-gray">Clear</a>
   </div>
 </form>
 
 <!-- Active filter chips -->
 <div id="chip-row" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;min-height:0"></div>
 
+<!-- Stats row -->
+<div class="stats-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">
+  <div class="stat-card">
+    <div class="stat-indicator" style="background:var(--text-2)"></div>
+    <div class="stat-num" style="color:var(--text-1)">{{ people|length }}</div>
+    <div class="stat-label">People tracked</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-indicator" style="background:var(--promo)"></div>
+    <div class="stat-num" style="color:var(--promo)">{{ senior_count }}</div>
+    <div class="stat-label">Senior (Partner / Director / VP)</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-indicator" style="background:var(--accent)"></div>
+    <div class="stat-num" style="color:var(--accent)">{{ junior_count }}</div>
+    <div class="stat-label">Junior (Analyst / Associate)</div>
+  </div>
+</div>
+
 <div class="card">
   <div class="card-header">
     <span class="card-title" id="people-count">{{ people|length }} people</span>
+    <a href="?{{ request.GET.urlencode }}&export=excel" class="btn-export" title="Download Excel">&#8595; Excel</a>
   </div>
   {% if people %}
   <table id="people-table">

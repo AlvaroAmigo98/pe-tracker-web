@@ -485,6 +485,9 @@ def people(request):
         widths = {i: 20 for i in range(1, 10)}
         return _make_excel_response('pe_tracker_export.xlsx', headers, rows, widths)
 
+    senior_count = sum(1 for p in people if p.seniority_group == 'Senior')
+    junior_count = len(people) - senior_count
+
     return render(request, 'tracker/people.html', {
         'people':           people,
         'companies':        companies,
@@ -497,6 +500,8 @@ def people(request):
         'function_filter':  function_filter,
         'last_seen_filter': last_seen_filter,
         'bucket_filter':    bucket_filter,
+        'senior_count':     senior_count,
+        'junior_count':     junior_count,
     })
 
 
@@ -1335,6 +1340,7 @@ def delete_firm_snapshot(request, run_id):
 def scrape_logs(request):
     status_filter = request.GET.get('status', '')
     bucket_filter = request.GET.get('bucket', '')
+    export        = request.GET.get('export', '')
 
     # Fetch enough recent runs to cover ~10 weeks (8 regional files per week)
     runs = list(ScrapeRun.objects.order_by('-ran_at')[:80])
@@ -1353,11 +1359,16 @@ def scrape_logs(request):
         .order_by('run__ran_at')
     )
 
-    # Build: firm_name -> week_date -> ScrapeRunFirm (newest run wins per firm per week)
+    # Build: firm_name -> week_date -> ScrapeRunFirm
+    # Prefer the entry with the highest row_count for each firm/week so that a
+    # second run with 0 rows (no new changes) doesn't overwrite a good first run.
     firm_week_data = {}
     for f in firms_qs:
         week = f.run.ran_at.date()
-        firm_week_data.setdefault(f.firm_name, {})[week] = f
+        firm_data = firm_week_data.setdefault(f.firm_name, {})
+        existing = firm_data.get(week)
+        if existing is None or (f.row_count or 0) > (existing.row_count or 0):
+            firm_data[week] = f
 
     # Last 10 unique weeks, newest first
     all_weeks = sorted({f.run.ran_at.date() for f in firms_qs}, reverse=True)[:10]
@@ -1395,6 +1406,17 @@ def scrape_logs(request):
             skipped=Count('id', filter=Q(status='skipped')),
         )
         health_digest = {'week': latest_health_week, **agg}
+
+    if export == 'excel':
+        headers = ['Firm', 'Week', 'Row Count', 'Status', 'Error']
+        rows = []
+        for firm in all_firms:
+            for w in all_weeks:
+                cell = firm_week_data[firm].get(w)
+                if cell:
+                    rows.append([firm, str(w), cell.row_count or 0, cell.status, cell.error_msg or ''])
+        widths = {1: 30, 2: 14, 3: 12, 4: 16, 5: 40}
+        return _make_excel_response('scrape_logs.xlsx', headers, rows, widths)
 
     return render(request, 'tracker/scrape_logs.html', {
         'weeks':         all_weeks,

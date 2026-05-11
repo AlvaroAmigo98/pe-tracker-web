@@ -57,9 +57,9 @@
     <button type="submit" class="btn">Search</button>
     <a href="?tab={{ tab }}" class="btn btn-gray">Clear</a>
     {% if tab == 'team' %}
-    <a href="?tab=team&q={{ search }}&export=team" class="btn btn-green">↓ Export Excel</a>
+    <a href="?tab=team&q={{ search }}&export=team" class="btn-export" title="Download Excel">&#8595; Excel</a>
     {% else %}
-    <a href="?tab={{ tab }}&q={{ search }}&export=events" class="btn btn-green">↓ Export Excel</a>
+    <a href="?tab={{ tab }}&q={{ search }}&export=events" class="btn-export" title="Download Excel">&#8595; Excel</a>
     {% endif %}
   </div>
 </form>
