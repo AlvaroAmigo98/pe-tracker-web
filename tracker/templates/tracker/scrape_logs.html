@@ -48,8 +48,10 @@
   .matrix-outer {
     border: 1px solid var(--border);
     border-radius: var(--r);
+    overflow: clip;
+  }
+  .matrix-scroll {
     overflow-x: auto;
-    overflow-y: clip;
   }
 
   .matrix-table {
@@ -152,6 +154,7 @@
   <div class="empty-state">No scrape run data yet. Logs will appear after the first weekly run.</div>
 {% else %}
 <div class="matrix-outer">
+  <div class="matrix-scroll">
   <table class="matrix-table">
       <thead>
         <tr>
@@ -194,6 +197,7 @@
         {% endfor %}
       </tbody>
     </table>
+  </div>
 </div>
 {% endif %}
 
