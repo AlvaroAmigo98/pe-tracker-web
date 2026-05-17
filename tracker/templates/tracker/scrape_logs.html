@@ -59,8 +59,12 @@
     min-width: 100%;
   }
 
-  /* Header row */
+  /* Header row — cancel base.html's global "thead th { position:sticky; top:134px }"
+     because our table lives inside an overflow-x:auto scroll container which makes
+     top:134px measure from the container top (= mid-table), not the viewport. */
   .matrix-table thead th {
+    position: static;
+    top: auto;
     background: var(--surface);
     border-bottom: 2px solid var(--border);
     padding: 9px 8px;
