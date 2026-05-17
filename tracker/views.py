@@ -1460,20 +1460,33 @@ def scrape_logs(request):
         health_digest = {'week': latest_health_week, **agg}
 
     if export == 'excel':
-        flag_map = {r['firm']: r for r in matrix} if status_filter == 'flagged' else {r['firm']: r for r in matrix}
-        headers = ['Firm', 'Week', 'Row Count', 'Status', 'Error', 'Anomaly']
+        # Wide matrix — mirrors the on-screen table exactly
+        # Columns: Firm | Flag | week1 | week2 | ...
+        week_labels = [w.strftime('%-d %b %Y') for w in all_weeks]
+        headers = ['Firm', 'Flag'] + week_labels
         rows = []
         for row in matrix:
             firm = row['firm']
+            flags = []
+            if row['collapse']:
+                flags.append('↓ ' + '; '.join(row['collapse_reasons']))
+            if row['spike']:
+                flags.append('↑ ' + '; '.join(row['spike_reasons']))
+            week_cells = []
             for w in all_weeks:
                 cell = firm_week_data[firm].get(w)
-                if cell:
-                    reasons = row['collapse_reasons'] + row['spike_reasons']
-                    rows.append([
-                        firm, str(w), cell.row_count or 0, cell.status,
-                        cell.error_msg or '', '; '.join(reasons) if reasons else '',
-                    ])
-        widths = {1: 30, 2: 14, 3: 12, 4: 16, 5: 40, 6: 50}
+                if cell is None:
+                    week_cells.append('—')
+                elif cell.status == 'ok':
+                    week_cells.append(cell.row_count or 0)
+                elif cell.status == 'below_threshold':
+                    week_cells.append(f"{cell.row_count or 0} ↓")
+                else:
+                    cnt = cell.row_count or 0
+                    week_cells.append(cnt if cnt > 0 else 'err')
+            rows.append([firm, ' | '.join(flags)] + week_cells)
+        widths = {1: 32, 2: 45}
+        widths.update({i + 3: 13 for i in range(len(all_weeks))})
         return _make_excel_response('scrape_logs.xlsx', headers, rows, widths)
 
     return render(request, 'tracker/scrape_logs.html', {
