@@ -344,6 +344,21 @@ def dashboard(request):
             return False
         events = [e for e in events if _matches_change_type(e)]
 
+    # Suppress bulk waves: >10 hires or promotions from one company = likely data artefact
+    from collections import Counter
+    _hire_ct  = Counter(e.person.company.name for e in events if e.event_type == 'hire')
+    _promo_ct = Counter(e.person.company.name for e in events if e.event_type in ('promotion', 'role_change'))
+    _bulk_hire_firms  = {c for c, n in _hire_ct.items()  if n > 10}
+    _bulk_promo_firms = {c for c, n in _promo_ct.items() if n > 10}
+    if _bulk_hire_firms or _bulk_promo_firms:
+        events = [
+            e for e in events
+            if not (
+                (e.event_type == 'hire' and e.person.company.name in _bulk_hire_firms)
+                or (e.event_type in ('promotion', 'role_change') and e.person.company.name in _bulk_promo_firms)
+            )
+        ]
+
     hires      = [e for e in events if e.event_type == 'hire']
     leavers    = [e for e in events if e.event_type == 'leaver']
     promotions = [e for e in events if e.event_type in ('promotion', 'role_change')]
