@@ -1342,8 +1342,8 @@ def scrape_logs(request):
     bucket_filter = request.GET.get('bucket', '')
     export        = request.GET.get('export', '')
 
-    # Fetch enough recent runs to cover ~10 weeks (8 regional files per week)
-    runs = list(ScrapeRun.objects.order_by('-ran_at')[:80])
+    # Fetch all runs — full history, no arbitrary cutoff
+    runs = list(ScrapeRun.objects.order_by('-ran_at'))
 
     if not runs:
         return render(request, 'tracker/scrape_logs.html', {
@@ -1359,19 +1359,27 @@ def scrape_logs(request):
         .order_by('run__ran_at')
     )
 
-    # Build: firm_name -> week_date -> ScrapeRunFirm
-    # Prefer the entry with the highest row_count for each firm/week so that a
-    # second run with 0 rows (no new changes) doesn't overwrite a good first run.
+    # Group run dates into "slots": consecutive dates ≤1 day apart share a column.
+    # This merges a Monday full-run + Tuesday fix-up into a single column.
+    all_run_dates = sorted({f.run.ran_at.date() for f in firms_qs})
+    slot_map: dict = {}  # run_date → slot_key (earliest date in the group)
+    slot_start = None
+    for i, d in enumerate(all_run_dates):
+        if i == 0 or (d - all_run_dates[i - 1]).days > 1:
+            slot_start = d
+        slot_map[d] = slot_start
+
+    # Build: firm_name -> slot_key -> best ScrapeRunFirm (highest row_count wins)
     firm_week_data = {}
     for f in firms_qs:
-        week = f.run.ran_at.date()
+        slot = slot_map[f.run.ran_at.date()]
         firm_data = firm_week_data.setdefault(f.firm_name, {})
-        existing = firm_data.get(week)
+        existing = firm_data.get(slot)
         if existing is None or (f.row_count or 0) > (existing.row_count or 0):
-            firm_data[week] = f
+            firm_data[slot] = f
 
-    # Last 10 unique weeks, newest first
-    all_weeks = sorted({f.run.ran_at.date() for f in firms_qs}, reverse=True)[:10]
+    # All slots, newest first — entire history, no cap
+    all_weeks = sorted(set(slot_map.values()), reverse=True)
     latest_week = all_weeks[0] if all_weeks else None
 
     all_firms = sorted(firm_week_data.keys())
