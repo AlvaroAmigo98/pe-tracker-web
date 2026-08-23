@@ -1,5 +1,14 @@
 from django.db import models
 
+# All models are managed=False — the schema (and its indexes) live in Supabase,
+# not in Django migrations. Performance indexes applied directly in Supabase:
+#   person_snapshot (person_id, scraped_at DESC)   ix_person_snapshot_person_scraped
+#   person_snapshot (scraped_at)                    ix_person_snapshot_scraped
+#   change_event    (detected_at DESC)              ix_change_event_detected
+#   change_event    (person_id)                     ix_change_event_person
+#   change_event    (event_type, detected_at)       ix_change_event_type_detected
+#   person          (company_id)                    ix_person_company
+
 
 class Company(models.Model):
     name       = models.TextField(unique=True)

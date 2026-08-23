@@ -333,7 +333,10 @@
   const raw = {{ trend_json|safe }};
   const ctx = document.getElementById('trend-chart');
   if (!ctx) return;
-  // Pull colours from the theme tokens so the chart matches light/dark.
+  // Build (and rebuild) the chart pulling colours from the theme tokens, so it
+  // repaints when the light/dark toggle flips.
+  let chart = null;
+  function build() {
   const cs = getComputedStyle(document.documentElement);
   const cHire   = (cs.getPropertyValue('--hire').trim()   || '#3557D6');
   const cLeave  = (cs.getPropertyValue('--leave').trim()  || '#626C7E');
@@ -342,7 +345,8 @@
   const cLegend = (cs.getPropertyValue('--text-2').trim() || '#5A6376');
   const cSurf   = (cs.getPropertyValue('--surface').trim()|| '#fff');
   const cText1  = (cs.getPropertyValue('--text-1').trim() || '#1B2230');
-  new Chart(ctx, {
+  if (chart) chart.destroy();
+  chart = new Chart(ctx, {
     type: 'line',
     data: {
       labels: raw.weeks,
@@ -383,6 +387,11 @@
       },
     },
   });
+  }
+  build();
+  new MutationObserver(function (muts) {
+    for (const m of muts) { if (m.attributeName === 'data-theme') { build(); break; } }
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 })();
 
 (function() {

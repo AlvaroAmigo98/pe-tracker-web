@@ -92,7 +92,7 @@
 <div class="stats-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">
   <div class="stat-card">
     <div class="stat-indicator" style="background:var(--text-2)"></div>
-    <div class="stat-num" style="color:var(--text-1)">{{ people|length }}</div>
+    <div class="stat-num" style="color:var(--text-1)">{{ total_count }}</div>
     <div class="stat-label">People tracked</div>
   </div>
   <div class="stat-card">
@@ -109,7 +109,7 @@
 
 <div class="card">
   <div class="card-header">
-    <span class="card-title" id="people-count">{{ people|length }} people</span>
+    <span class="card-title" id="people-count">{{ total_count }} people</span>
     <a href="?{{ request.GET.urlencode }}&export=excel" class="btn-export" title="Download Excel">&#8595; Excel</a>
   </div>
   {% if people %}
@@ -164,6 +164,16 @@
       {% endfor %}
     </tbody>
   </table>
+  {% if page_obj.paginator.num_pages > 1 %}
+  <div class="pagination">
+    <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} · showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ total_count }}</span>
+    <span class="pagination-links">
+      {% if page_obj.has_previous %}<a href="?{% if querystring %}{{ querystring }}&{% endif %}page=1">« First</a><a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">‹ Prev</a>{% else %}<span>« First</span><span>‹ Prev</span>{% endif %}
+      <span class="current">{{ page_obj.number }}</span>
+      {% if page_obj.has_next %}<a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next ›</a><a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.paginator.num_pages }}">Last »</a>{% else %}<span>Next ›</span><span>Last »</span>{% endif %}
+    </span>
+  </div>
+  {% endif %}
   {% else %}
   <div class="empty">
     {% if search or company_filter or group_filter or function_filter or region_filter or last_seen_filter %}

@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
+from django.core.paginator import Paginator
 from urllib.parse import quote
 from django.db.models import Count, Max, Q
 from django.db.models.functions import TruncMonth
@@ -562,9 +563,20 @@ def people(request):
 
     senior_count = sum(1 for p in people if p.seniority_group == 'Senior')
     junior_count = len(people) - senior_count
+    total_count  = len(people)
+
+    # Paginate the fully-filtered list (13k+ rows otherwise render in one page).
+    paginator = Paginator(people, 50)
+    page_obj  = paginator.get_page(request.GET.get('page'))
+    _qs = request.GET.copy()
+    _qs.pop('page', None)
+    querystring = _qs.urlencode()
 
     return render(request, 'tracker/people.html', {
-        'people':           people,
+        'people':           page_obj,      # iterate the current page
+        'page_obj':         page_obj,
+        'total_count':      total_count,
+        'querystring':      querystring,
         'companies':        companies,
         'seniorities':      seniorities,
         'search':           search,
@@ -897,6 +909,16 @@ def firm_detail(request, company_id):
 def signals(request):
     today = date.today()
     bucket_filter = request.GET.get('bucket', '')
+
+    # Market Pulse is a heavy, bucket-scoped aggregation over the whole event
+    # history (O(n^2) cascade scan + 52-week trend + 365-day heatmap). The data
+    # only changes on the weekly scrape, so cache the computed payload per
+    # bucket per day. (Single gunicorn worker → LocMemCache is shared per-process.)
+    _sig_cache_key = f'signals:{bucket_filter}:{today.isoformat()}'
+    _sig_cached = cache.get(_sig_cache_key)
+    if _sig_cached is not None:
+        return render(request, 'tracker/signals.html', {**_sig_cached, 'bucket_filter': bucket_filter})
+
     bucket_company_ids = _bucket_company_ids(bucket_filter)
 
     # Base leaver queryset scoped to bucket
@@ -1007,7 +1029,7 @@ def signals(request):
         heatmap_dict[dt.isoformat()] = row['cnt']
     heatmap_json = json.dumps(heatmap_dict)
 
-    return render(request, 'tracker/signals.html', {
+    _sig_ctx = {
         'cascade_alerts':       cascade_alerts[:10],
         'firms_count':          firms_count,
         'recent_events':        recent_events,
@@ -1018,8 +1040,9 @@ def signals(request):
         'notable_moves':        notable_moves,
         'trend_json':           trend_json,
         'heatmap_json':         heatmap_json,
-        'bucket_filter':        bucket_filter,
-    })
+    }
+    cache.set(_sig_cache_key, _sig_ctx, 60 * 30)  # 30 min
+    return render(request, 'tracker/signals.html', {**_sig_ctx, 'bucket_filter': bucket_filter})
 
 
 @login_required
