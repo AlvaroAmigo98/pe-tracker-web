@@ -1,10 +1,10 @@
-# RaiseTrack
+# Rota
 
-**RaiseTrack** is a Django dashboard for tracking PE firm headcount changes (hires, leavers, promotions). Data comes from the [pe-scraper](https://github.com/AlvaroAmigo98/pe-scraper) pipeline which writes to a shared Supabase PostgreSQL database.
+**Rota** is a Django dashboard for tracking PE firm headcount changes (hires, leavers, promotions). Data comes from the [pe-scraper](https://github.com/AlvaroAmigo98/pe-scraper) pipeline which writes to a shared Supabase PostgreSQL database.
 
 **Live app:** `pe-tracker-web-production.up.railway.app`
 
-> Note: the product was renamed from "PE Tracker" to **RaiseTrack**. The rebrand is user-facing only — the Git repo (`pe-tracker-web`), the Django project package (`petracker/`), and the Railway hostname above are intentionally unchanged so deployment and imports keep working.
+> Note: the product was renamed from "PE Tracker" to **Rota**. The rebrand is user-facing only — the Git repo (`pe-tracker-web`), the Django project package (`petracker/`), and the Railway hostname above are intentionally unchanged so deployment and imports keep working.
 
 ---
 
