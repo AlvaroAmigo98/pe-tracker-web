@@ -28,9 +28,12 @@
     /* ── Nav ─────────────────────────────────────────────────────────────── */
     nav { border-bottom: 1px solid rgba(255,255,255,.14); }
     .nav-in { display: flex; align-items: center; justify-content: space-between; height: 66px; }
-    .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
-    .brand-sq { width: 26px; height: 26px; background: #fff; color: #000; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 11px; letter-spacing: -1px; border-radius: 2px; }
-    .brand-wd { font-weight: 800; letter-spacing: -.5px; font-size: 16px; color: #fff; }
+    .brand { display: inline-flex; align-items: center; text-decoration: none; }
+    .lp-word { font-family: 'Chakra Petch', ui-monospace, sans-serif; text-transform: uppercase; letter-spacing: .06em; font-size: 18px; line-height: 1; color: #fff; }
+    .lp-word b { font-weight: 700; }
+    .lp-word i { font-weight: 400; font-style: normal; color: #9A9A9A; }
+    .lp-word-dark { color: #0A0A0A; font-size: 15px; }
+    .lp-word-dark i { color: #6A6A6A; }
     .nav-cta { display: inline-flex; align-items: center; gap: 7px; background: #fff; color: #000; padding: 9px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; text-decoration: none; border-radius: 2px; transition: opacity .15s; }
     .nav-cta:hover { opacity: .82; }
 
@@ -136,13 +139,13 @@
 <!-- ════ BLACK: nav + hero + tape strip ════ -->
 <section class="sec-black">
   <nav><div class="wrap nav-in">
-    <a href="/" class="brand"><span class="brand-sq">RT</span><span class="brand-wd">RaiseTrack</span></a>
+    <a href="/" class="brand"><span class="lp-word"><b>Raise</b><i>Track</i></span></a>
     <a href="{% url 'login' %}" class="nav-cta">Sign in →</a>
   </div></nav>
 
   <div class="wrap hero">
     <div class="hero-kicker"><span class="live"></span> Live · 100+ funds · updated weekly</div>
-    <h1>The record of movement in private equity.</h1>
+    <h1>Know every move in private equity.</h1>
     <p class="hero-sub">RaiseTrack tracks every hire, exit and promotion across the funds that matter — structured, timestamped, and on your desk before it reaches the press.</p>
     <div class="hero-actions">
       <a href="{% url 'login' %}" class="btn-solid">Access the terminal →</a>
@@ -250,12 +253,12 @@
   </div>
 
   <div class="wrap cta">
-    <div class="cta-t">The market moves first. Read it here.</div>
+    <div class="cta-t">The PE market moves fast. Move faster.</div>
     <a href="{% url 'login' %}" class="btn-solid-inv">Access the terminal →</a>
   </div>
 
   <div class="wrap"><footer>
-    <span class="foot-brand"><span class="foot-sq">RT</span><span class="foot-wd">RaiseTrack</span></span>
+    <span class="foot-brand"><span class="lp-word lp-word-dark"><b>Raise</b><i>Track</i></span></span>
     <span>Personnel intelligence for private equity</span>
     <span class="mono">© 2026</span>
   </footer></div>
