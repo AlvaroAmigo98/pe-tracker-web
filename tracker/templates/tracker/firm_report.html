@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>{{ company.name }} — PE Tracker Report</title>
+  <title>{{ company.name }} — RaiseTrack Report</title>
   <style>
     @media print {
       @page { margin: 18mm 16mm; }
@@ -12,11 +12,11 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color: #1a1a2e; background: #fff; line-height: 1.5; }
 
-    .header { background: #06080F; color: white; padding: 28px 32px; display: flex; align-items: flex-start; justify-content: space-between; }
-    .header-brand { font-size: 11px; color: rgba(255,255,255,.5); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .1em; }
-    .header-firm { font-size: 26px; font-weight: 800; color: white; letter-spacing: -0.5px; }
-    .header-meta { font-size: 11px; color: rgba(255,255,255,.5); margin-top: 4px; }
-    .header-right { text-align: right; font-size: 11px; color: rgba(255,255,255,.5); }
+    .header { background: #fff; color: #0A0A0A; padding: 26px 32px 22px; display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 2px solid #0A0A0A; }
+    .header-brand { font-size: 11px; color: #0A0A0A; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .12em; font-weight: 700; }
+    .header-firm { font-size: 26px; font-weight: 800; color: #1a1a2e; letter-spacing: -0.5px; }
+    .header-meta { font-size: 11px; color: #6B7280; margin-top: 4px; }
+    .header-right { text-align: right; font-size: 11px; color: #6B7280; }
 
     .content { padding: 28px 32px; }
 
@@ -34,17 +34,18 @@
     tr:last-child td { border-bottom: none; }
 
     .badge { display: inline-flex; align-items: center; font-size: 9px; font-weight: 700; padding: 1px 7px; border-radius: 99px; letter-spacing: .02em; }
-    .b-hire   { background: #D1FAE5; color: #065F46; }
-    .b-leave  { background: #FEE2E2; color: #991B1B; }
-    .b-promo  { background: #FEF3C7; color: #92400E; }
-    .b-senior { background: #FEF3C7; color: #92400E; }
-    .b-junior { background: #DBEAFE; color: #1E40AF; }
+    /* Semantic status tints (print-friendly, deepened neon) */
+    .b-hire   { background: #E6F6EE; color: #007A3D; }
+    .b-leave  { background: #FDE7EA; color: #C20016; }
+    .b-promo  { background: #E9F0FF; color: #0B54D6; }
+    .b-senior { background: transparent; color: #0A0A0A; border: 1px solid #0A0A0A; }
+    .b-junior { background: #F0F0F0; color: #6A6A6A; }
 
-    .highlight-box { background: #FFF7ED; border: 1px solid #FED7AA; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px; }
-    .highlight-box .hb-title { font-size: 11px; font-weight: 700; color: #9A3412; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .07em; }
+    .highlight-box { background: #F5F6F8; border: 1px solid #D6DAE1; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px; }
+    .highlight-box .hb-title { font-size: 11px; font-weight: 700; color: #4B5567; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .07em; }
 
-    .print-btn { position: fixed; bottom: 24px; right: 24px; background: #6366F1; color: white; border: none; border-radius: 8px; padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(99,102,241,.4); }
-    .print-btn:hover { background: #4F46E5; }
+    .print-btn { position: fixed; bottom: 24px; right: 24px; background: #0A0A0A; color: white; border: none; border-radius: 3px; padding: 11px 22px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; cursor: pointer; }
+    .print-btn:hover { background: #333; }
 
     .footer { border-top: 1px solid #E5E7EB; padding: 12px 32px; font-size: 10px; color: #9CA3AF; display: flex; justify-content: space-between; }
   </style>
@@ -53,12 +54,12 @@
 
 <div class="header">
   <div>
-    <div class="header-brand">PE Tracker · Firm Report</div>
+    <div class="header-brand">RaiseTrack · Firm Report</div>
     <div class="header-firm">{{ company.name }}</div>
     <div class="header-meta">Generated {{ generated_at|date:"d M Y" }} · Confidential</div>
   </div>
   <div class="header-right">
-    <div style="font-size:28px;font-weight:800;color:white">{{ team|length }}</div>
+    <div style="font-size:28px;font-weight:800;color:#0A0A0A">{{ team|length }}</div>
     <div>tracked employees</div>
   </div>
 </div>
@@ -67,19 +68,19 @@
 
   <div class="stats">
     <div class="stat">
-      <div class="stat-num" style="color:#059669">{{ hires|length }}</div>
+      <div class="stat-num" style="color:#007A3D">{{ hires|length }}</div>
       <div class="stat-label">Hires</div>
     </div>
     <div class="stat">
-      <div class="stat-num" style="color:#DC2626">{{ leavers|length }}</div>
+      <div class="stat-num" style="color:#C20016">{{ leavers|length }}</div>
       <div class="stat-label">Leavers</div>
     </div>
     <div class="stat">
-      <div class="stat-num" style="color:#D97706">{{ promotions|length }}</div>
+      <div class="stat-num" style="color:#0B54D6">{{ promotions|length }}</div>
       <div class="stat-label">Promotions</div>
     </div>
     <div class="stat">
-      <div class="stat-num" style="color:#DC2626">{{ senior_leavers|length }}</div>
+      <div class="stat-num" style="color:#C20016">{{ senior_leavers|length }}</div>
       <div class="stat-label">Senior leavers</div>
     </div>
   </div>
@@ -161,7 +162,7 @@
 </div>
 
 <div class="footer">
-  <span>{{ company.name }} · PE Tracker Report</span>
+  <span>{{ company.name }} · RaiseTrack Report</span>
   <span>Generated {{ generated_at|date:"d M Y" }}</span>
 </div>
 

@@ -23,7 +23,7 @@
   .form-group input[readonly] { opacity: .5; cursor: not-allowed; }
 
   .btn-primary {
-    background: linear-gradient(135deg,#6366F1,#4F46E5); color: white;
+    background: var(--accent); color: white;
     border: none; border-radius: var(--r-sm); padding: 9px 20px;
     font-size: 13px; font-weight: 700; font-family: inherit;
     cursor: pointer; transition: opacity .15s;
@@ -31,20 +31,20 @@
   .btn-primary:hover { opacity: .88; }
 
   .alert { border-radius: var(--r-sm); padding: 10px 14px; font-size: 13px; margin-bottom: 20px; }
-  .alert-ok  { background: var(--hire-bg);  color: var(--hire-text);  border: 1px solid rgba(16,185,129,.25); }
-  .alert-err { background: var(--leave-bg); color: var(--leave-text); border: 1px solid rgba(244,63,94,.25); }
+  .alert-ok  { background: var(--hire-bg);  color: var(--hire-text);  border: 1px solid var(--border2); }
+  .alert-err { background: var(--leave-bg); color: var(--leave-text); border: 1px solid var(--border2); }
 
   .meta-row { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 20px; }
   .meta-item { display: flex; flex-direction: column; gap: 4px; }
   .meta-item span:first-child { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text-2); }
   .meta-item span:last-child  { font-size: 13px; color: var(--text-1); }
-  .badge-super { background: rgba(245,158,11,.15); color: #FCD34D; font-size: 10px;
+  .badge-super { background: var(--accent-soft); color: var(--accent-hover); font-size: 10px;
     font-weight: 700; padding: 2px 8px; border-radius: 20px; letter-spacing: .04em; }
 
   .login-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 12px; }
   .login-table th { text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase;
     letter-spacing: .07em; color: var(--text-2); padding: 5px 10px; border-bottom: 1px solid var(--border); }
-  .login-table td { padding: 7px 10px; border-bottom: 1px solid rgba(255,255,255,.04); color: var(--text-2); }
+  .login-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); color: var(--text-2); }
   .login-table tr:last-child td { border-bottom: none; }
 </style>
 

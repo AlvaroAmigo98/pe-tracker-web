@@ -3,592 +3,391 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PE Tracker</title>
+  <title>{% block title %}RaiseTrack{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  {% include "tracker/_theme.html" %}
+
   <style>
-    :root {
-      --bg:           #06080F;
-      --surface:      #0C1220;
-      --surface2:     #111B2E;
-      --border:       rgba(255,255,255,0.07);
-      --border2:      rgba(255,255,255,0.12);
-      --text-1:       #E2E8F4;
-      --text-2:       #64748B;
-      --text-3:       #2D3A4E;
-      --accent:       #6366F1;
-      --accent-hover: #818CF8;
-      --nav:          #080C18;
+    /* ══ App shell: left rail + top bar ══════════════════════════════════ */
+    .app { min-height: 100vh; }
 
-      /* event colours */
-      --hire:      #10B981; --hire-bg:  rgba(16,185,129,.14); --hire-text:  #6EE7B7;
-      --leave:     #F43F5E; --leave-bg: rgba(244,63,94,.14);  --leave-text: #FDA4AF;
-      --promo:     #F59E0B; --promo-bg: rgba(245,158,11,.14); --promo-text: #FCD34D;
-      --role:      #38BDF8; --role-bg:  rgba(56,189,248,.14); --role-text:  #7DD3FC;
-
-      --shadow:    0 1px 4px rgba(0,0,0,.4);
-      --shadow-md: 0 8px 24px rgba(0,0,0,.5);
-      --r: 12px; --r-sm: 8px;
+    .sidebar {
+      position: fixed; top: 0; left: 0; bottom: 0; width: var(--sidebar-w);
+      background: var(--surface); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; z-index: 70;
     }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Inter', -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text-1);
-      font-size: 14px;
-      line-height: 1.5;
-      -webkit-font-smoothing: antialiased;
+    .sb-brand { display: flex; align-items: center; height: var(--topbar-h); padding: 0 20px; text-decoration: none; border-bottom: 1px solid var(--border); }
+    .sb-nav { padding: 14px 12px; display: flex; flex-direction: column; gap: 1px; flex: 1; overflow-y: auto; }
+    .sb-item {
+      display: flex; align-items: center; gap: 11px;
+      padding: 9px 12px; font-size: 13.5px; font-weight: 500;
+      color: var(--text-2); text-decoration: none; border-radius: var(--r-sm);
+      position: relative; transition: color .12s, background .12s;
     }
+    .sb-item:hover { color: var(--text-1); background: var(--surface2); }
+    .sb-item.active { color: var(--text-1); background: var(--surface2); font-weight: 600; }
+    .sb-item.active::before { content: ''; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 3px; background: var(--text-1); }
+    .sb-item svg { width: 16px; height: 16px; flex-shrink: 0; opacity: .85; }
+    .sb-group { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .14em; color: var(--text-3); padding: 16px 12px 7px; }
+    .sb-sep { height: 1px; background: var(--border); margin: 10px 4px; }
 
-    /* ── Topbar (brand + search + user) ──────────────────────────────────── */
+    .main { margin-left: var(--sidebar-w); min-height: 100vh; display: flex; flex-direction: column; }
+
     .topbar {
-      background: var(--nav);
-      height: 52px;
-      display: flex;
-      align-items: center;
-      padding: 0 24px;
-      gap: 20px;
-      position: sticky;
-      top: 0;
-      z-index: 60;
-      border-bottom: 1px solid var(--border);
-      backdrop-filter: blur(12px);
+      height: var(--topbar-h); display: flex; align-items: stretch;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 60;
     }
-    .topbar-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
-    .topbar-icon {
-      width: 28px; height: 28px;
-      background: linear-gradient(135deg, #6366F1, #4F46E5);
-      border-radius: 7px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 13px; font-weight: 800; color: white; letter-spacing: -0.5px;
-      box-shadow: 0 0 12px rgba(99,102,241,.4);
+    .scope { display: flex; align-items: stretch; overflow-x: auto; scrollbar-width: none; flex: 1; }
+    .scope::-webkit-scrollbar { display: none; }
+    .scope-lead { display: flex; align-items: center; padding: 0 20px 0 24px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .14em; color: var(--text-3); white-space: nowrap; flex-shrink: 0; }
+    .scope-tab {
+      display: flex; align-items: center; padding: 0 14px; font-size: 12.5px; font-weight: 500;
+      color: var(--text-2); text-decoration: none; white-space: nowrap;
+      border-bottom: 2px solid transparent; transition: color .12s, border-color .12s;
     }
-    .topbar-title { font-size: 14px; font-weight: 700; color: var(--text-1); letter-spacing: -0.2px; }
-    .topbar-right { display: flex; align-items: center; gap: 14px; font-size: 13px; color: var(--text-2); margin-left: auto; }
-    .topbar-user { display: flex; align-items: center; gap: 8px; cursor: pointer; position: relative; }
-    .topbar-avatar {
-      width: 26px; height: 26px;
-      background: rgba(99,102,241,.25);
-      border: 1px solid rgba(99,102,241,.4);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 10px; font-weight: 700; color: #A5B4FC; text-transform: uppercase;
-    }
-    .topbar-right a { color: var(--text-2); text-decoration: none; transition: color .15s; font-size: 13px; }
-    .topbar-right a:hover { color: var(--text-1); }
-    .hamburger { display: none; background: none; border: none; cursor: pointer; padding: 4px; color: var(--text-1); font-size: 22px; line-height: 1; flex-shrink: 0; }
+    .scope-tab:hover { color: var(--text-1); }
+    .scope-tab.active { color: var(--text-1); border-bottom-color: var(--text-1); font-weight: 600; }
+    .scope-sep { align-self: center; height: 18px; width: 1px; background: var(--border); margin: 0 6px; flex-shrink: 0; }
 
-    /* ── Bucket nav (row 2) ───────────────────────────────────────────────── */
-    .bucket-nav {
-      background: var(--nav);
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 52px;
-      z-index: 55;
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-    .bucket-nav::-webkit-scrollbar { display: none; }
-    .bucket-nav-inner {
-      display: flex;
-      align-items: center;
-      padding: 0 24px;
-      gap: 2px;
-      min-width: max-content;
-    }
-    .bucket-tab {
-      padding: 10px 14px;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-2);
-      text-decoration: none;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -1px;
-      white-space: nowrap;
-      transition: color .15s, border-color .15s;
-      letter-spacing: 0.01em;
-    }
-    .bucket-tab:hover { color: var(--text-1); }
-    .bucket-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-    .bucket-sep {
-      border-left: 1px solid var(--border);
-      margin-left: 8px;
-      padding-left: 22px !important;
-    }
-    .bucket-nav-right {
-      margin-left: auto;
-      display: flex;
-      align-items: center;
-      border-left: 1px solid var(--border);
-      padding-left: 4px;
-    }
-    .bucket-nav-right .bucket-tab { color: var(--text-3); }
-    .bucket-nav-right .bucket-tab:hover { color: var(--text-2); }
-    .bucket-nav-right .bucket-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .topbar-right { display: flex; align-items: center; gap: 10px; padding: 0 20px 0 14px; margin-left: auto; border-left: 1px solid var(--border); flex-shrink: 0; }
+    .topbar-user { display: flex; align-items: center; gap: 8px; cursor: pointer; position: relative; padding: 5px 8px; border-radius: var(--r-sm); transition: background .12s; }
+    .topbar-user:hover { background: var(--surface2); }
+    .topbar-avatar { width: 26px; height: 26px; background: var(--text-1); color: var(--bg); border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+    .topbar-user > span { font-size: 13px; color: var(--text-1); }
+    .hamburger { display: none; background: none; border: none; cursor: pointer; padding: 0 8px; color: var(--text-1); font-size: 20px; }
 
-    /* ── Sub-tab nav (row 3) ─────────────────────────────────────────────── */
-    .sub-nav {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 93px;
-      z-index: 50;
+    /* ── Search ─────────────────────────────────────────────────────────── */
+    .searchbox { display: flex; align-items: center; }
+    #topbar-search {
+      width: 210px; height: 34px; padding: 0 12px; font-size: 12.5px; font-family: inherit;
+      background: var(--surface2); color: var(--text-1);
+      border: 1px solid transparent; border-radius: var(--r-sm); outline: none;
+      transition: border-color .12s, background .12s;
     }
-    .sub-nav-inner {
-      display: flex;
-      align-items: center;
-      padding: 0 24px;
-      gap: 0;
-      max-width: 1300px;
-      margin: 0 auto;
-    }
-    .sub-tab {
-      padding: 9px 16px;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text-2);
-      text-decoration: none;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -1px;
-      white-space: nowrap;
-      transition: color .15s, border-color .15s;
-    }
-    .sub-tab:hover { color: var(--text-1); }
-    .sub-tab.active { color: white; border-bottom-color: white; font-weight: 600; }
+    #topbar-search::placeholder { color: var(--text-3); }
+    #topbar-search:focus { border-color: var(--line-strong); background: var(--surface); }
 
-    /* ── Layout ──────────────────────────────────────────────────────────── */
-    .content { max-width: 1300px; margin: 0 auto; padding: 28px 24px 56px; }
+    /* ── Content ────────────────────────────────────────────────────────── */
+    .content { padding: 32px 40px 64px; max-width: 1520px; width: 100%; }
 
-    /* ── Page header ─────────────────────────────────────────────────────── */
-    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 10px; }
-    .page-title { font-size: 22px; font-weight: 800; color: var(--text-1); letter-spacing: -0.5px; }
-    .page-meta { font-size: 12px; color: var(--text-2); margin-top: 4px; }
+    /* ── Page header ────────────────────────────────────────────────────── */
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+    .page-title { font-size: 26px; font-weight: 800; color: var(--text-1); letter-spacing: -.8px; }
+    .page-meta { font-size: 12.5px; color: var(--text-2); margin-top: 5px; }
 
-    /* ── Cards ───────────────────────────────────────────────────────────── */
-    .card {
-      background: var(--surface);
-      border-radius: var(--r);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow);
-      overflow: clip;
-      margin-bottom: 20px;
+    /* ── Cards ──────────────────────────────────────────────────────────── */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); overflow: clip; margin-bottom: 20px; }
+    .card-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .card-title { font-size: 11px; font-weight: 700; color: var(--text-1); text-transform: uppercase; letter-spacing: .1em; }
+
+    /* ── Stat cards ─────────────────────────────────────────────────────── */
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-bottom: 28px; border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
+    .stat-card { background: var(--surface); border-left: 1px solid var(--border); padding: 22px 24px; cursor: pointer; transition: background .12s; position: relative; }
+    .stat-card:first-child { border-left: none; }
+    .stat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 0; height: 2px; background: var(--stat-color, var(--text-1)); transition: width .18s; }
+    .stat-card:hover { background: var(--surface2); }
+    .stat-card:hover::before, .stat-card.active::before { width: 100%; }
+    .stat-card.hire-card { --stat-color: var(--hire); }
+    .stat-card.leave-card { --stat-color: var(--leave); }
+    .stat-card.promo-card { --stat-color: var(--promo); }
+    .stat-num { font-family: 'JetBrains Mono', monospace; font-size: 38px; font-weight: 600; line-height: 1; letter-spacing: -1.5px; color: var(--text-1); font-variant-numeric: tabular-nums; }
+    .stat-label { font-size: 10.5px; color: var(--text-2); margin-top: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; }
+    .stat-indicator { width: 7px; height: 7px; margin-bottom: 14px; }
+
+    /* ── Badges ─────────────────────────────────────────────────────────── */
+    .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: var(--r-sm); letter-spacing: .04em; white-space: nowrap; text-transform: uppercase; }
+    .badge::before { content: ''; }
+    .badge-hire  { color: var(--hire-text);  background: var(--hire-bg); }
+    .badge-leave { color: var(--leave-text); background: var(--leave-bg); }
+    .badge-promo { color: var(--promo-text); background: var(--promo-bg); }
+    .badge-hire::before, .badge-leave::before, .badge-promo::before { width: 6px; height: 6px; border-radius: 50%; }
+    .badge-hire::before  { background: var(--hire); box-shadow: 0 0 6px var(--hire); }
+    .badge-leave::before { background: var(--leave); box-shadow: 0 0 6px var(--leave); }
+    .badge-promo::before { background: var(--promo); box-shadow: 0 0 6px var(--promo); }
+    /* Everything non-event is monochrome */
+    .badge-role, .badge-emea, .badge-na, .badge-apac,
+    .badge-buyout, .badge-infra, .badge-re, .badge-credit, .badge-vc,
+    .badge-invest, .badge-advisory, .badge-ops, .badge-junior {
+      color: var(--text-2); background: transparent; border: 1px solid var(--border2);
     }
-    .card-header {
-      padding: 14px 20px;
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between; gap: 12px;
-      background: rgba(255,255,255,.02);
-    }
-    .card-title { font-size: 13px; font-weight: 600; color: var(--text-1); }
+    .badge-senior { color: var(--text-1); background: transparent; border: 1px solid var(--line-strong); }
 
-    /* ── Stat cards ──────────────────────────────────────────────────────── */
-    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px; }
-    .stat-card {
-      background: var(--surface);
-      border-radius: var(--r);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow);
-      padding: 20px 22px;
-      cursor: pointer;
-      transition: border-color .15s, transform .15s, box-shadow .15s;
-      position: relative; overflow: hidden;
-    }
-    .stat-card:hover { border-color: var(--border2); transform: translateY(-2px); box-shadow: var(--shadow-md); }
-    .stat-card.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), var(--shadow); }
-    .stat-num { font-size: 36px; font-weight: 800; line-height: 1; letter-spacing: -1.5px; }
-    .stat-label { font-size: 12px; color: var(--text-2); margin-top: 6px; font-weight: 500; }
-    .stat-indicator { width: 8px; height: 8px; border-radius: 50%; margin-bottom: 14px; }
-
-    /* ── Badges ──────────────────────────────────────────────────────────── */
-    .badge {
-      display: inline-flex; align-items: center;
-      font-size: 11px; font-weight: 600; padding: 2px 9px;
-      border-radius: 99px; letter-spacing: 0.02em; white-space: nowrap;
-    }
-    .badge-hire  { background: var(--hire-bg);  color: var(--hire-text); }
-    .badge-leave { background: var(--leave-bg); color: var(--leave-text); }
-    .badge-promo { background: var(--promo-bg); color: var(--promo-text); }
-    .badge-role  { background: var(--role-bg);  color: var(--role-text); }
-    .badge-emea { background: rgba(16,185,129,.13);  color: #6EE7B7; }
-    .badge-na   { background: rgba(96,165,250,.13);  color: #93C5FD; }
-    .badge-apac { background: rgba(251,191,36,.13);  color: #FCD34D; }
-    .badge-buyout  { background: rgba(245,158,11,.13); color: #FCD34D; }
-    .badge-infra   { background: rgba(56,189,248,.13); color: #7DD3FC; }
-    .badge-re      { background: rgba(52,211,153,.13); color: #6EE7B7; }
-    .badge-credit  { background: rgba(167,139,250,.13);color: #C4B5FD; }
-    .badge-vc      { background: rgba(244,63,94,.13);  color: #FDA4AF; }
-    .badge-invest  { background: rgba(99,102,241,.13); color: #A5B4FC; }
-    .badge-advisory{ background: rgba(34,211,238,.13); color: #67E8F9; }
-    .badge-ops     { background: rgba(107,114,128,.13);color: #9CA3AF; }
-    .badge-senior  { background: rgba(245,158,11,.13); color: #FCD34D; }
-    .badge-junior  { background: rgba(56,189,248,.13); color: #7DD3FC; }
-
-    /* ── Tables ──────────────────────────────────────────────────────────── */
+    /* ── Tables ─────────────────────────────────────────────────────────── */
     table { width: 100%; border-collapse: collapse; }
-    th {
-      text-align: left; padding: 10px 16px;
-      font-size: 10px; font-weight: 700; color: var(--text-3);
-      background: rgba(255,255,255,.02);
-      border-bottom: 1px solid var(--border);
-      text-transform: uppercase; letter-spacing: 0.08em;
-      white-space: nowrap; cursor: pointer; user-select: none;
-    }
-    th:hover { color: var(--text-2); }
-    td { padding: 11px 16px; border-bottom: 1px solid rgba(255,255,255,.03); color: var(--text-1); font-size: 13px; }
+    th { text-align: left; padding: 10px 16px; font-size: 10px; font-weight: 700; color: var(--text-3); background: var(--surface); border-bottom: 1px solid var(--line-strong); text-transform: uppercase; letter-spacing: .1em; white-space: nowrap; cursor: pointer; user-select: none; transition: color .12s; }
+    th:hover { color: var(--text-1); }
+    td { padding: 12px 16px; border-bottom: 1px solid var(--border); color: var(--text-1); font-size: 13px; }
     tr:last-child td { border-bottom: none; }
     tbody tr { transition: background .1s; }
-    tbody tr:hover td { background: rgba(255,255,255,.03); }
+    tbody tr:hover td { background: var(--surface2); }
     .name-cell { font-weight: 600; color: var(--text-1); }
     .subtle { color: var(--text-2); font-size: 12px; }
+    .tnum, td .mono { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
 
-    /* ── Filter bar ──────────────────────────────────────────────────────── */
+    /* ── Filter bar (in-page) ───────────────────────────────────────────── */
     .filter-bar { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; align-items: flex-end; }
-    .filter-group { display: flex; flex-direction: column; gap: 4px; }
-    .filter-label { font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; }
+    .filter-group { display: flex; flex-direction: column; gap: 6px; }
+    .filter-label { font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .1em; }
     input[type=text], select {
-      border: 1px solid var(--border);
-      border-radius: var(--r-sm);
-      padding: 7px 12px;
-      font-size: 13px; font-family: inherit;
-      outline: none;
-      background: var(--surface2);
-      color: var(--text-1);
-      height: 36px;
-      transition: border-color .15s, box-shadow .15s;
+      border: 1px solid var(--border2); border-radius: var(--r-sm); padding: 8px 12px;
+      font-size: 13px; font-family: inherit; outline: none; background: var(--surface); color: var(--text-1);
+      height: 36px; transition: border-color .12s, box-shadow .12s;
     }
-    input[type=text]:focus, select:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(99,102,241,.15);
-    }
+    input[type=text]:focus, select:focus { border-color: var(--line-strong); box-shadow: 0 0 0 3px var(--accent-ring); }
     input[type=text] { min-width: 220px; }
-    select option { background: var(--surface2); color: var(--text-1); }
+    input[type=text]::placeholder { color: var(--text-3); }
+    select option { background: var(--surface); color: var(--text-1); }
 
-    /* ── Buttons ─────────────────────────────────────────────────────────── */
-    .btn {
-      background: var(--accent); color: white; border: none;
-      border-radius: var(--r-sm); padding: 7px 16px;
-      font-size: 13px; font-family: inherit; font-weight: 600;
-      cursor: pointer; height: 36px; white-space: nowrap;
-      display: inline-flex; align-items: center; gap: 6px;
-      transition: background .15s, transform .1s; text-decoration: none;
-    }
+    /* ── Buttons ────────────────────────────────────────────────────────── */
+    .btn { background: var(--accent); color: var(--accent-ink); border: 1px solid var(--accent); border-radius: var(--r-sm); padding: 8px 16px; font-size: 12px; font-family: inherit; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; cursor: pointer; height: 36px; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; transition: background .12s; text-decoration: none; }
     .btn:hover { background: var(--accent-hover); }
-    .btn:active { transform: scale(.98); }
-    .btn-ghost {
-      background: transparent; color: var(--text-2);
-      border: 1px solid var(--border); border-radius: var(--r-sm);
-      padding: 7px 14px; font-size: 13px; font-family: inherit; font-weight: 500;
-      cursor: pointer; height: 36px; text-decoration: none;
-      display: inline-flex; align-items: center;
-      transition: border-color .15s, color .15s;
-    }
-    .btn-ghost:hover { border-color: var(--border2); color: var(--text-1); }
-    .btn-green { background: #059669; } .btn-green:hover { background: #047857; }
-    .btn-red   { background: #DC2626; } .btn-red:hover   { background: #B91C1C; }
-    .btn-gray  { background: #1E293B; color: var(--text-2); border: 1px solid var(--border); }
-    .btn-gray:hover { background: var(--surface2); color: var(--text-1); }
-    .btn-export {
-      font-size:12px; font-weight:500; color:var(--text-2); text-decoration:none;
-      padding:3px 10px; border-radius:6px; border: 1px solid var(--border);
-      background: var(--surface2); transition: all .1s;
-    }
-    .btn-export:hover { color:var(--text-1); border-color:var(--border2); }
+    .btn-ghost { background: transparent; color: var(--text-1); border: 1px solid var(--border2); border-radius: var(--r-sm); padding: 8px 14px; font-size: 12px; font-family: inherit; font-weight: 600; cursor: pointer; height: 36px; text-decoration: none; display: inline-flex; align-items: center; transition: border-color .12s, background .12s; }
+    .btn-ghost:hover { border-color: var(--line-strong); background: var(--surface2); }
+    .btn-green { background: var(--hire); color: #fff; border-color: var(--hire); } .btn-green:hover { filter: brightness(.92); }
+    .btn-red   { background: var(--leave); color: #fff; border-color: var(--leave); } .btn-red:hover { filter: brightness(.92); }
+    .btn-gray  { background: var(--surface2); color: var(--text-1); border: 1px solid var(--border2); }
+    .btn-gray:hover { background: var(--surface3); }
+    .btn-export { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-2); text-decoration: none; padding: 5px 10px; border-radius: var(--r-sm); border: 1px solid var(--border2); background: var(--surface); transition: all .12s; }
+    .btn-export:hover { color: var(--text-1); border-color: var(--line-strong); }
 
-    /* ── Tabs (within a page) ────────────────────────────────────────────── */
+    /* ── In-page tabs ───────────────────────────────────────────────────── */
     .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
-    .tab-btn {
-      padding: 9px 18px; font-size: 13px; font-weight: 500; color: var(--text-2);
-      cursor: pointer; text-decoration: none;
-      border-bottom: 2px solid transparent; margin-bottom: -1px;
-      transition: all .15s; white-space: nowrap;
-    }
+    .tab-btn { padding: 10px 18px; font-size: 13px; font-weight: 500; color: var(--text-2); cursor: pointer; text-decoration: none; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .12s; white-space: nowrap; }
     .tab-btn:hover { color: var(--text-1); }
-    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+    .tab-btn.active { color: var(--text-1); border-bottom-color: var(--text-1); font-weight: 600; }
 
-    /* ── Sort links ──────────────────────────────────────────────────────── */
-    .sort-link { font-size:12px; font-weight:500; color:var(--text-2); text-decoration:none; padding:3px 10px; border-radius:6px; transition:all .1s; border: 1px solid transparent; }
-    .sort-link:hover { color:var(--text-1); background:var(--surface2); }
-    .sort-active { font-weight:700 !important; color:var(--accent) !important; background:rgba(99,102,241,.1); border-color: rgba(99,102,241,.25) !important; }
+    /* ── Sort links ─────────────────────────────────────────────────────── */
+    .sort-link { font-size: 12px; font-weight: 500; color: var(--text-2); text-decoration: none; padding: 4px 10px; border-radius: var(--r-sm); transition: all .12s; border: 1px solid transparent; }
+    .sort-link:hover { color: var(--text-1); background: var(--surface2); }
+    .sort-active { font-weight: 700 !important; color: var(--text-1) !important; background: var(--surface2); border-color: var(--border2) !important; }
     .sort-arrow { font-size: 10px; margin-left: 3px; opacity: .5; }
 
-    /* ── Sticky table header — offset for 3 nav rows ─────────────────────── */
-    thead th { position: sticky; top: 134px; z-index: 10; background: var(--surface); }
-    .th-sorted { color: var(--accent) !important; }
+    /* ── Sticky thead — offset for single top bar ───────────────────────── */
+    thead th { position: sticky; top: var(--topbar-h); z-index: 10; background: var(--surface); }
+    .th-sorted { color: var(--text-1) !important; }
 
-    /* ── Row links ───────────────────────────────────────────────────────── */
+    /* ── Row links ──────────────────────────────────────────────────────── */
     .row-link { color: inherit; text-decoration: none; transition: color .12s; }
-    .row-link:hover { color: var(--accent); }
-    .row-new td:first-child { border-left: 2px solid var(--hire); }
+    .row-link:hover { color: var(--text-1); text-decoration: underline; text-underline-offset: 2px; }
+    .row-new td:first-child { box-shadow: inset 2px 0 0 var(--hire); }
 
-    /* ── Filter chips ────────────────────────────────────────────────────── */
-    .filter-chip {
-      display: inline-flex; align-items: center; gap: 5px;
-      background: var(--surface2); border: 1px solid var(--border2);
-      border-radius: 99px; padding: 3px 8px 3px 11px;
-      font-size: 12px; color: var(--text-1);
-    }
+    /* ── Filter chips ───────────────────────────────────────────────────── */
+    .filter-chip { display: inline-flex; align-items: center; gap: 5px; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--r-sm); padding: 3px 8px 3px 11px; font-size: 12px; color: var(--text-1); }
     .chip-key { color: var(--text-2); font-size: 11px; margin-right: 2px; }
-    .chip-x {
-      background: none; border: none; color: var(--text-2); cursor: pointer;
-      font-size: 15px; line-height: 1; padding: 0 3px; font-family: inherit;
-      transition: color .1s;
-    }
+    .chip-x { background: none; border: none; color: var(--text-2); cursor: pointer; font-size: 15px; line-height: 1; padding: 0 3px; font-family: inherit; transition: color .1s; }
     .chip-x:hover { color: var(--text-1); }
 
-    /* ── Pagination ──────────────────────────────────────────────────────── */
+    /* ── Pagination ─────────────────────────────────────────────────────── */
     .pagination { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-2); }
     .pagination-links { display: flex; gap: 4px; }
-    .pagination-links a, .pagination-links span { padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border); text-decoration: none; color: var(--text-2); font-size: 12px; transition: background .1s; }
+    .pagination-links a, .pagination-links span { padding: 6px 11px; border-radius: var(--r-sm); border: 1px solid var(--border2); text-decoration: none; color: var(--text-2); font-size: 12px; transition: background .1s; }
     .pagination-links a:hover { background: var(--surface2); }
-    .pagination-links .current { background: var(--accent); color: white; border-color: var(--accent); }
+    .pagination-links .current { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 
-    /* ── Dropdown ────────────────────────────────────────────────────────── */
+    /* ── Dropdown ───────────────────────────────────────────────────────── */
     .dropdown { position: relative; display: inline-block; }
-    .dropdown-btn {
-      border: 1px solid var(--border); border-radius: var(--r-sm); padding: 7px 12px;
-      font-size: 13px; font-family: inherit; background: var(--surface2); color: var(--text-1);
-      cursor: pointer; display: flex; align-items: center; gap: 6px;
-      white-space: nowrap; height: 36px; transition: border-color .15s;
-    }
-    .dropdown-btn:hover { border-color: var(--border2); }
-    .dropdown-btn .count { background: var(--accent); color: white; border-radius: 99px; padding: 1px 7px; font-size: 11px; font-weight: 600; }
+    .dropdown-btn { border: 1px solid var(--border2); border-radius: var(--r-sm); padding: 8px 12px; font-size: 13px; font-family: inherit; background: var(--surface); color: var(--text-1); cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap; height: 36px; transition: border-color .12s, background .12s; }
+    .dropdown-btn:hover { border-color: var(--line-strong); background: var(--surface2); }
+    .dropdown-btn .count { background: var(--accent); color: var(--accent-ink); border-radius: 2px; padding: 1px 7px; font-size: 11px; font-weight: 700; }
     .dropdown-btn .chevron { font-size: 10px; color: var(--text-2); }
-    .dropdown-panel {
-      display: none; position: absolute; top: calc(100% + 6px); left: 0;
-      background: var(--surface); border: 1px solid var(--border2);
-      border-radius: var(--r); padding: 6px 0;
-      min-width: 210px; z-index: 100; box-shadow: var(--shadow-md);
-      max-height: 300px; overflow-y: auto;
-    }
+    .dropdown-panel { display: none; position: absolute; top: calc(100% + 6px); left: 0; background: var(--surface); border: 1px solid var(--border2); border-radius: var(--r); padding: 6px 0; min-width: 210px; z-index: 100; box-shadow: var(--shadow-md); max-height: 300px; overflow-y: auto; }
     .dropdown-panel.open { display: block; }
-    .dropdown-panel label {
-      display: flex; align-items: center; gap: 10px; padding: 7px 14px;
-      font-size: 13px; cursor: pointer; color: var(--text-1); transition: background .1s;
-    }
+    .dropdown-panel label { display: flex; align-items: center; gap: 10px; padding: 8px 14px; font-size: 13px; cursor: pointer; color: var(--text-1); transition: background .1s; }
     .dropdown-panel label:hover { background: var(--surface2); }
-    .dropdown-panel input[type=checkbox] { width: 14px; height: 14px; cursor: pointer; accent-color: var(--accent); }
+    .dropdown-panel input[type=checkbox] { width: 14px; height: 14px; cursor: pointer; accent-color: var(--text-1); }
     .dropdown-panel::-webkit-scrollbar { width: 4px; }
-    .dropdown-panel::-webkit-scrollbar-track { background: transparent; }
-    .dropdown-panel::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+    .dropdown-panel::-webkit-scrollbar-thumb { background: var(--border2); }
     .dropdown-actions { display: flex; gap: 6px; padding: 6px 10px 4px; border-bottom: 1px solid var(--border); }
-    .dropdown-action-btn { background: none; border: 1px solid var(--border); border-radius: 4px; padding: 2px 8px; font-size: 11px; color: var(--text-2); cursor: pointer; font-family: inherit; transition: border-color .1s, color .1s; }
-    .dropdown-action-btn:hover { border-color: var(--border2); color: var(--text-1); }
+    .dropdown-action-btn { background: none; border: 1px solid var(--border2); border-radius: 2px; padding: 3px 8px; font-size: 11px; color: var(--text-2); cursor: pointer; font-family: inherit; transition: border-color .1s, color .1s; }
+    .dropdown-action-btn:hover { border-color: var(--line-strong); color: var(--text-1); }
 
-    /* ── Typeahead ───────────────────────────────────────────────────────── */
-    .typeahead-wrap { position: relative; flex: 0 0 auto; display: flex; align-items: center; }
-    .typeahead-panel {
-      display: none; position: absolute; top: calc(100% + 8px); right: 0;
-      background: var(--surface); border: 1px solid var(--border2);
-      border-radius: var(--r); padding: 6px 0;
-      min-width: 280px; z-index: 200; box-shadow: var(--shadow-md);
-    }
+    /* ── Typeahead ──────────────────────────────────────────────────────── */
+    .typeahead-wrap { position: relative; }
+    .typeahead-panel { display: none; position: absolute; top: calc(100% + 8px); right: 0; background: var(--surface); border: 1px solid var(--border2); border-radius: var(--r); padding: 6px 0; min-width: 300px; z-index: 200; box-shadow: var(--shadow-md); }
     .typeahead-panel.open { display: block; }
-    .typeahead-section { padding: 5px 14px 3px; font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .08em; }
+    .typeahead-section { padding: 6px 14px 3px; font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .1em; }
     .typeahead-item { display: block; padding: 8px 14px; text-decoration: none; color: var(--text-1); font-size: 13px; transition: background .1s; }
     .typeahead-item:hover { background: var(--surface2); }
     .typeahead-sub { font-size: 11px; color: var(--text-2); margin-top: 1px; }
 
-    /* ── Mobile ──────────────────────────────────────────────────────────── */
-    .mobile-nav {
-      display: none; position: fixed; top: 52px; left: 0; right: 0; bottom: 0;
-      background: var(--nav); z-index: 49; padding: 16px 20px;
-      border-top: 1px solid var(--border); flex-direction: column; gap: 4px;
-      overflow-y: auto;
-    }
-    .mobile-nav.open { display: flex; }
-    .mobile-nav a { color: var(--text-2); text-decoration: none; padding: 13px 16px; border-radius: var(--r-sm); font-size: 15px; font-weight: 500; transition: color .15s, background .15s; }
-    .mobile-nav a:hover, .mobile-nav a.active { color: white; background: rgba(99,102,241,.2); }
+    /* ── Misc ───────────────────────────────────────────────────────────── */
+    .empty { text-align: center; padding: 60px 24px; color: var(--text-2); font-size: 13px; }
+    .empty-icon { width: 40px; height: 40px; margin: 0 auto 14px; color: var(--text-3); display: flex; align-items: center; justify-content: center; border: 1px solid var(--border2); }
+    .empty-title { font-size: 15px; font-weight: 700; color: var(--text-1); margin-bottom: 5px; }
 
-    /* ── Misc ────────────────────────────────────────────────────────────── */
-    .empty { text-align: center; padding: 52px; color: var(--text-2); font-size: 13px; }
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 6px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.2); }
-
-    @media (max-width: 768px) {
+    /* ── Mobile drawer ──────────────────────────────────────────────────── */
+    .sb-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 65; }
+    @media (max-width: 900px) {
+      .sidebar { transform: translateX(-100%); transition: transform .2s; }
+      .app.nav-open .sidebar { transform: translateX(0); }
+      .app.nav-open .sb-backdrop { display: block; }
+      .main { margin-left: 0; }
       .hamburger { display: block; }
-      .topbar { padding: 0 16px; gap: 10px; }
-      .topbar-right { gap: 8px; }
-      .content { padding: 20px 16px 40px; }
-      .stats-row { grid-template-columns: repeat(2, 1fr); }
-      .filter-bar { gap: 6px; }
-      .page-header { flex-direction: column; gap: 8px; }
-      .bucket-nav-inner { padding: 0 16px; }
-      .sub-nav-inner { padding: 0 16px; }
+      .scope-lead { display: none; }
+      .content { padding: 24px 18px 48px; }
+      #topbar-search { width: 150px; }
     }
-    @media (max-width: 480px) {
-      .stats-row { grid-template-columns: 1fr 1fr; }
-      .stat-num { font-size: 28px; }
+    @media (max-width: 560px) {
+      .stats-row { grid-template-columns: 1fr; }
+      .stat-card { border-left: none; border-top: 1px solid var(--border); }
+      .stat-card:first-child { border-top: none; }
+      .topbar-user > span { display: none; }
+      #topbar-search { width: 110px; }
     }
   </style>
 </head>
 <body>
+{% with active_view=request.resolver_match.url_name %}
+{% with active_bucket=request.GET.bucket|default:'' %}
+{% with bq=active_bucket|urlencode %}
+<div class="app" id="app">
 
-  <!-- ── Row 1: Brand + Search + User ──────────────────────────────────── -->
-  <div class="topbar">
-    <a href="{% url 'dashboard' %}" class="topbar-brand">
-      <div class="topbar-icon">PE</div>
-      <span class="topbar-title">PE Tracker</span>
+  <!-- ── Left rail: product navigation ──────────────────────────────────── -->
+  <aside class="sidebar" id="sidebar">
+    <a href="{% url 'dashboard' %}" class="sb-brand" aria-label="RaiseTrack">
+      {% include "tracker/_brand.html" with size=24 wf=15 %}
     </a>
+    <nav class="sb-nav">
+      <a href="{% url 'dashboard' %}{% if active_bucket %}?bucket={{ bq }}{% endif %}" class="sb-item {% if active_view == 'dashboard' %}active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+        Dashboard
+      </a>
+      <a href="{% url 'people' %}{% if active_bucket %}?bucket={{ bq }}{% endif %}" class="sb-item {% if active_view == 'people' or active_view == 'person_profile' %}active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0"/><path d="M16 5.5a3 3 0 0 1 0 5.6M18 20a5.5 5.5 0 0 0-3-4.9"/></svg>
+        People
+      </a>
+      <a href="{% url 'firms' %}{% if active_bucket %}?bucket={{ bq }}{% endif %}" class="sb-item {% if active_view == 'firms' or active_view == 'firm_detail' %}active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="12" height="18"/><path d="M16 8h4v13H4M8 7h1M12 7h1M8 11h1M12 11h1M8 15h1M12 15h1"/></svg>
+        Firms
+      </a>
+      <a href="{% url 'signals' %}{% if active_bucket %}?bucket={{ bq }}{% endif %}" class="sb-item {% if active_view == 'signals' %}active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>
+        Market Pulse
+      </a>
+      {% if request.user.is_superuser %}
+      <a href="{% url 'scrape_logs' %}{% if active_bucket %}?bucket={{ bq }}{% endif %}" class="sb-item {% if active_view == 'scrape_logs' %}active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16M4 12h16M4 19h10"/></svg>
+        Scrape Logs
+      </a>
+      <div class="sb-group">Admin</div>
+      <a href="{% url 'user_admin' %}" class="sb-item {% if active_view == 'user_admin' %}active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>
+        Users
+      </a>
+      <a href="{% url 'data_review' %}" class="sb-item {% if active_view == 'data_review' or active_view == 'batch_edit' %}active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6 9 17l-5-5"/></svg>
+        Data Review
+      </a>
+      {% endif %}
+    </nav>
+  </aside>
+  <div class="sb-backdrop" id="sb-backdrop"></div>
 
-    <div class="typeahead-wrap">
-      <form action="{% url 'search' %}" method="get" style="display:flex;align-items:center">
-        <input type="text" name="q" id="topbar-search" value="{{ request.GET.q }}"
-               placeholder="⌕  Search…  ⌘K" autocomplete="off"
-               style="width:220px;border-radius:20px;font-size:12px;height:32px;padding:0 14px;min-width:0">
-      </form>
-      <div class="typeahead-panel" id="typeahead-panel"></div>
-    </div>
+  <!-- ── Main column ────────────────────────────────────────────────────── -->
+  <div class="main">
+    <header class="topbar">
+      <button class="hamburger" id="hamburger-btn" aria-label="Menu">≡</button>
 
-    <div class="topbar-right">
-      <div class="topbar-user" id="user-menu-btn">
-        <div class="topbar-avatar">{{ request.user.username|slice:":2"|upper }}</div>
-        <span>{{ request.user.username }}</span>
-        <span style="font-size:10px;color:var(--text-2);margin-left:2px">▾</span>
-        <div id="user-dropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;
-             background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-sm);
-             min-width:160px;z-index:300;box-shadow:var(--shadow-md);overflow:hidden">
-          <a href="{% url 'profile' %}" style="display:block;padding:10px 16px;font-size:13px;
-             color:var(--text-1);text-decoration:none;border-bottom:1px solid var(--border)">My Profile</a>
-          <form method="post" action="{% url 'logout' %}" style="margin:0">
-            {% csrf_token %}
-            <button type="submit" style="display:block;width:100%;text-align:left;padding:10px 16px;
-              font-size:13px;color:var(--leave-text);background:none;border:none;cursor:pointer;
-              font-family:inherit">Log out</button>
+      {% if active_view in 'dashboard,people,firms,signals,firm_detail,scrape_logs' %}
+      <div class="scope">
+        <span class="scope-lead">Scope</span>
+        <a href="{% url 'dashboard' %}" class="scope-tab {% if active_bucket == '' %}active{% endif %}">All</a>
+        <a href="{% url 'dashboard' %}?bucket=Pan-European+%2F+Global" class="scope-tab {% if active_bucket == 'Pan-European / Global' %}active{% endif %}">Upper Mid-Market</a>
+        <span class="scope-sep"></span>
+        <a href="{% url 'dashboard' %}?bucket=UK"       class="scope-tab {% if active_bucket == 'UK' %}active{% endif %}">UK</a>
+        <a href="{% url 'dashboard' %}?bucket=Benelux"  class="scope-tab {% if active_bucket == 'Benelux' %}active{% endif %}">Benelux</a>
+        <a href="{% url 'dashboard' %}?bucket=Nordics"  class="scope-tab {% if active_bucket == 'Nordics' %}active{% endif %}">Nordics</a>
+        <a href="{% url 'dashboard' %}?bucket=DACH"     class="scope-tab {% if active_bucket == 'DACH' %}active{% endif %}">DACH</a>
+        <a href="{% url 'dashboard' %}?bucket=France"   class="scope-tab {% if active_bucket == 'France' %}active{% endif %}">France</a>
+        <a href="{% url 'dashboard' %}?bucket=Iberia"   class="scope-tab {% if active_bucket == 'Iberia' %}active{% endif %}">Iberia</a>
+        <a href="{% url 'dashboard' %}?bucket=Italy"    class="scope-tab {% if active_bucket == 'Italy' %}active{% endif %}">Italy</a>
+      </div>
+      {% else %}
+      <div class="scope"></div>
+      {% endif %}
+
+      <div class="topbar-right">
+        <div class="typeahead-wrap searchbox">
+          <form action="{% url 'search' %}" method="get" style="display:flex;align-items:center">
+            <input type="text" name="q" id="topbar-search" value="{{ request.GET.q }}" placeholder="Search  /  ⌘K" autocomplete="off">
           </form>
+          <div class="typeahead-panel" id="typeahead-panel"></div>
+        </div>
+        {% include "tracker/_theme_toggle.html" %}
+        <div class="topbar-user" id="user-menu-btn">
+          <div class="topbar-avatar">{{ request.user.username|slice:":2"|upper }}</div>
+          <span>{{ request.user.username }}</span>
+          <div id="user-dropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-sm);min-width:170px;z-index:300;box-shadow:var(--shadow-md);overflow:hidden">
+            <a href="{% url 'profile' %}" style="display:block;padding:11px 16px;font-size:13px;color:var(--text-1);text-decoration:none;border-bottom:1px solid var(--border)">My Profile</a>
+            <a href="{% url 'logout_confirm' %}" style="display:block;padding:11px 16px;font-size:13px;color:var(--text-2);text-decoration:none">Log out</a>
+          </div>
         </div>
       </div>
-    </div>
-    <button class="hamburger" id="hamburger-btn" aria-label="Menu">☰</button>
-  </div>
+    </header>
 
-  <!-- ── Row 2: Bucket tabs ─────────────────────────────────────────────── -->
-  {% with active_view=request.resolver_match.url_name %}
-  {% with active_bucket=request.GET.bucket|default:'' %}
-  <div class="bucket-nav">
-    <div class="bucket-nav-inner">
-      <a href="{% url 'dashboard' %}" class="bucket-tab {% if active_view in 'dashboard,people,firms,signals' and active_bucket == '' %}active{% endif %}">All</a>
-      <a href="{% url 'dashboard' %}?bucket=Pan-European+%2F+Global" class="bucket-tab {% if active_bucket == 'Pan-European / Global' %}active{% endif %}">Upper Mid-Market</a>
-      <a href="{% url 'dashboard' %}?bucket=UK"       class="bucket-tab bucket-sep {% if active_bucket == 'UK' %}active{% endif %}">UK</a>
-      <a href="{% url 'dashboard' %}?bucket=Benelux"  class="bucket-tab {% if active_bucket == 'Benelux' %}active{% endif %}">Benelux</a>
-      <a href="{% url 'dashboard' %}?bucket=Nordics"  class="bucket-tab {% if active_bucket == 'Nordics' %}active{% endif %}">Nordics</a>
-      <a href="{% url 'dashboard' %}?bucket=DACH"     class="bucket-tab {% if active_bucket == 'DACH' %}active{% endif %}">DACH</a>
-      <a href="{% url 'dashboard' %}?bucket=France"   class="bucket-tab {% if active_bucket == 'France' %}active{% endif %}">France</a>
-      <a href="{% url 'dashboard' %}?bucket=Iberia"   class="bucket-tab {% if active_bucket == 'Iberia' %}active{% endif %}">Iberia</a>
-      <a href="{% url 'dashboard' %}?bucket=Italy"    class="bucket-tab {% if active_bucket == 'Italy' %}active{% endif %}">Italy</a>
-      {% if request.user.is_superuser %}
-      <div class="bucket-nav-right">
-        <a href="{% url 'user_admin' %}"  class="bucket-tab {% if active_view == 'user_admin' %}active{% endif %}">Users</a>
-        <a href="{% url 'scrape_logs' %}" class="bucket-tab {% if active_view == 'scrape_logs' %}active{% endif %}">Scrape Logs</a>
-        <a href="{% url 'data_review' %}" class="bucket-tab {% if active_view == 'data_review' or active_view == 'batch_edit' or active_view == 'batch_approve' or active_view == 'batch_reject' %}active{% endif %}">Data Review</a>
-      </div>
-      {% endif %}
+    <div class="content">
+      {% block content %}{% endblock %}
     </div>
   </div>
-
-  <!-- ── Row 3: Sub-tabs (Dashboard / People / Firms / Market Pulse / Scrape Logs) ── -->
-  {% if active_view in 'dashboard,people,firms,signals,firm_detail,scrape_logs' %}
-  <div class="sub-nav">
-    <div class="sub-nav-inner">
-      {% if active_bucket %}
-        <a href="{% url 'dashboard' %}?bucket={{ active_bucket|urlencode }}" class="sub-tab {% if active_view == 'dashboard' %}active{% endif %}">Dashboard</a>
-        <a href="{% url 'people' %}?bucket={{ active_bucket|urlencode }}"    class="sub-tab {% if active_view == 'people' %}active{% endif %}">People</a>
-        <a href="{% url 'firms' %}?bucket={{ active_bucket|urlencode }}"     class="sub-tab {% if active_view == 'firms' or active_view == 'firm_detail' %}active{% endif %}">Firms</a>
-        <a href="{% url 'signals' %}?bucket={{ active_bucket|urlencode }}"   class="sub-tab {% if active_view == 'signals' %}active{% endif %}">Market Pulse</a>
-        {% if request.user.is_superuser %}
-        <a href="{% url 'scrape_logs' %}?bucket={{ active_bucket|urlencode }}" class="sub-tab {% if active_view == 'scrape_logs' %}active{% endif %}">Scrape Logs</a>
-        {% endif %}
-      {% else %}
-        <a href="{% url 'dashboard' %}" class="sub-tab {% if active_view == 'dashboard' %}active{% endif %}">Dashboard</a>
-        <a href="{% url 'people' %}"    class="sub-tab {% if active_view == 'people' %}active{% endif %}">People</a>
-        <a href="{% url 'firms' %}"     class="sub-tab {% if active_view == 'firms' or active_view == 'firm_detail' %}active{% endif %}">Firms</a>
-        <a href="{% url 'signals' %}"   class="sub-tab {% if active_view == 'signals' %}active{% endif %}">Market Pulse</a>
-        {% if request.user.is_superuser %}
-        <a href="{% url 'scrape_logs' %}" class="sub-tab {% if active_view == 'scrape_logs' %}active{% endif %}">Scrape Logs</a>
-        {% endif %}
-      {% endif %}
-    </div>
-  </div>
-  {% endif %}
-  {% endwith %}
-  {% endwith %}
-
-  <!-- ── Mobile nav ────────────────────────────────────────────────────── -->
-  <nav class="mobile-nav" id="mobile-nav">
-    <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a>
-    <a href="{% url 'people' %}"    class="{% if request.resolver_match.url_name == 'people' %}active{% endif %}">People</a>
-    <a href="{% url 'firms' %}"     class="{% if request.resolver_match.url_name == 'firms' or request.resolver_match.url_name == 'firm_detail' %}active{% endif %}">Firms</a>
-    <a href="{% url 'signals' %}"   class="{% if request.resolver_match.url_name == 'signals' %}active{% endif %}">Market Pulse</a>
-    {% if request.user.is_superuser %}
-    <a href="{% url 'scrape_logs' %}"  class="{% if request.resolver_match.url_name == 'scrape_logs' %}active{% endif %}">Scrape Logs</a>
-    <a href="{% url 'data_review' %}"  class="{% if request.resolver_match.url_name == 'data_review' %}active{% endif %}">Data Review</a>
-    {% endif %}
-  </nav>
-
-  <div class="content">
-    {% block content %}{% endblock %}
-  </div>
+</div>
+{% endwith %}{% endwith %}{% endwith %}
 
 <script>
 // User dropdown
-(function() {
+(function () {
   const btn = document.getElementById('user-menu-btn');
-  const dd  = document.getElementById('user-dropdown');
+  const dd = document.getElementById('user-dropdown');
   if (!btn) return;
-  btn.addEventListener('click', function(e) { e.stopPropagation(); dd.style.display = dd.style.display === 'none' ? 'block' : 'none'; });
-  document.addEventListener('click', function() { dd.style.display = 'none'; });
+  btn.addEventListener('click', e => { e.stopPropagation(); dd.style.display = dd.style.display === 'none' ? 'block' : 'none'; });
+  document.addEventListener('click', () => { dd.style.display = 'none'; });
 })();
 
-// Mobile nav
-document.getElementById('hamburger-btn').addEventListener('click', function() {
-  document.getElementById('mobile-nav').classList.toggle('open');
-});
-document.getElementById('mobile-nav').querySelectorAll('a').forEach(a => {
-  a.addEventListener('click', () => document.getElementById('mobile-nav').classList.remove('open'));
-});
+// Mobile sidebar drawer
+(function () {
+  const app = document.getElementById('app');
+  const ham = document.getElementById('hamburger-btn');
+  const bd = document.getElementById('sb-backdrop');
+  if (ham) ham.addEventListener('click', () => app.classList.toggle('nav-open'));
+  if (bd) bd.addEventListener('click', () => app.classList.remove('nav-open'));
+  document.querySelectorAll('.sb-item').forEach(a => a.addEventListener('click', () => app.classList.remove('nav-open')));
+})();
 
 // Typeahead
-(function() {
+(function () {
   const input = document.getElementById('topbar-search');
   const panel = document.getElementById('typeahead-panel');
   if (!input || !panel) return;
   let timer;
-  input.addEventListener('input', function() {
+  input.addEventListener('input', function () {
     clearTimeout(timer);
     const q = this.value.trim();
     if (q.length < 2) { panel.classList.remove('open'); panel.innerHTML = ''; return; }
-    timer = setTimeout(function() {
-      fetch('/api/search/?q=' + encodeURIComponent(q))
-        .then(r => r.json())
-        .then(function(data) {
-          panel.innerHTML = '';
-          if (!data.firms.length && !data.people.length) { panel.classList.remove('open'); return; }
-          if (data.firms.length) {
-            const sec = document.createElement('div'); sec.className = 'typeahead-section'; sec.textContent = 'Firms'; panel.appendChild(sec);
-            data.firms.forEach(function(f) {
-              const a = document.createElement('a'); a.className = 'typeahead-item'; a.href = '/firms/' + f.id + '/'; a.textContent = f.name; panel.appendChild(a);
-            });
-          }
-          if (data.people.length) {
-            const sec = document.createElement('div'); sec.className = 'typeahead-section'; sec.textContent = 'People'; panel.appendChild(sec);
-            data.people.forEach(function(p) {
-              const a = document.createElement('a'); a.className = 'typeahead-item'; a.href = '/people/?q=' + encodeURIComponent(p.name);
-              a.innerHTML = p.name + '<div class="typeahead-sub">' + p.firm + (p.title ? ' · ' + p.title : '') + '</div>'; panel.appendChild(a);
-            });
-          }
-          panel.classList.add('open');
-        });
+    timer = setTimeout(function () {
+      fetch('/api/search/?q=' + encodeURIComponent(q)).then(r => r.json()).then(function (data) {
+        panel.innerHTML = '';
+        if (!data.firms.length && !data.people.length) { panel.classList.remove('open'); return; }
+        if (data.firms.length) {
+          const sec = document.createElement('div'); sec.className = 'typeahead-section'; sec.textContent = 'Firms'; panel.appendChild(sec);
+          data.firms.forEach(f => { const a = document.createElement('a'); a.className = 'typeahead-item'; a.href = '/firms/' + f.id + '/'; a.textContent = f.name; panel.appendChild(a); });
+        }
+        if (data.people.length) {
+          const sec = document.createElement('div'); sec.className = 'typeahead-section'; sec.textContent = 'People'; panel.appendChild(sec);
+          data.people.forEach(p => { const a = document.createElement('a'); a.className = 'typeahead-item'; a.href = '/people/?q=' + encodeURIComponent(p.name); a.innerHTML = p.name + '<div class="typeahead-sub">' + p.firm + (p.title ? ' · ' + p.title : '') + '</div>'; panel.appendChild(a); });
+        }
+        panel.classList.add('open');
+      });
     }, 250);
   });
-  input.addEventListener('keydown', function(e) { if (e.key === 'Escape') { panel.classList.remove('open'); this.blur(); } });
-  document.addEventListener('click', function(e) { if (!e.target.closest('.typeahead-wrap')) panel.classList.remove('open'); });
+  input.addEventListener('keydown', function (e) { if (e.key === 'Escape') { panel.classList.remove('open'); this.blur(); } });
+  document.addEventListener('click', function (e) { if (!e.target.closest('.typeahead-wrap')) panel.classList.remove('open'); });
 })();
 
 // ⌘K / Ctrl+K
-document.addEventListener('keydown', function(e) {
+document.addEventListener('keydown', function (e) {
   const tag = document.activeElement.tagName;
   const editing = tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement.isContentEditable;
   if ((e.key === 'k' && (e.metaKey || e.ctrlKey)) || (e.key === '/' && !editing)) {

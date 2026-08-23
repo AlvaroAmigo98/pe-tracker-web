@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page not found · RaiseTrack</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  {% include "tracker/_theme.html" %}
+  <style>
+    .corner { position: fixed; top: 18px; right: 18px; z-index: 5; }
+    .err-code { font-size: 84px; font-weight: 800; letter-spacing: -3px; color: var(--accent); line-height: 1; margin-bottom: 10px; }
+    .err-actions { display: flex; gap: 10px; justify-content: center; margin-top: 24px; flex-wrap: wrap; }
+    .err-actions .rt-btn { width: auto; }
+  </style>
+</head>
+<body>
+  <div class="corner">{% include "tracker/_theme_toggle.html" %}</div>
+  <div class="rt-shell">
+    <div class="rt-panel" style="text-align:center">
+      <div class="rt-brand-row">
+        <a href="/" style="text-decoration:none">{% include "tracker/_brand.html" with size=30 wf=17 %}</a>
+      </div>
+      <div class="err-code">404</div>
+      <h1 style="font-size:22px;font-weight:700;letter-spacing:-.4px;margin-bottom:8px">Page not found</h1>
+      <p class="rt-muted" style="font-size:14px;max-width:340px;margin:0 auto">
+        The page you’re looking for doesn’t exist, or may have moved.
+      </p>
+      <div class="err-actions">
+        <a class="rt-btn" href="{% url 'dashboard' %}">Go to dashboard</a>
+        <a class="rt-btn rt-btn-ghost" href="/">Back to home</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

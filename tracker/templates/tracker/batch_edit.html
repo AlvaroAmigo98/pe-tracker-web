@@ -14,9 +14,9 @@
     letter-spacing: .07em; color: var(--text-2); padding: 8px 12px;
     border-bottom: 1px solid var(--border);
   }
-  .edit-table td { padding: 6px 12px; border-bottom: 1px solid rgba(255,255,255,.04); vertical-align: middle; }
+  .edit-table td { padding: 6px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
   .edit-table tr:last-child td { border-bottom: none; }
-  .edit-table tr:hover td { background: rgba(255,255,255,.02); }
+  .edit-table tr:hover td { background: var(--surface2); }
 
   .edit-input {
     width: 100%; background: var(--surface2); border: 1px solid var(--border2);
@@ -30,16 +30,16 @@
   .edit-actions { display: flex; gap: 10px; }
   .btn-save {
     padding: 9px 22px; border-radius: 6px; font-size: 13px; font-weight: 700;
-    background: rgba(99,102,241,.15); color: #a5b4fc; border: 1px solid rgba(99,102,241,.3);
+    background: var(--accent); color: #fff; border: 1px solid var(--accent);
     cursor: pointer; font-family: inherit;
   }
-  .btn-save:hover { background: rgba(99,102,241,.3); }
+  .btn-save:hover { background: var(--accent-hover); }
   .btn-approve-edit {
     padding: 9px 22px; border-radius: 6px; font-size: 13px; font-weight: 700;
     background: var(--hire-bg); color: var(--hire-text); border: 1px solid var(--hire);
     cursor: pointer; font-family: inherit;
   }
-  .btn-approve-edit:hover { background: rgba(16,185,129,.25); }
+  .btn-approve-edit:hover { background: var(--hire); color: #fff; }
   .btn-back {
     padding: 9px 22px; border-radius: 6px; font-size: 13px; font-weight: 700;
     background: transparent; color: var(--text-2); border: 1px solid var(--border);

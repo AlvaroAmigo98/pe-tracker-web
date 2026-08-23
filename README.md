@@ -1,8 +1,10 @@
-# pe-tracker-web
+# RaiseTrack
 
-Django dashboard for tracking PE firm headcount changes (hires, leavers, promotions). Data comes from the [pe-scraper](https://github.com/AlvaroAmigo98/pe-scraper) pipeline which writes to a shared Supabase PostgreSQL database.
+**RaiseTrack** is a Django dashboard for tracking PE firm headcount changes (hires, leavers, promotions). Data comes from the [pe-scraper](https://github.com/AlvaroAmigo98/pe-scraper) pipeline which writes to a shared Supabase PostgreSQL database.
 
 **Live app:** `pe-tracker-web-production.up.railway.app`
+
+> Note: the product was renamed from "PE Tracker" to **RaiseTrack**. The rebrand is user-facing only — the Git repo (`pe-tracker-web`), the Django project package (`petracker/`), and the Railway hostname above are intentionally unchanged so deployment and imports keep working.
 
 ---
 
@@ -44,6 +46,8 @@ runtime.txt           Python version for Railway
 | URL | View | Access |
 |---|---|---|
 | `/` | `landing` | Public |
+| `/login/` · `/logout/` · `/logout/confirm/` | auth | Public |
+| `/forgot-password/` · `/forgot-password/sent/` | `forgot_password` | Public (front-end only — see below) |
 | `/dashboard/` | `dashboard` | Login required |
 | `/people/` | `people` | Login required |
 | `/firms/` | `firms` | Login required |
@@ -54,6 +58,8 @@ runtime.txt           Python version for Railway
 | `/scrape-logs/` | `scrape_logs` | Superuser only |
 | `/users/` | `user_admin` | Superuser only |
 | `/profile/` | `profile` | Login required |
+
+**Password reset is a front-end-only flow.** `/forgot-password/` validates the email and shows a "check your email" confirmation, but **no email is sent** — there is no `EMAIL_BACKEND` configured. Search the codebase for `TODO: wire to real backend` (in `tracker/views.py` `forgot_password` and `tracker/templates/tracker/forgot_password.html`) for the exact place to plug in Django's `PasswordResetView` / an SMTP or transactional provider.
 
 ---
 

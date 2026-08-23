@@ -1,0 +1,13 @@
+{% comment %}
+  RaiseTrack identity — register mark: a solid ink square with "RT" reversed
+  out, set against the wordmark. Monochrome; flips with the theme. Sharp, not
+  rounded. Matches the favicon.
+  Params: size (mark px, default 26), wf (wordmark px, default 15),
+          mark_only (truthy → square only).
+{% endcomment %}
+<span style="display:inline-flex;align-items:center;gap:10px;line-height:1">
+  <span style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;
+    width:{{ size|default:26 }}px;height:{{ size|default:26 }}px;background:var(--text-1);color:var(--bg);
+    font-weight:800;font-size:{% widthratio size|default:26 100 42 %}px;letter-spacing:-1px;border-radius:2px">RT</span>
+  {% if not mark_only %}<span style="font-size:{{ wf|default:15 }}px;font-weight:800;letter-spacing:-.5px;color:var(--text-1);white-space:nowrap">RaiseTrack</span>{% endif %}
+</span>

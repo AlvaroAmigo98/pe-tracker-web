@@ -127,7 +127,7 @@
           <form method="post" action="{% url 'watchlist_toggle' f.company.id %}" style="display:inline">
             {% csrf_token %}
             <input type="hidden" name="next" value="{{ request.get_full_path }}">
-            <button type="submit" style="background:none;border:none;cursor:pointer;font-size:15px;color:{% if f.company.id in watchlist %}#FBBF24{% else %}var(--text-3){% endif %};padding:0;line-height:1" title="{% if f.company.id in watchlist %}Unwatch{% else %}Watch{% endif %}">
+            <button type="submit" style="background:none;border:none;cursor:pointer;font-size:15px;color:{% if f.company.id in watchlist %}var(--accent){% else %}var(--text-3){% endif %};padding:0;line-height:1" title="{% if f.company.id in watchlist %}Unwatch{% else %}Watch{% endif %}">
               {% if f.company.id in watchlist %}&#9733;{% else %}&#9734;{% endif %}
             </button>
           </form>

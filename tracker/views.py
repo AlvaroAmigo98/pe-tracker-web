@@ -2,6 +2,8 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.http import HttpResponse, JsonResponse
+from django.urls import reverse
+from urllib.parse import quote
 from django.db.models import Count, Max, Q
 from django.db.models.functions import TruncMonth
 from django.core.cache import cache
@@ -74,6 +76,64 @@ def landing(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
     return render(request, 'tracker/landing.html')
+
+
+def logout_confirm(request):
+    """Lightweight 'are you sure?' step before logging out.
+
+    The actual logout is still handled by Django's LogoutView via a POST to
+    {% url 'logout' %} — this view only renders the confirmation screen.
+    """
+    if not request.user.is_authenticated:
+        return redirect('login')
+    return render(request, 'tracker/logout_confirm.html')
+
+
+def forgot_password(request):
+    """Front-end password-reset request screen.
+
+    NOTE: This is a complete UI flow only. There is no email backend wired up
+    yet, so no reset email is actually sent. The confirmation copy is written to
+    be truthful about that ("if an account exists…") and never claims a mail was
+    delivered.
+
+    // TODO: wire to real backend — replace the redirect below with Django's
+    // PasswordResetView / a call that generates a token and sends the reset
+    // email once an EMAIL_BACKEND (SMTP / transactional provider) is configured.
+    """
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+
+    error = None
+    email = ''
+    if request.method == 'POST':
+        email = (request.POST.get('email') or '').strip()
+        if not email:
+            error = 'Please enter your email address.'
+        else:
+            from django.core.validators import validate_email
+            from django.core.exceptions import ValidationError
+            try:
+                validate_email(email)
+            except ValidationError:
+                error = 'That doesn’t look like a valid email address.'
+
+        if not error:
+            # // TODO: wire to real backend — send the reset email here.
+            # Always redirect to the same confirmation regardless of whether the
+            # address matches an account, to avoid leaking which emails exist.
+            return redirect(f"{reverse('forgot_password_sent')}?email={quote(email)}")
+
+    return render(request, 'tracker/forgot_password.html', {'error': error, 'email': email})
+
+
+def forgot_password_sent(request):
+    """Confirmation screen for the password-reset request flow (front-end only)."""
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    return render(request, 'tracker/forgot_password_sent.html', {
+        'email': (request.GET.get('email') or '').strip(),
+    })
 
 
 SENIORITY_GROUP = {

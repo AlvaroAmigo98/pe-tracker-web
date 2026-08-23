@@ -18,10 +18,10 @@
 </div>
 
 {% if watchlist_activity %}
-<div style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);border-radius:var(--r);padding:14px 20px;margin-bottom:20px;display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">
+<div style="background:var(--accent-soft);border:1px solid var(--border2);border-radius:var(--r);padding:14px 20px;margin-bottom:20px;display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">
   <span style="font-size:18px;flex-shrink:0">★</span>
   <div>
-    <div style="font-size:13px;color:#A5B4FC;font-weight:600;margin-bottom:6px">{{ watchlist_activity|length }} new event{{ watchlist_activity|length|pluralize }} at watched firms since your last visit</div>
+    <div style="font-size:13px;color:var(--accent-hover);font-weight:600;margin-bottom:6px">{{ watchlist_activity|length }} new event{{ watchlist_activity|length|pluralize }} at watched firms since your last visit</div>
     <div style="display:flex;flex-wrap:wrap;gap:8px">
       {% for e in watchlist_activity %}
       <a href="/firms/{{ e.person.company_id }}/?tab={% if e.event_type == 'leaver' %}leavers{% elif e.event_type == 'hire' %}hires{% else %}promotions{% endif %}"
@@ -35,18 +35,18 @@
 {% endif %}
 
 <div class="stats-row">
-  <div class="stat-card">
-    <div class="stat-indicator" style="background:var(--hire)"></div>
+  <div class="stat-card hire-card">
+    <div class="stat-indicator" style="background:var(--hire);color:var(--hire)"></div>
     <div class="stat-num" style="color:var(--hire)">{{ hires|length }}</div>
     <div class="stat-label">New hires</div>
   </div>
-  <div class="stat-card">
-    <div class="stat-indicator" style="background:var(--leave)"></div>
+  <div class="stat-card leave-card">
+    <div class="stat-indicator" style="background:var(--leave);color:var(--leave)"></div>
     <div class="stat-num" style="color:var(--leave)">{{ leavers|length }}</div>
     <div class="stat-label">Leavers</div>
   </div>
-  <div class="stat-card">
-    <div class="stat-indicator" style="background:var(--promo)"></div>
+  <div class="stat-card promo-card">
+    <div class="stat-indicator" style="background:var(--promo);color:var(--promo)"></div>
     <div class="stat-num" style="color:var(--promo)">{{ promotions|length }}</div>
     <div class="stat-label">Promotions &amp; role changes</div>
   </div>

@@ -1,35 +1,36 @@
 {% extends 'tracker/base.html' %}
 {% block content %}
 <style>
-  /* ── Design tokens ── */
+  /* ── Design tokens — mapped onto the global RaiseTrack theme so this page
+        follows light/dark and uses the muted (non-stoplight) status palette ── */
   :root {
-    --d-bg:       #06080F;
-    --d-surface:  rgba(255,255,255,0.035);
-    --d-surface2: rgba(255,255,255,0.06);
-    --d-border:   rgba(255,255,255,0.07);
-    --d-border2:  rgba(255,255,255,0.12);
-    --d-text1:    #E8EEFF;
-    --d-text2:    #7B8CAA;
-    --d-text3:    #3E4C63;
-    --red:        #FF3B5C;
-    --red-glow:   rgba(255,59,92,0.18);
-    --amber:      #F59E0B;
-    --amber-glow: rgba(245,158,11,0.18);
-    --blue:       #38BDF8;
-    --blue-glow:  rgba(56,189,248,0.18);
-    --green:      #10B981;
-    --green-glow: rgba(16,185,129,0.18);
-    --purple:     #A78BFA;
-    --purple-glow:rgba(167,139,250,0.18);
+    --d-bg:       var(--bg);
+    --d-surface:  var(--surface);
+    --d-surface2: var(--surface2);
+    --d-border:   var(--border);
+    --d-border2:  var(--border2);
+    --d-text1:    var(--text-1);
+    --d-text2:    var(--text-2);
+    --d-text3:    var(--text-3);
+    --red:        var(--leave);  --red-glow:    var(--leave-bg);
+    --amber:      var(--promo);  --amber-glow:  var(--promo-bg);
+    --blue:       var(--text-2); --blue-glow:   var(--surface2);
+    --green:      var(--hire);   --green-glow:  var(--hire-bg);
+    --purple:     var(--text-1); --purple-glow: var(--accent-soft);
   }
+  /* Heatmap intensity scale, built from the muted "hire" accent so it themes cleanly */
+  .hm { width: 10px; height: 10px; border-radius: 2px; }
+  .hm-0 { background: var(--surface2); border: 1px solid var(--border); }
+  .hm-1 { background: color-mix(in srgb, var(--hire) 28%, transparent); }
+  .hm-2 { background: color-mix(in srgb, var(--hire) 52%, transparent); }
+  .hm-3 { background: color-mix(in srgb, var(--hire) 76%, transparent); }
+  .hm-4 { background: var(--hire); }
 
   /* ── Page header ── */
   .sig-header { margin-bottom: 36px; }
   .sig-title {
     font-size: 30px; font-weight: 800; letter-spacing: -0.8px;
-    background: linear-gradient(135deg, #E8EEFF 0%, #7B8CAA 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--text-1);
     margin-bottom: 6px;
   }
   .sig-meta { font-size: 13px; color: var(--d-text2); display: flex; align-items: center; gap: 12px; }
@@ -63,7 +64,7 @@
   }
   .sig-stat::before {
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-    background: var(--accent-color, rgba(255,255,255,0.15));
+    background: var(--accent-color, var(--border2));
     border-radius: 14px 14px 0 0;
   }
   .sig-stat:hover { border-color: var(--d-border2); transform: translateY(-2px); }
@@ -89,7 +90,7 @@
     padding: 18px 22px;
     border-bottom: 1px solid var(--d-border);
     display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
-    background: rgba(255,255,255,0.02);
+    background: var(--surface2);
   }
   .dcard-title { font-size: 14px; font-weight: 700; color: var(--d-text1); letter-spacing: -0.2px; }
   .dcard-sub { font-size: 12px; color: var(--d-text2); margin-top: 3px; line-height: 1.4; }
@@ -101,31 +102,31 @@
     text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap;
   }
   .sbadge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
-  .sbadge-red    { background: var(--red-glow);    color: var(--red);    border: 1px solid rgba(255,59,92,0.25); }
-  .sbadge-amber  { background: var(--amber-glow);  color: var(--amber);  border: 1px solid rgba(245,158,11,0.25); }
-  .sbadge-blue   { background: var(--blue-glow);   color: var(--blue);   border: 1px solid rgba(56,189,248,0.25); }
-  .sbadge-green  { background: var(--green-glow);  color: var(--green);  border: 1px solid rgba(16,185,129,0.25); }
-  .sbadge-purple { background: var(--purple-glow); color: var(--purple); border: 1px solid rgba(167,139,250,0.25); }
+  .sbadge-red    { background: var(--red-glow);    color: var(--red);    border: 1px solid var(--border2); }
+  .sbadge-amber  { background: var(--amber-glow);  color: var(--amber);  border: 1px solid var(--border2); }
+  .sbadge-blue   { background: var(--blue-glow);   color: var(--blue);   border: 1px solid var(--border2); }
+  .sbadge-green  { background: var(--green-glow);  color: var(--green);  border: 1px solid var(--border2); }
+  .sbadge-purple { background: var(--purple-glow); color: var(--purple); border: 1px solid var(--border2); }
 
   /* ── Dark tables ── */
   .dtable { width: 100%; border-collapse: collapse; }
   .dtable th {
     padding: 10px 18px; font-size: 10px; font-weight: 700; color: var(--d-text3);
     text-transform: uppercase; letter-spacing: 0.1em;
-    background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--d-border);
+    background: var(--surface2); border-bottom: 1px solid var(--d-border);
     white-space: nowrap; text-align: left;
   }
-  .dtable td { padding: 13px 18px; font-size: 13px; color: var(--d-text2); border-bottom: 1px solid rgba(255,255,255,0.03); }
+  .dtable td { padding: 13px 18px; font-size: 13px; color: var(--d-text2); border-bottom: 1px solid var(--border); }
   .dtable tbody tr:last-child td { border-bottom: none; }
   .dtable tbody tr { transition: background .12s; }
-  .dtable tbody tr:hover td { background: rgba(255,255,255,0.03); }
+  .dtable tbody tr:hover td { background: var(--surface2); }
   .dtable .dn { font-weight: 600; color: var(--d-text1); }
 
   /* ── Days pill ── */
   .dpill {
     display: inline-block; font-size: 11px; font-weight: 600;
     padding: 2px 9px; border-radius: 99px;
-    background: rgba(255,255,255,0.06); color: var(--d-text2);
+    background: var(--surface2); color: var(--d-text2);
     border: 1px solid var(--d-border);
   }
 
@@ -142,7 +143,7 @@
     cursor: pointer;
   }
   .sig-row:last-child { border-bottom: none; }
-  .sig-row:hover { background: rgba(255,255,255,0.03); }
+  .sig-row:hover { background: var(--surface2); }
   .sig-row-accent { width: 4px; flex-shrink: 0; }
   .sig-row-body { padding: 16px 20px; flex: 1; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
   .sig-row-firm { font-size: 14px; font-weight: 700; color: var(--d-text1); min-width: 160px; }
@@ -182,7 +183,7 @@
   /* ── Scroll ── */
   .health-table-col::-webkit-scrollbar { width: 4px; }
   .health-table-col::-webkit-scrollbar-track { background: transparent; }
-  .health-table-col::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+  .health-table-col::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
 
   @media (max-width: 900px) {
     .sig-grid { grid-template-columns: 1fr; }
@@ -247,7 +248,7 @@
 
 <!-- ── Cascade Departure Alerts ───────────────────────────────────────────── -->
 <div class="sig-section-label">Cascade Departure Alerts</div>
-<div class="dcard" style="border-color:rgba(245,158,11,0.2); box-shadow:0 0 40px rgba(245,158,11,0.04);">
+<div class="dcard" style="border-color:var(--border2);">
   <div class="dcard-header">
     <div>
       <div class="dcard-title">Cascade Departures</div>
@@ -317,11 +318,11 @@
   <div id="heatmap-container" style="display:flex;gap:3px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin"></div>
   <div style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:11px;color:var(--d-text3)">
     <span>Less</span>
-    <div style="width:10px;height:10px;border-radius:2px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08)"></div>
-    <div style="width:10px;height:10px;border-radius:2px;background:#1a3a2a"></div>
-    <div style="width:10px;height:10px;border-radius:2px;background:rgba(16,185,129,0.5)"></div>
-    <div style="width:10px;height:10px;border-radius:2px;background:rgba(16,185,129,0.75)"></div>
-    <div style="width:10px;height:10px;border-radius:2px;background:#10B981"></div>
+    <div class="hm hm-0"></div>
+    <div class="hm hm-1"></div>
+    <div class="hm hm-2"></div>
+    <div class="hm hm-3"></div>
+    <div class="hm hm-4"></div>
     <span>More</span>
   </div>
 </div>
@@ -332,6 +333,15 @@
   const raw = {{ trend_json|safe }};
   const ctx = document.getElementById('trend-chart');
   if (!ctx) return;
+  // Pull colours from the theme tokens so the chart matches light/dark.
+  const cs = getComputedStyle(document.documentElement);
+  const cHire   = (cs.getPropertyValue('--hire').trim()   || '#3557D6');
+  const cLeave  = (cs.getPropertyValue('--leave').trim()  || '#626C7E');
+  const cGrid   = (cs.getPropertyValue('--border').trim() || 'rgba(0,0,0,.08)');
+  const cTick   = (cs.getPropertyValue('--text-3').trim() || '#949CAD');
+  const cLegend = (cs.getPropertyValue('--text-2').trim() || '#5A6376');
+  const cSurf   = (cs.getPropertyValue('--surface').trim()|| '#fff');
+  const cText1  = (cs.getPropertyValue('--text-1').trim() || '#1B2230');
   new Chart(ctx, {
     type: 'line',
     data: {
@@ -340,8 +350,8 @@
         {
           label: 'Hires',
           data: raw.hires,
-          borderColor: '#10B981',
-          backgroundColor: 'rgba(16,185,129,0.08)',
+          borderColor: cHire,
+          backgroundColor: cHire + '1F',
           borderWidth: 2,
           pointRadius: 0,
           tension: 0.3,
@@ -350,8 +360,8 @@
         {
           label: 'Leavers',
           data: raw.leavers,
-          borderColor: '#FF3B5C',
-          backgroundColor: 'rgba(255,59,92,0.08)',
+          borderColor: cLeave,
+          backgroundColor: cLeave + '1F',
           borderWidth: 2,
           pointRadius: 0,
           tension: 0.3,
@@ -364,12 +374,12 @@
       maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { labels: { color: 'rgba(255,255,255,0.4)', font: { size: 11, family: 'inherit' }, boxWidth: 12, boxHeight: 2 } },
-        tooltip: { backgroundColor: '#0d1220', borderColor: 'rgba(255,255,255,0.08)', borderWidth: 1, titleColor: 'rgba(255,255,255,0.7)', bodyColor: 'rgba(255,255,255,0.5)', padding: 10 },
+        legend: { labels: { color: cLegend, font: { size: 11, family: 'inherit' }, boxWidth: 12, boxHeight: 2 } },
+        tooltip: { backgroundColor: cSurf, borderColor: cGrid, borderWidth: 1, titleColor: cText1, bodyColor: cLegend, padding: 10 },
       },
       scales: {
-        x: { ticks: { color: 'rgba(255,255,255,0.2)', font: { size: 10 }, maxTicksLimit: 13 }, grid: { color: 'rgba(255,255,255,0.05)' } },
-        y: { beginAtZero: true, ticks: { color: 'rgba(255,255,255,0.2)', font: { size: 10 }, precision: 0 }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        x: { ticks: { color: cTick, font: { size: 10 }, maxTicksLimit: 13 }, grid: { color: cGrid } },
+        y: { beginAtZero: true, ticks: { color: cTick, font: { size: 10 }, precision: 0 }, grid: { color: cGrid } },
       },
     },
   });
@@ -384,12 +394,12 @@
   start.setDate(today.getDate() - 363);
   const startDay = start.getDay();
   start.setDate(start.getDate() - (startDay === 0 ? 6 : startDay - 1));
-  function colorForCount(c) {
-    if (c === 0) return 'rgba(255,255,255,0.04)';
-    if (c <= 2)  return '#1a3a2a';
-    if (c <= 5)  return 'rgba(16,185,129,0.5)';
-    if (c <= 10) return 'rgba(16,185,129,0.75)';
-    return '#10B981';
+  function levelForCount(c) {
+    if (c === 0) return 0;
+    if (c <= 2)  return 1;
+    if (c <= 5)  return 2;
+    if (c <= 10) return 3;
+    return 4;
   }
   function pad2(n) { return n < 10 ? '0' + n : '' + n; }
   function isoDate(d) { return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); }
@@ -398,7 +408,7 @@
   dayLabels.style.cssText = 'display:flex;flex-direction:column;gap:2px;margin-right:4px';
   DAYS.forEach(function(d, i) {
     const el = document.createElement('div');
-    el.style.cssText = 'height:10px;font-size:9px;color:rgba(255,255,255,0.2);line-height:10px;min-width:20px;text-align:right';
+    el.style.cssText = 'height:10px;font-size:9px;color:var(--text-3);line-height:10px;min-width:20px;text-align:right';
     el.textContent = (i % 2 === 0) ? d : '';
     dayLabels.appendChild(el);
   });
@@ -411,8 +421,8 @@
       const cell = document.createElement('div');
       const iso = isoDate(cur);
       const count = data[iso] || 0;
-      cell.style.cssText = 'width:10px;height:10px;border-radius:2px;cursor:default';
-      cell.style.background = colorForCount(count);
+      cell.className = 'hm hm-' + levelForCount(count);
+      cell.style.cursor = 'default';
       cell.title = iso + ': ' + count + ' event' + (count !== 1 ? 's' : '');
       col.appendChild(cell);
       cur.setDate(cur.getDate() + 1);
