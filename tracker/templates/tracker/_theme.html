@@ -4,10 +4,12 @@
   colour in the product. Included in the <head> of every page.
 {% endcomment %}
 
-{# All site fonts in ONE request — Inter (body), JetBrains Mono (numerals/mono),
-   Chakra Petch (wordmark logo). Consolidated here so every page makes a single
-   render-blocking font request instead of two. Weights are the superset used
-   across all pages; unused weights are never downloaded by the browser. #}
+{% comment %}
+  All site fonts in ONE request — Inter (body), JetBrains Mono (numerals/mono),
+  Chakra Petch (wordmark logo). Consolidated here so every page makes a single
+  render-blocking font request instead of two. Weights are the superset used
+  across all pages; unused weights are never downloaded by the browser.
+{% endcomment %}
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
 {# Favicon: black square, reversed "R" monogram. #}
