@@ -4,8 +4,11 @@
   colour in the product. Included in the <head> of every page.
 {% endcomment %}
 
-{# Industrial face used for the wordmark logo (Chakra Petch). Body stays Inter. #}
-<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+{# All site fonts in ONE request — Inter (body), JetBrains Mono (numerals/mono),
+   Chakra Petch (wordmark logo). Consolidated here so every page makes a single
+   render-blocking font request instead of two. Weights are the superset used
+   across all pages; unused weights are never downloaded by the browser. #}
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
 {# Favicon: black square, reversed "R" monogram. #}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000'/%3E%3Ctext x='16' y='23' font-family='Arial,Helvetica,sans-serif' font-size='21' font-weight='700' text-anchor='middle' fill='%23fff'%3ER%3C/text%3E%3C/svg%3E">
