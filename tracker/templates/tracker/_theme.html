@@ -26,32 +26,32 @@
 <style>
   /* ══ Tokens — light (paper) is default ══════════════════════════════════ */
   :root {
-    --bg:            #FFFFFF;
-    --surface:       #FFFFFF;
-    --surface2:      #F5F5F5;
-    --surface3:      #ECECEC;
-    --border:        #E4E4E4;
-    --border2:       #CFCFCF;
-    --line-strong:   #111111;
-    --text-1:        #0A0A0A;
-    --text-2:        #5C5C5C;
-    --text-3:        #8E8E8E;
-    --accent:        #0A0A0A;   /* ink */
-    --accent-hover:  #333333;
+    --bg:            #EEF1F4;   /* cool paper ground */
+    --surface:       #FFFFFF;   /* cards float on the paper */
+    --surface2:      #F4F6F9;
+    --surface3:      #E9EDF1;
+    --border:        #DCE2E8;
+    --border2:       #C7D0D8;
+    --line-strong:   #141A22;
+    --text-1:        #19212C;
+    --text-2:        #59636F;
+    --text-3:        #838D99;
+    --accent:        #141A22;   /* slate ink */
+    --accent-hover:  #263243;
     --accent-ink:    #FFFFFF;   /* text on accent */
-    --accent-soft:   #F0F0F0;
-    --accent-ring:   rgba(0,0,0,.16);
+    --accent-soft:   #EDF0F3;
+    --accent-ring:   rgba(20,26,34,.15);
 
-    /* Semantic neon — deepened for legibility on white */
-    --hire:  #00A152; --hire-bg:  rgba(0,161,82,.10);  --hire-text:  #007A3D;
-    --leave: #E5102D; --leave-bg: rgba(229,16,45,.09); --leave-text: #C20016;
-    --promo: #1A6DFF; --promo-bg: rgba(26,109,255,.10); --promo-text: #0B54D6;
+    /* Semantic — jewel tones, text deepened for AA on paper */
+    --hire:  #0E9F6E; --hire-bg:  rgba(14,159,110,.10); --hire-text:  #0B7E57;
+    --leave: #D42447; --leave-bg: rgba(212,36,71,.09);  --leave-text: #B31D3B;
+    --promo: #2563EB; --promo-bg: rgba(37,99,235,.10);  --promo-text: #1D4ED8;
     --role-bg: var(--surface2); --role-text: var(--text-2);
 
     --shadow: none;
-    --shadow-md: 0 8px 28px rgba(0,0,0,.10);
-    --shadow-lg: 0 20px 50px rgba(0,0,0,.14);
-    --r: 4px; --r-sm: 2px;
+    --shadow-md: 0 1px 2px rgba(19,26,36,.05), 0 10px 30px rgba(19,26,36,.07);
+    --shadow-lg: 0 2px 6px rgba(19,26,36,.07), 0 24px 60px rgba(19,26,36,.13);
+    --r: 8px; --r-sm: 5px;
 
     --sidebar-w: 232px;
     --topbar-h: 58px;
@@ -59,44 +59,44 @@
 
   /* ══ Tokens — dark (ink) — explicit choice ══════════════════════════════ */
   :root[data-theme="dark"] {
-    --bg:            #000000;
-    --surface:       #0A0A0B;
-    --surface2:      #151517;
-    --surface3:      #202024;
-    --border:        #232326;
-    --border2:       #37373D;
-    --line-strong:   #FFFFFF;
-    --text-1:        #FAFAFA;
-    --text-2:        #9C9CA3;
-    --text-3:        #5E5E66;
-    --accent:        #FFFFFF;
-    --accent-hover:  #DADADA;
-    --accent-ink:    #000000;
-    --accent-soft:   #161618;
-    --accent-ring:   rgba(255,255,255,.22);
+    --bg:            #0E131A;   /* deep slate ground */
+    --surface:       #141A22;   /* ink card — matches the landing */
+    --surface2:      #1C2530;
+    --surface3:      #232E3B;
+    --border:        #232D39;
+    --border2:       #35414F;
+    --line-strong:   #E9ECF1;
+    --text-1:        #E9ECF1;
+    --text-2:        #99A2AE;
+    --text-3:        #6C7683;
+    --accent:        #E9ECF1;
+    --accent-hover:  #CDD3DB;
+    --accent-ink:    #141A22;
+    --accent-soft:   #1C2530;
+    --accent-ring:   rgba(233,236,241,.20);
 
-    --hire:  #00E676; --hire-bg:  rgba(0,230,118,.14); --hire-text:  #4DFFA6;
-    --leave: #FF3B4E; --leave-bg: rgba(255,59,78,.15); --leave-text: #FF7A87;
-    --promo: #3B9EFF; --promo-bg: rgba(59,158,255,.15); --promo-text: #85C4FF;
+    --hire:  #21C68A; --hire-bg:  rgba(33,198,138,.14); --hire-text:  #5FE0B0;
+    --leave: #F2647B; --leave-bg: rgba(242,100,123,.15); --leave-text: #FF97A6;
+    --promo: #5C9BFF; --promo-bg: rgba(92,155,255,.15); --promo-text: #93BEFF;
     --role-bg: var(--surface2); --role-text: var(--text-2);
 
     --shadow: none;
-    --shadow-md: 0 8px 30px rgba(0,0,0,.6);
-    --shadow-lg: 0 24px 60px rgba(0,0,0,.7);
+    --shadow-md: 0 8px 30px rgba(0,0,0,.5);
+    --shadow-lg: 0 24px 60px rgba(0,0,0,.6);
   }
 
   /* Dark by OS preference unless user chose light */
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg:#000000; --surface:#0A0A0B; --surface2:#151517; --surface3:#202024;
-      --border:#232326; --border2:#37373D; --line-strong:#FFFFFF;
-      --text-1:#FAFAFA; --text-2:#9C9CA3; --text-3:#5E5E66;
-      --accent:#FFFFFF; --accent-hover:#DADADA; --accent-ink:#000000;
-      --accent-soft:#161618; --accent-ring:rgba(255,255,255,.22);
-      --hire:#00E676; --hire-bg:rgba(0,230,118,.14); --hire-text:#4DFFA6;
-      --leave:#FF3B4E; --leave-bg:rgba(255,59,78,.15); --leave-text:#FF7A87;
-      --promo:#3B9EFF; --promo-bg:rgba(59,158,255,.15); --promo-text:#85C4FF;
-      --shadow:none; --shadow-md:0 8px 30px rgba(0,0,0,.6); --shadow-lg:0 24px 60px rgba(0,0,0,.7);
+      --bg:#0E131A; --surface:#141A22; --surface2:#1C2530; --surface3:#232E3B;
+      --border:#232D39; --border2:#35414F; --line-strong:#E9ECF1;
+      --text-1:#E9ECF1; --text-2:#99A2AE; --text-3:#6C7683;
+      --accent:#E9ECF1; --accent-hover:#CDD3DB; --accent-ink:#141A22;
+      --accent-soft:#1C2530; --accent-ring:rgba(233,236,241,.20);
+      --hire:#21C68A; --hire-bg:rgba(33,198,138,.14); --hire-text:#5FE0B0;
+      --leave:#F2647B; --leave-bg:rgba(242,100,123,.15); --leave-text:#FF97A6;
+      --promo:#5C9BFF; --promo-bg:rgba(92,155,255,.15); --promo-text:#93BEFF;
+      --shadow:none; --shadow-md:0 8px 30px rgba(0,0,0,.5); --shadow-lg:0 24px 60px rgba(0,0,0,.6);
     }
   }
 
