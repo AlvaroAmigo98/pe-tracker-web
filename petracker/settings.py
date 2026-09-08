@@ -29,7 +29,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-local-dev-only')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'pe-tracker-web-production.up.railway.app']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'pe-tracker-web-production.up.railway.app', 'rota-alts.com', 'www.rota-alts.com']
 
 
 # Application definition
@@ -140,7 +140,7 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-CSRF_TRUSTED_ORIGINS = ['https://pe-tracker-web-production.up.railway.app']
+CSRF_TRUSTED_ORIGINS = ['https://pe-tracker-web-production.up.railway.app', 'https://rota-alts.com', 'https://www.rota-alts.com']
 
 # ── Session security (#3) ─────────────────────────────────────────────────────
 SESSION_COOKIE_SECURE   = not DEBUG   # HTTPS-only in production
